@@ -8,6 +8,9 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path
 
+from config.health import healthz
+
 urlpatterns = [
+    path("healthz", healthz, name="healthz"),
     path(f"{settings.ADMIN_URL_PATH}/", admin.site.urls),
 ]
