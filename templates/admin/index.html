@@ -61,19 +61,47 @@
         </div>
       </div>
     </div>
+
+    <div class="fs-rise" style="background:#fff;border:1px solid #ebedf1;border-radius:12px;padding:20px;box-shadow:0 4px 8px rgba(18,28,37,0.04);">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:#00a37a;color:#fff;">
+          <span class="material-symbols-outlined">trending_up</span>
+        </span>
+        <div>
+          <div style="font-size:26px;font-weight:700;line-height:1;">${{ fs_profit|floatformat:2 }}</div>
+          <div style="font-size:13px;color:#606b8b;margin-top:4px;">Profit · {{ fs_margin_percent }}% margin</div>
+          {% if fs_uncosted_revenue %}
+          <div style="font-size:11px;color:#8f5a06;margin-top:3px;" title="Orders with no line items have no traceable supplier cost, so they are left out of the margin rather than counted as pure profit.">
+            excludes ${{ fs_uncosted_revenue|floatformat:2 }} with no cost data
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Chart + top destinations -->
   <div style="display:grid;gap:16px;grid-template-columns:2fr 1fr;margin-top:18px;">
     <div class="fs-rise" style="background:#fff;border:1px solid #ebedf1;border-radius:12px;padding:20px;box-shadow:0 4px 8px rgba(18,28,37,0.04);min-width:0;">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h2 style="font-size:16px;font-weight:700;margin:0;">Sales · last 14 days</h2>
-        <span style="font-size:12px;color:#606b8b;">USD per day</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <h2 style="font-size:16px;font-weight:700;margin:0;">Revenue &amp; profit · last 14 days</h2>
+        <div style="display:flex;gap:14px;font-size:12px;color:#606b8b;">
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#e59500;"></span> profit</span>
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#c9d1de;"></span> supplier cost</span>
+        </div>
       </div>
-      <div style="display:flex;align-items:flex-end;gap:6px;height:180px;margin-top:20px;">
+      <div style="display:flex;gap:22px;margin-top:12px;font-size:13px;">
+        <div><span style="color:#606b8b;">Revenue</span> <b style="color:#111e2b;">${{ fs_period_revenue|floatformat:2 }}</b></div>
+        <div><span style="color:#606b8b;">Cost</span> <b style="color:#111e2b;">${{ fs_period_cost|floatformat:2 }}</b></div>
+        <div><span style="color:#606b8b;">Profit</span> <b style="color:#00a37a;">${{ fs_period_profit|floatformat:2 }}</b></div>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:180px;margin-top:16px;">
         {% for d in fs_chart %}
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;" title="{{ d.label }}: ${{ d.value|floatformat:2 }}">
-          <div style="width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#ffcb69,#e59500);height:{{ d.pct }}%;min-height:3px;transition:height .4s ease;"></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;"
+             title="{{ d.label }} — revenue ${{ d.value|floatformat:2 }}, cost ${{ d.cost|floatformat:2 }}, profit ${{ d.profit|floatformat:2 }}">
+          <div style="width:100%;height:{{ d.pct }}%;min-height:3px;border-radius:6px 6px 0 0;overflow:hidden;display:flex;flex-direction:column;transition:height .4s ease;background:linear-gradient(180deg,#ffcb69,#e59500);">
+            <div style="height:{{ d.cost_pct }}%;background:#c9d1de;margin-top:auto;"></div>
+          </div>
           <span style="font-size:10px;color:#8994b0;">{{ d.short }}</span>
         </div>
         {% endfor %}
@@ -90,6 +118,50 @@
       </div>
       {% empty %}
       <p style="color:#8994b0;font-size:13px;">No eSIMs sold yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Margin spread + supply mix -->
+  <div style="display:grid;gap:16px;grid-template-columns:2fr 1fr;margin-top:18px;">
+    <div class="fs-rise" style="background:#fff;border:1px solid #ebedf1;border-radius:12px;padding:20px;box-shadow:0 4px 8px rgba(18,28,37,0.04);min-width:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <h2 style="font-size:16px;font-weight:700;margin:0;">Margin spread</h2>
+        <a href="/admin/catalog/pricingrule/" style="font-size:13px;color:#e59500;font-weight:600;text-decoration:none;">Pricing rules</a>
+      </div>
+      <p style="font-size:12px;color:#8994b0;margin:4px 0 16px;">Active plans grouped by profit over supplier cost.</p>
+      {% for m in fs_margin_spread %}
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
+        <span style="width:52px;font-size:12px;color:#606b8b;font-variant-numeric:tabular-nums;">{{ m.label }}{% if m.label != 'loss' %}%{% endif %}</span>
+        <div style="flex:1;height:10px;background:#f2f3f5;border-radius:999px;overflow:hidden;">
+          <div style="height:100%;width:{{ m.pct }}%;border-radius:999px;background:{% if m.label == 'loss' %}#e5484d{% else %}linear-gradient(90deg,#ffcb69,#e59500){% endif %};transition:width .4s ease;"></div>
+        </div>
+        <span style="width:34px;text-align:right;font-size:13px;font-weight:600;color:#111e2b;">{{ m.count }}</span>
+      </div>
+      {% endfor %}
+      {% if fs_unpriced_plans %}
+      <p style="margin:14px 0 0;padding:9px 12px;border-radius:8px;background:#fff8ec;color:#8f5a06;font-size:12px;">
+        {{ fs_unpriced_plans }} active plan(s) have no supplier cost, so they are excluded here.
+        Run <code style="font-family:ui-monospace,monospace;">manage.py backfill_costs</code> or set a cost.
+      </p>
+      {% endif %}
+    </div>
+
+    <div class="fs-rise" style="background:#fff;border:1px solid #ebedf1;border-radius:12px;padding:20px;box-shadow:0 4px 8px rgba(18,28,37,0.04);">
+      <h2 style="font-size:16px;font-weight:700;margin:0;">Supply mix</h2>
+      <p style="font-size:12px;color:#8994b0;margin:4px 0 16px;">Where active plans come from.</p>
+      {% for s in fs_supply_mix %}
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
+          <span style="font-weight:600;color:#111e2b;">{{ s.provider }}</span>
+          <span style="color:#606b8b;">{{ s.count }} · {{ s.pct }}%</span>
+        </div>
+        <div style="height:10px;background:#f2f3f5;border-radius:999px;overflow:hidden;">
+          <div style="height:100%;width:{{ s.pct }}%;border-radius:999px;background:linear-gradient(90deg,#ffcb69,#e59500);transition:width .4s ease;"></div>
+        </div>
+      </div>
+      {% empty %}
+      <p style="color:#8994b0;font-size:13px;">No active plans.</p>
       {% endfor %}
     </div>
   </div>

@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Count
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
@@ -66,14 +67,20 @@ class OrderAdmin(ModelAdmin):
     inlines = (OrderItemInline, ESIMInline)
     ordering = ("-created_at",)
     list_filter_submit = True
+    list_select_related = ("customer",)
+
+    def get_queryset(self, request):
+        # `obj.items.count()` per row was one query per order — 100 extra
+        # queries on a default-sized page.
+        return super().get_queryset(request).annotate(_item_count=Count("items"))
 
     @display(description="Status")
     def status_badge(self, obj):
         return _status_badge(obj.status, obj.get_status_display())
 
-    @display(description="Items")
+    @display(description="Items", ordering="_item_count")
     def item_count(self, obj):
-        return obj.items.count()
+        return obj._item_count
 
 
 @admin.register(ESIM)

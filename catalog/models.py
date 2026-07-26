@@ -60,7 +60,32 @@ class Plan(models.Model):
     data_amount_mb = models.PositiveIntegerField(default=1024, help_text="Ignored when unlimited")
     is_unlimited = models.BooleanField(default=False)
     validity_days = models.PositiveIntegerField(default=7)
+
+    # --- Pricing -----------------------------------------------------------
+    # What the supplier charges us. Written by the eSIM Access sync or entered
+    # by hand; never shown to customers.
+    cost_usd = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Supplier cost. Leave empty for plans with no supplier.",
+    )
+    # What the customer pays. Recalculated from cost + markup on save unless
+    # price_locked is set.
     price_usd = models.DecimalField(max_digits=8, decimal_places=2)
+    markup_percent = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Overrides every pricing rule for this plan only. Leave empty to inherit.",
+    )
+    price_locked = models.BooleanField(
+        default=False,
+        help_text="Keep the price exactly as typed; never recalculate it from cost.",
+    )
+
     network_type = models.CharField(max_length=2, choices=Network.choices, default=Network.LTE)
     supports_hotspot = models.BooleanField(default=True)
     provider = models.CharField(
@@ -91,3 +116,136 @@ class Plan(models.Model):
         if self.data_amount_mb % 1024 == 0:
             return f"{self.data_amount_mb // 1024} GB"
         return f"{self.data_amount_mb} MB"
+
+    @property
+    def margin_usd(self):
+        from catalog.pricing import margin
+
+        return margin(self)
+
+    @property
+    def margin_percent(self):
+        from catalog.pricing import margin_percent
+
+        return margin_percent(self)
+
+    def recalculate_price(self, rules=None) -> bool:
+        """Recompute price_usd from cost and the governing rule.
+
+        Returns True when the price actually changed. A locked plan or one
+        with no supplier cost is left alone.
+        """
+        if self.price_locked:
+            return False
+
+        from catalog.pricing import calculate_price
+
+        new_price = calculate_price(self, rules)
+        if new_price is None or new_price == self.price_usd:
+            return False
+
+        self.price_usd = new_price
+        return True
+
+    def save(self, *args, **kwargs):
+        # Recalculate on every save so an edited cost or markup takes effect
+        # immediately, rather than waiting for someone to run a bulk action.
+        self.recalculate_price()
+        super().save(*args, **kwargs)
+
+
+class PricingRule(models.Model):
+    """A markup rule. The most specific active rule wins — see catalog/pricing.py.
+
+    Three scopes are supported so the same catalogue can be priced globally,
+    tuned per supplier, or tuned per destination, without touching individual
+    plans.
+    """
+
+    class Scope(models.TextChoices):
+        GLOBAL = "global", "Everything (house default)"
+        PROVIDER = "provider", "One supplier"
+        COUNTRY = "country", "One destination"
+
+    class Rounding(models.TextChoices):
+        NONE = "none", "Exact cents"
+        CHARM = "charm", "End in .99"
+        HALF = "half", "Round up to 0.50"
+        WHOLE = "whole", "Round up to whole dollar"
+
+    scope = models.CharField(max_length=10, choices=Scope.choices, default=Scope.GLOBAL)
+    provider = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text="Required when the scope is 'One supplier', e.g. esimaccess.",
+    )
+    country = models.ForeignKey(
+        Country,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="pricing_rules",
+        help_text="Required when the scope is 'One destination'.",
+    )
+    markup_percent = models.DecimalField(
+        max_digits=6, decimal_places=2, default=30, help_text="Added on top of supplier cost."
+    )
+    min_margin_usd = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0,
+        help_text="Profit floor. A percentage on a cheap plan can be pennies; this prevents that.",
+    )
+    rounding = models.CharField(
+        max_length=10, choices=Rounding.choices, default=Rounding.NONE
+    )
+    is_active = models.BooleanField(default=True)
+    note = models.CharField(max_length=200, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "catalog_pricingrule"
+        ordering = ["scope", "provider", "country__name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["scope"],
+                condition=models.Q(scope="global"),
+                name="one_global_pricing_rule",
+            ),
+            models.UniqueConstraint(
+                fields=["provider"],
+                condition=models.Q(scope="provider"),
+                name="one_rule_per_provider",
+            ),
+            models.UniqueConstraint(
+                fields=["country"],
+                condition=models.Q(scope="country"),
+                name="one_rule_per_country",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(markup_percent__gte=0), name="markup_not_negative"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(min_margin_usd__gte=0), name="min_margin_not_negative"
+            ),
+        ]
+
+    def __str__(self):
+        if self.scope == self.Scope.PROVIDER:
+            target = self.provider or "?"
+        elif self.scope == self.Scope.COUNTRY:
+            target = self.country.name if self.country else "?"
+        else:
+            target = "everything"
+        return f"{target} +{self.markup_percent}%"
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        if self.scope == self.Scope.PROVIDER and not self.provider:
+            raise ValidationError({"provider": "Choose the supplier this rule applies to."})
+        if self.scope == self.Scope.COUNTRY and not self.country:
+            raise ValidationError({"country": "Choose the destination this rule applies to."})
+        if self.scope == self.Scope.GLOBAL:
+            self.provider = ""
+            self.country = None

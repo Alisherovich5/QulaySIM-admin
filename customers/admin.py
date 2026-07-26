@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Count
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group, User
@@ -34,9 +35,12 @@ class CustomerAdmin(ModelAdmin):
     autocomplete_fields = ("referred_by",)
     ordering = ("-created_at",)
 
-    @display(description="Orders")
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(_order_count=Count("orders"))
+
+    @display(description="Orders", ordering="_order_count")
     def order_count(self, obj):
-        return obj.orders.count()
+        return obj._order_count
 
 
 @admin.register(Referral)
