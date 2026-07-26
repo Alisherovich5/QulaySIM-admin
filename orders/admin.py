@@ -4,7 +4,7 @@ from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 
-from .models import ESIM, Order, OrderItem, Payment, PromoCode
+from .models import ESIM, Order, OrderItem, Payment, PaymeTransaction, PromoCode
 
 _STATUS_COLORS = {
     "pending": "#FFB020",
@@ -127,3 +127,36 @@ class PaymentAdmin(ModelAdmin):
     @display(description="Status")
     def status_badge(self, obj):
         return _status_badge(obj.status, obj.get_status_display())
+
+
+@admin.register(PaymeTransaction)
+class PaymeTransactionAdmin(ModelAdmin):
+    """Read-only by design: Payme owns this lifecycle. Editing a state here
+    would desynchronise us from the payment provider's record."""
+
+    list_display = ("transaction_id", "order", "amount_display", "state_badge", "created_at")
+    list_filter = ("state", "created_at")
+    search_fields = ("transaction_id", "order__id", "account")
+    ordering = ("-created_at",)
+    list_select_related = ("order",)
+    readonly_fields = tuple(f.name for f in PaymeTransaction._meta.fields)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    @display(description="Amount")
+    def amount_display(self, obj):
+        return f"{obj.amount_uzs:,.2f} so‘m"
+
+    @display(description="State", ordering="state")
+    def state_badge(self, obj):
+        colours = {1: "#FFB020", 2: "#00C9A7", -1: "#5B6478", -2: "#E5484D"}
+        return format_html(
+            '<span style="display:inline-block;padding:2px 10px;border-radius:999px;'
+            'font-size:11px;font-weight:700;color:#fff;background:{};">{}</span>',
+            colours.get(obj.state, "#5B6478"),
+            obj.get_state_display(),
+        )

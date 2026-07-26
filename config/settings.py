@@ -236,6 +236,7 @@ UNFOLD = {
                     },
                     {"title": "eSIMs", "icon": "qr_code_2", "link": "/admin/orders/esim/"},
                     {"title": "Payments", "icon": "payments", "link": "/admin/orders/payment/"},
+                    {"title": "Payme", "icon": "account_balance", "link": "/admin/orders/paymetransaction/"},
                     {"title": "Promo codes", "icon": "sell", "link": "/admin/orders/promocode/"},
                 ],
             },
