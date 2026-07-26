@@ -1,5 +1,6 @@
 from django.db import models
 
+from catalog.fields import EncryptedCharField, EncryptedTextField
 from catalog.models import Plan
 from customers.models import Customer
 
@@ -80,9 +81,14 @@ class ESIM(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="esims")
     plan = models.ForeignKey(Plan, on_delete=models.PROTECT, related_name="esims")
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="esims")
+    # ICCID stays in the clear: it identifies the profile for support lookups
+    # and admin search, and on its own it cannot install anything.
     iccid = models.CharField(max_length=22, unique=True)
-    qr_payload = models.CharField(max_length=255)
-    qr_image = models.TextField(blank=True, help_text="Base64 PNG data URL")
+    # The activation code is the credential. Together with the ICCID it is
+    # enough to install the customer's eSIM elsewhere, so it is encrypted at
+    # rest — a database dump alone no longer hands over working profiles.
+    qr_payload = EncryptedCharField(max_length=255)
+    qr_image = EncryptedTextField(blank=True, help_text="Base64 PNG data URL (encrypted at rest)")
     provider = models.CharField(max_length=20, default="mock")
     provider_esim_tran_no = models.CharField(max_length=64, blank=True, db_index=True)
     provider_status = models.CharField(max_length=40, blank=True)

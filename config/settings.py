@@ -13,9 +13,15 @@ from django.templatetags.static import static
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config("SECRET_KEY", default="dev-secret-key")
-DEBUG = config("DEBUG", default=True, cast=bool)
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="*", cast=Csv())
+# No fall-back for the secret: a missing value must crash the process rather
+# than quietly boot with a key an attacker can look up in the repository.
+SECRET_KEY = config("SECRET_KEY")
+# Defaults to OFF. A missing DEBUG variable used to mean "debug on", which
+# turns every 500 into a full stack trace plus every setting, database
+# password included.
+DEBUG = config("DEBUG", default=False, cast=bool)
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
+CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="", cast=Csv())
 
 
 INSTALLED_APPS = [
@@ -76,9 +82,43 @@ DATABASES = {
     }
 }
 
+# ---------------------------------------------------------------------------
+# Transport and cookie security
+#
+# Applied only outside DEBUG so local development over plain HTTP still works.
+# Behind a reverse proxy Django cannot see the original scheme, so it is told
+# to trust the forwarded header — without this SECURE_SSL_REDIRECT would loop.
+# ---------------------------------------------------------------------------
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=True, cast=bool)
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+X_FRAME_OPTIONS = "DENY"
+
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+# Staff sessions are far more valuable than customer ones; expire them daily
+# and on browser close rather than leaving them open for two weeks.
+SESSION_COOKIE_AGE = 60 * 60 * 24
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# The admin is not on a guessable path in production.
+ADMIN_URL_PATH = config("ADMIN_URL_PATH", default="admin")
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8},
+    },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
@@ -214,5 +254,27 @@ UNFOLD = {
                 ],
             },
         ],
+    },
+}
+
+
+# ---------------------------------------------------------------------------
+# Logging
+#
+# There was none, so a production failure left no trace anywhere.
+# ---------------------------------------------------------------------------
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {"format": "{levelname} {asctime} {name} {message}", "style": "{"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "verbose"},
+    },
+    "root": {"handlers": ["console"], "level": config("LOG_LEVEL", default="INFO")},
+    "loggers": {
+        "django.security": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "django.request": {"handlers": ["console"], "level": "WARNING", "propagate": False},
     },
 }
