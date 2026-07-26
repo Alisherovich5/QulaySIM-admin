@@ -174,3 +174,56 @@ class MarginReportingTests(TestCase):
         p = plan(cost="10.00")
         p.price_usd = Decimal("8.00")
         self.assertEqual(margin(p), Decimal("-2.00"))
+
+
+class RuleChangePropagationTests(TestCase):
+    """Changing a rule must move the prices it governs.
+
+    Regression guard: rules used to take effect only when someone remembered
+    to run the bulk action, so an admin could change a markup and see nothing
+    happen.
+    """
+
+    def test_saving_a_global_rule_reprices_the_catalogue(self):
+        rule = PricingRule.objects.create(scope="global", markup_percent=Decimal("20"))
+        p = Plan.objects.create(title="A", cost_usd=Decimal("10.00"), price_usd=Decimal("0"))
+        self.assertEqual(p.price_usd, Decimal("12.00"))
+
+        rule.markup_percent = Decimal("50")
+        rule.save()
+
+        p.refresh_from_db()
+        self.assertEqual(p.price_usd, Decimal("15.00"))
+
+    def test_a_provider_rule_only_touches_that_provider(self):
+        PricingRule.objects.create(scope="global", markup_percent=Decimal("20"))
+        theirs = Plan.objects.create(
+            title="Supplier", cost_usd=Decimal("10.00"), price_usd=Decimal("0"),
+            provider="esimaccess",
+        )
+        ours = Plan.objects.create(
+            title="Manual", cost_usd=Decimal("10.00"), price_usd=Decimal("0"), provider="mock"
+        )
+
+        PricingRule.objects.create(
+            scope="provider", provider="esimaccess", markup_percent=Decimal("90")
+        )
+
+        theirs.refresh_from_db()
+        ours.refresh_from_db()
+        self.assertEqual(theirs.price_usd, Decimal("19.00"))
+        self.assertEqual(ours.price_usd, Decimal("12.00"), "the global rule should still apply")
+
+    def test_locked_plans_survive_a_rule_change(self):
+        rule = PricingRule.objects.create(scope="global", markup_percent=Decimal("20"))
+        locked = Plan.objects.create(
+            title="Fixed",
+            cost_usd=Decimal("10.00"),
+            price_usd=Decimal("99.00"),
+            price_locked=True,
+        )
+        rule.markup_percent = Decimal("80")
+        rule.save()
+
+        locked.refresh_from_db()
+        self.assertEqual(locked.price_usd, Decimal("99.00"))

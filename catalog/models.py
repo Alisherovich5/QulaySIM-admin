@@ -239,6 +239,27 @@ class PricingRule(models.Model):
             target = "everything"
         return f"{target} +{self.markup_percent}%"
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # A rule that does not move any price is a rule the admin cannot trust.
+        # Recalculating here makes the change visible immediately instead of
+        # waiting for someone to remember the bulk action.
+        self.apply_to_plans()
+
+    def apply_to_plans(self) -> int:
+        """Recalculate every plan this rule could govern; returns how many moved."""
+        rules = list(PricingRule.objects.filter(is_active=True))
+        plans = Plan.objects.filter(price_locked=False, cost_usd__isnull=False)
+        if self.scope == self.Scope.PROVIDER:
+            plans = plans.filter(provider=self.provider)
+        elif self.scope == self.Scope.COUNTRY:
+            plans = plans.filter(country_id=self.country_id)
+
+        changed = [plan for plan in plans if plan.recalculate_price(rules)]
+        if changed:
+            Plan.objects.bulk_update(changed, ["price_usd"], batch_size=500)
+        return len(changed)
+
     def clean(self):
         from django.core.exceptions import ValidationError
 

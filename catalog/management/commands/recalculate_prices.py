@@ -45,6 +45,12 @@ class Command(BaseCommand):
 
         Plan.objects.bulk_update([p for p, _ in changed], ["price_usd"], batch_size=500)
 
+        # bulk_update bypasses post_save, so the storefront cache would keep
+        # serving the old prices until its TTL expired. Clear it explicitly.
+        from config.cache import invalidate_catalogue
+
+        invalidate_catalogue()
+
         locked = Plan.objects.filter(price_locked=True).count()
         uncosted = Plan.objects.filter(cost_usd__isnull=True, is_active=True).count()
         self.stdout.write(self.style.SUCCESS(f"{len(changed)} price(s) updated."))
