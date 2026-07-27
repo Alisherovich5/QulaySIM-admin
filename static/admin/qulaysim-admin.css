@@ -1,0 +1,274 @@
+/* QulaySIM admin — DON back-office styling layer on top of django-unfold */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+:root {
+  --fs-navy: #111e2b;
+  --fs-navy-dark: #101017;
+  --fs-navy-hover: #1c2836;
+  --fs-gold: #ffcb69;
+  --fs-gold-deep: #e59500;
+  --fs-secondary: #606b8b;
+  --fs-divider: #ebedf1;
+}
+
+html,
+body,
+.unfold,
+button,
+input,
+select,
+textarea {
+  font-family: 'Roboto', ui-sans-serif, system-ui, sans-serif !important;
+}
+
+/* Gold brand scrollbar (matches DON back-office) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--fs-gold) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--fs-gold);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Softer, DON-style cards & rows */
+.bg-white,
+.dark\:bg-base-900 {
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+/* Active sidebar item: gold accent bar */
+a[class*="bg-primary"] {
+  position: relative;
+}
+
+/* ---------------------------------------------------------------- */
+/* DON-style dark navy sidebar on top of light content               */
+/* ---------------------------------------------------------------- */
+#nav-sidebar,
+#nav-sidebar .bg-base-50,
+#nav-sidebar > div {
+  background-color: var(--fs-navy) !important;
+}
+#nav-sidebar {
+  border-color: var(--fs-navy-hover) !important;
+}
+/* All sidebar text/icons -> light */
+#nav-sidebar a,
+#nav-sidebar span,
+#nav-sidebar p,
+#nav-sidebar h1,
+#nav-sidebar h2,
+#nav-sidebar h3,
+#nav-sidebar label,
+#nav-sidebar [class*="text-base-"],
+#nav-sidebar [class*="text-font-"] {
+  color: #aeb6c7 !important;
+}
+#nav-sidebar .border-base-200,
+#nav-sidebar [class*="border-base-"] {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+/* Hover state */
+#nav-sidebar a:hover {
+  background-color: var(--fs-navy-hover) !important;
+}
+#nav-sidebar a:hover span,
+#nav-sidebar a:hover {
+  color: #ffffff !important;
+}
+/* Active nav item -> gold accent */
+#nav-sidebar a[class*="bg-primary"] {
+  background-color: var(--fs-navy-hover) !important;
+}
+#nav-sidebar a[class*="bg-primary"] span,
+#nav-sidebar a[class*="bg-primary"] {
+  color: var(--fs-gold) !important;
+}
+/* Sidebar search box */
+#nav-sidebar input {
+  background-color: #0c1620 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+#nav-sidebar input::placeholder {
+  color: #6b7689 !important;
+}
+/* Section dividers / group titles */
+#nav-sidebar [class*="border-t"] {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Subtle entrance animation for dashboard widgets */
+@keyframes fsFadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fs-rise {
+  animation: fsFadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.fs-rise:nth-child(2) { animation-delay: 0.06s; }
+.fs-rise:nth-child(3) { animation-delay: 0.12s; }
+.fs-rise:nth-child(4) { animation-delay: 0.18s; }
+
+/* ==========================================================================
+   Dashboard charts
+   --------------------------------------------------------------------------
+   Colour roles, not raw hex, so light/dark swap in one place.
+
+   The ramp for the margin donut is ORDINAL — margin buckets are an ordered
+   scale, so they take one hue light→dark rather than a categorical set. Both
+   modes were run through the palette validator: all checks pass (monotone
+   lightness, adjacent ΔL ≥ 0.06, light end clears the surface, single hue).
+
+   Status colours are the fixed status palette and are never themed. Green and
+   red are 4.1 ΔE apart under deuteranopia, so every status segment ships with
+   a label and a value in the legend — hue never carries the meaning alone.
+   ========================================================================== */
+.qs-viz {
+  --viz-surface: #ffffff;
+  --viz-track: #edeff3;
+  --viz-ink: #111e2b;
+  --viz-ink-2: #606b8b;
+  --viz-ink-3: #8994b0;
+  --viz-grid: #ebedf1;
+
+  /* ordinal ramp, light (validated) */
+  --viz-s1: #86b6ef;
+  --viz-s2: #5598e7;
+  --viz-s3: #2a78d6;
+  --viz-s4: #1c5cab;
+  --viz-s5: #104281;
+
+  /* status (fixed palette) */
+  --viz-good: #0ca30c;
+  --viz-warning: #fab219;
+  --viz-critical: #d03b3b;
+  --viz-neutral: #8994b0;
+
+  /* the meter's single hue */
+  --viz-meter: #2a78d6;
+
+  /* Caution ink + wash for "excluded from the figures" notes. Both modes are
+     chosen, not flipped: the dark step is lightened to clear the dark surface. */
+  --viz-caution-ink: #8f5a06;
+  --viz-caution-wash: #fff8ec;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .qs-viz {
+    --viz-caution-ink: #f0b354;
+    --viz-caution-wash: #33291a;
+    --viz-surface: #1c2836;
+    --viz-track: #2b3a4d;
+    --viz-ink: #f5f6f8;
+    --viz-ink-2: #a6b0c6;
+    --viz-ink-3: #8994b0;
+    --viz-grid: #2b3a4d;
+    /* ordinal ramp, dark — re-stepped for the dark surface, not flipped */
+    --viz-s1: #b7d3f6;
+    --viz-s2: #86b6ef;
+    --viz-s3: #3987e5;
+    --viz-s4: #256abf;
+    --viz-s5: #184f95;
+    --viz-meter: #3987e5;
+  }
+}
+:root[data-theme="dark"] .qs-viz {
+  --viz-caution-ink: #f0b354;
+  --viz-caution-wash: #33291a;
+  --viz-surface: #1c2836;
+  --viz-track: #2b3a4d;
+  --viz-ink: #f5f6f8;
+  --viz-ink-2: #a6b0c6;
+  --viz-ink-3: #8994b0;
+  --viz-grid: #2b3a4d;
+  --viz-s1: #b7d3f6;
+  --viz-s2: #86b6ef;
+  --viz-s3: #3987e5;
+  --viz-s4: #256abf;
+  --viz-s5: #184f95;
+  --viz-meter: #3987e5;
+}
+
+.qs-card {
+  background: var(--viz-surface);
+  border: 1px solid var(--viz-grid);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(18, 28, 37, 0.04);
+  min-width: 0;
+}
+.qs-card h2 { font-size: 15px; font-weight: 700; margin: 0; color: var(--viz-ink); }
+.qs-card .qs-sub { font-size: 12px; color: var(--viz-ink-3); margin: 4px 0 0; }
+
+/* Donut ---------------------------------------------------------------- */
+.qs-donut { display: block; margin: 6px auto 2px; }
+.qs-donut circle { fill: none; stroke-linecap: butt; }
+.qs-donut .qs-track { stroke: var(--viz-track); }
+.qs-donut .qs-seg { transition: opacity .15s ease; }
+/* Hover dims the others rather than moving anything — the geometry stays put
+   so the reader's eye is not asked to re-find the segment. */
+.qs-donut:hover .qs-seg { opacity: .32; }
+.qs-donut .qs-seg:hover { opacity: 1; }
+
+.qs-seg-good { stroke: var(--viz-good); }
+.qs-seg-warning { stroke: var(--viz-warning); }
+.qs-seg-critical { stroke: var(--viz-critical); }
+.qs-seg-neutral { stroke: var(--viz-neutral); }
+.qs-seg-loss { stroke: var(--viz-critical); }
+.qs-seg-s1 { stroke: var(--viz-s1); }
+.qs-seg-s2 { stroke: var(--viz-s2); }
+.qs-seg-s3 { stroke: var(--viz-s3); }
+.qs-seg-s4 { stroke: var(--viz-s4); }
+.qs-seg-s5 { stroke: var(--viz-s5); }
+.qs-meter-arc { stroke: var(--viz-meter); }
+
+/* Centre figure: the donut's headline, so the reader is not summing slices. */
+.qs-donut-centre { text-anchor: middle; }
+/* Sizes are in USER UNITS, not pixels: the viewBox is 42 wide and the svg
+   renders at 190, so every unit is scaled ~4.5x. A 22px value here would
+   render at ~100px and swallow the ring. */
+.qs-donut-centre .qs-figure {
+  font-size: 5.6px; font-weight: 700; fill: var(--viz-ink);
+  font-variant-numeric: tabular-nums;
+}
+.qs-donut-centre .qs-caption {
+  font-size: 2.1px; fill: var(--viz-ink-3); letter-spacing: .12px; font-weight: 600;
+}
+
+/* Legend — always present, so identity never rests on colour alone. */
+.qs-legend { list-style: none; margin: 10px 0 0; padding: 0; }
+.qs-legend li {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 0; font-size: 13px; color: var(--viz-ink-2);
+  border-bottom: 1px solid var(--viz-grid);
+}
+.qs-legend li:last-child { border-bottom: 0; }
+.qs-legend .qs-key { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.qs-legend .qs-name { flex: 1; min-width: 0; }
+.qs-legend .qs-val { font-weight: 700; color: var(--viz-ink); font-variant-numeric: tabular-nums; }
+.qs-legend .qs-pct { color: var(--viz-ink-3); font-size: 11px; min-width: 34px; text-align: right; }
+
+.qs-key-good { background: var(--viz-good); }
+.qs-key-warning { background: var(--viz-warning); }
+.qs-key-critical { background: var(--viz-critical); }
+.qs-key-neutral { background: var(--viz-neutral); }
+.qs-key-loss { background: var(--viz-critical); }
+.qs-key-s1 { background: var(--viz-s1); }
+.qs-key-s2 { background: var(--viz-s2); }
+.qs-key-s3 { background: var(--viz-s3); }
+.qs-key-s4 { background: var(--viz-s4); }
+.qs-key-s5 { background: var(--viz-s5); }
+
+.qs-empty { color: var(--viz-ink-3); font-size: 13px; text-align: center; padding: 34px 0; }
+
+.qs-grid-3 { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 18px; }
+@media (max-width: 1100px) { .qs-grid-3 { grid-template-columns: 1fr; } }

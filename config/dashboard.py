@@ -1,8 +1,9 @@
-"""Dashboard metrics for the FastSIM Unfold admin index page."""
+"""Dashboard metrics for the QulaySIM Unfold admin index page."""
 
 from datetime import timedelta
 from decimal import Decimal
 
+from django.conf import settings
 from django.db.models import Count, DecimalField, ExpressionWrapper, F, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
@@ -136,8 +137,67 @@ def dashboard_callback(request, context):
         Order.objects.select_related("customer").order_by("-created_at")[:8]
     )
 
+    # ---- Donut inputs -----------------------------------------------------
+    # Pre-computed as stroke offsets so the template stays free of arithmetic:
+    # each segment carries its own dash length and offset around one circle.
+    def _arcs(rows, circumference=100.0, gap=1.0):
+        """Turn (label, value, colour_role) rows into donut segment geometry.
+
+        A 1-unit gap in the surface colour separates touching segments — the
+        spacer is what makes neighbouring steps read as distinct, rather than a
+        stroke drawn around each one.
+        """
+        total = sum(max(v, 0) for _, v, _ in rows)
+        if not total:
+            return [], 0
+        out, offset = [], 0.0
+        for label, value, role in rows:
+            share = max(value, 0) / total
+            length = share * circumference
+            visible = max(length - gap, 0.4) if share < 1 else circumference
+            out.append(
+                {
+                    "label": label,
+                    "value": value,
+                    "percent": round(share * 100),
+                    "role": role,
+                    "dash": round(visible, 3),
+                    "rest": round(circumference - visible, 3),
+                    "offset": round(-offset, 3),
+                }
+            )
+            offset += length
+        return out, total
+
+    status_rows = [
+        ("Paid", Order.objects.filter(status=Order.Status.PAID).count(), "good"),
+        ("Pending", Order.objects.filter(status=Order.Status.PENDING).count(), "warning"),
+        ("Cancelled", Order.objects.filter(status=Order.Status.CANCELLED).count(), "neutral"),
+        ("Refunded", Order.objects.filter(status=Order.Status.REFUNDED).count(), "critical"),
+    ]
+    status_arcs, status_total = _arcs([r for r in status_rows if r[1] > 0])
+
+    # Margin buckets are an ordered scale, not identities, so they take one
+    # sequential hue light→dark. A loss is a status, not a step on that ramp.
+    margin_rows = [
+        ("Loss", margin_buckets["loss"], "loss"),
+        ("0–20%", margin_buckets["0-20"], "s1"),
+        ("20–40%", margin_buckets["20-40"], "s2"),
+        ("40–60%", margin_buckets["40-60"], "s3"),
+        ("60%+", margin_buckets["60+"], "s4"),
+    ]
+    margin_arcs, margin_total = _arcs([r for r in margin_rows if r[1] > 0])
+
     context.update(
         {
+            # The meter's track length is 100 minus the filled arc, so the
+            # template needs no arithmetic.
+            "fs_admin_path": settings.ADMIN_URL_PATH,
+            "fs_margin_track": 100,
+            "fs_status_arcs": status_arcs,
+            "fs_status_total": status_total,
+            "fs_margin_arcs": margin_arcs,
+            "fs_margin_total": margin_total,
             "fs_revenue": revenue,
             "fs_orders_count": Order.objects.count(),
             "fs_paid_count": paid.count(),

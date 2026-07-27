@@ -1,5 +1,5 @@
 """
-Django settings for FastSIM admin panel.
+Django settings for the QulaySIM admin panel.
 
 Django is the SCHEMA OWNER for the whole platform: all models and migrations
 live here, and the FastAPI service reads/writes the same PostgreSQL tables via
@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # FastSIM apps
+    # QulaySIM apps
     "catalog",
     "customers",
     "orders",
@@ -151,8 +151,8 @@ def _badge_pending_orders(request):
 
 
 UNFOLD = {
-    "SITE_TITLE": "FastSIM Admin",
-    "SITE_HEADER": "FastSIM",
+    "SITE_TITLE": "QulaySIM Admin",
+    "SITE_HEADER": "QulaySIM",
     "SITE_SUBHEADER": "eSIM commerce control panel",
     "SITE_SYMBOL": "sim_card",
     "THEME": "light",
@@ -161,7 +161,7 @@ UNFOLD = {
     "BORDER_RADIUS": "12px",
     "DASHBOARD_CALLBACK": "config.dashboard.dashboard_callback",
     "STYLES": [
-        lambda request: static("admin/fastsim-admin.css"),
+        lambda request: static("admin/qulaysim-admin.css"),
     ],
     # DON back-office palette: deep navy structure + gold brand accent.
     "COLORS": {
