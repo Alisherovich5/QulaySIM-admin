@@ -233,7 +233,7 @@
        ring would be a single 100% block. A stat line says it plainly, and the
        bars appear once a second route actually carries plans.
   -->
-  <div class="qs-viz" style="display:grid;gap:16px;grid-template-columns:2fr 1fr;margin-top:18px;">
+  <div class="qs-viz" style="margin-top:18px;">
     <div class="qs-card fs-rise">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
         <h2>Supply mix</h2>
@@ -268,19 +268,6 @@
       {% endif %}
     </div>
 
-    <div class="qs-card fs-rise">
-      <h2>Top destinations</h2>
-      <p class="qs-sub">By eSIMs sold.</p>
-      {% for c in fs_top_countries %}
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--viz-grid);">
-        <img src="https://flagcdn.com/w40/{{ c.plan__country__iso2|lower }}.png" alt="" style="width:26px;height:18px;border-radius:3px;object-fit:cover;" />
-        <span style="flex:1;font-size:14px;font-weight:500;color:var(--viz-ink);">{{ c.plan__country__name }}</span>
-        <span style="font-size:13px;color:var(--viz-ink-2);font-weight:600;">{{ c.c }}</span>
-      </div>
-      {% empty %}
-      <p class="qs-empty">No eSIMs sold yet.</p>
-      {% endfor %}
-    </div>
   </div>
 
   <!-- Recent orders -->
