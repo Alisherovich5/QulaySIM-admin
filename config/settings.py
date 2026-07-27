@@ -151,15 +151,20 @@ AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
 AXES_RESET_ON_SUCCESS = True
 AXES_ENABLE_ADMIN = True
 AXES_VERBOSE = True
-# Caddy terminates TLS, so REMOTE_ADDR is the proxy and every attempt would
-# look like one client — which would turn the per-IP lockout into a global
-# account lockout anyone could trigger against a known username.
+# Caddy terminates TLS, so REMOTE_ADDR is the proxy. Left uncorrected, every
+# attempt looks like one client and the per-IP lockout becomes a global account
+# lockout that anyone could trigger against a known username.
 #
-# Caddy is configured to *overwrite* X-Forwarded-For with the real peer address
-# rather than append to it, so the header holds exactly one trustworthy entry
-# and a client cannot spoof its way to a fresh counter. No proxy count is set:
-# with one entry, ipware reads it directly.
+# django-axes reads the client address through django-ipware, which it treats as
+# an OPTIONAL dependency — without it installed these settings are ignored
+# entirely and it falls back to REMOTE_ADDR without complaint. It is a hard
+# requirement here.
+#
+# Caddy appends the real peer address to X-Forwarded-For, so a client that sends
+# its own header ends up left of the trustworthy entry. Reading RIGHT-most
+# therefore takes Caddy's value and ignores anything the client seeded.
 AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
+AXES_IPWARE_PROXY_ORDER = "right-most"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

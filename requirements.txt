@@ -7,3 +7,6 @@ redis>=5.0
 cryptography>=42.0
 whitenoise[brotli]>=6.6
 django-axes>=6.4
+# django-axes treats this as optional and silently falls back to REMOTE_ADDR
+# without it — which behind a proxy is the proxy, not the client.
+django-ipware>=7.0
