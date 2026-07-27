@@ -6,3 +6,4 @@ Pillow>=10.0
 redis>=5.0
 cryptography>=42.0
 whitenoise[brotli]>=6.6
+django-axes>=6.4

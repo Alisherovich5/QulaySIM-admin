@@ -6,7 +6,8 @@ wins, the margin floor, and each rounding mode.
 
 from decimal import Decimal
 
-from django.test import TestCase
+from django.conf import settings
+from django.test import TestCase, override_settings
 
 from catalog.models import Country, Plan, PricingRule, Region
 from catalog.pricing import calculate_price, margin, margin_percent, resolve_rule
@@ -227,3 +228,60 @@ class RuleChangePropagationTests(TestCase):
 
         locked.refresh_from_db()
         self.assertEqual(locked.price_usd, Decimal("99.00"))
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class AdminLockoutTests(TestCase):
+    """The admin login must not accept unlimited attempts.
+
+    Regression guard: without a lockout the only barrier is the password, and
+    the obscure admin path ends up doing security work it cannot carry.
+
+    SSL redirect is disabled for these tests: with it on, the test client's
+    plain-HTTP POST is answered with a 301 before it ever reaches the login
+    view, which makes a lockout assertion pass without testing anything.
+    """
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        User.objects.create_superuser("locktest", "lock@example.com", "correct-horse-battery")
+        self.login_url = f"/{settings.ADMIN_URL_PATH}/login/"
+
+    def tearDown(self):
+        from axes.utils import reset
+
+        reset()
+
+    def _attempt(self, username, password):
+        return self.client.post(
+            self.login_url, {"username": username, "password": password}, follow=False
+        )
+
+    def test_a_correct_password_signs_in(self):
+        """Baseline: without this, a lockout assertion could pass because login
+        was broken rather than because the lockout worked."""
+        response = self._attempt("locktest", "correct-horse-battery")
+        self.assertEqual(response.status_code, 302)
+
+    def test_repeated_failures_are_locked_out(self):
+        for _ in range(settings.AXES_FAILURE_LIMIT):
+            self._attempt("locktest", "wrong")
+
+        # The *correct* password must now be refused — that is the lockout.
+        response = self._attempt("locktest", "correct-horse-battery")
+        self.assertNotEqual(
+            response.status_code, 302, "a locked-out account should not be able to sign in"
+        )
+
+    def test_a_different_account_is_unaffected(self):
+        """Locked on username+IP together, so one attacker cannot lock every
+        administrator out by failing logins against their names."""
+        from django.contrib.auth.models import User
+
+        User.objects.create_superuser("other", "other@example.com", "another-long-password")
+        for _ in range(settings.AXES_FAILURE_LIMIT + 2):
+            self._attempt("locktest", "wrong")
+
+        response = self._attempt("other", "another-long-password")
+        self.assertEqual(response.status_code, 302, "an untargeted account should still sign in")

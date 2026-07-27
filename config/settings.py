@@ -6,6 +6,7 @@ live here, and the FastAPI service reads/writes the same PostgreSQL tables via
 SQLAlchemy. The admin UI is themed with django-unfold ("Signal" palette).
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 from decouple import Csv, config
@@ -35,6 +36,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # Locks the admin login out after repeated failures.
+    "axes",
     # QulaySIM apps
     "catalog",
     "customers",
@@ -54,6 +57,17 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Must be last: it wraps authentication so a lockout is enforced after the
+    # session and auth middleware have run.
+    "axes.middleware.AxesMiddleware",
+]
+
+# Axes must come first so a locked-out attempt is refused before the password
+# is ever checked. ModelBackend stays as the fallback that actually
+# authenticates the survivors.
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -119,6 +133,28 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # The admin is not on a guessable path in production.
 ADMIN_URL_PATH = config("ADMIN_URL_PATH", default="admin")
+
+# ---------------------------------------------------------------------------
+# Brute-force protection (django-axes)
+#
+# Without this the admin login accepts unlimited attempts, which leaves a strong
+# password as the only barrier and makes the obscure path do security work it
+# should not have to.
+#
+# Locking on username AND IP together, rather than IP alone: a single attacker
+# behind one address should not be able to lock a real administrator out of
+# their own account by failing logins against it.
+# ---------------------------------------------------------------------------
+AXES_FAILURE_LIMIT = config("AXES_FAILURE_LIMIT", default=6, cast=int)
+AXES_COOLOFF_TIME = timedelta(minutes=config("AXES_COOLOFF_MINUTES", default=30, cast=int))
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
+AXES_RESET_ON_SUCCESS = True
+AXES_ENABLE_ADMIN = True
+AXES_VERBOSE = True
+# Caddy terminates TLS, so the peer address is the proxy. Read the forwarded
+# header first or every attempt would look like it came from one client.
+AXES_IPWARE_PROXY_COUNT = config("AXES_PROXY_COUNT", default=1, cast=int)
+AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
