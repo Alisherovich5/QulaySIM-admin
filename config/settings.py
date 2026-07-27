@@ -44,6 +44,10 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Serves the collected static files. Django itself refuses to with
+    # DEBUG=False and gunicorn has no opinion about them, so without this the
+    # entire admin — Unfold's CSS included — loads unstyled behind a 404.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -134,6 +138,17 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+
+# Compression without the manifest: Unfold ships CSS that references assets by
+# relative path, and the manifest backend turns any missing reference into a
+# hard failure at collectstatic time.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
+# Static filenames are not hashed, so let the browser revalidate rather than
+# cache a stale stylesheet for a year.
+WHITENOISE_MAX_AGE = 3600
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
