@@ -151,9 +151,14 @@ AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
 AXES_RESET_ON_SUCCESS = True
 AXES_ENABLE_ADMIN = True
 AXES_VERBOSE = True
-# Caddy terminates TLS, so the peer address is the proxy. Read the forwarded
-# header first or every attempt would look like it came from one client.
-AXES_IPWARE_PROXY_COUNT = config("AXES_PROXY_COUNT", default=1, cast=int)
+# Caddy terminates TLS, so REMOTE_ADDR is the proxy and every attempt would
+# look like one client — which would turn the per-IP lockout into a global
+# account lockout anyone could trigger against a known username.
+#
+# Caddy is configured to *overwrite* X-Forwarded-For with the real peer address
+# rather than append to it, so the header holds exactly one trustworthy entry
+# and a client cannot spoof its way to a fresh counter. No proxy count is set:
+# with one entry, ipware reads it directly.
 AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
 
 AUTH_PASSWORD_VALIDATORS = [
