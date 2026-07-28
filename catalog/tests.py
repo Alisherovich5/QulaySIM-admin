@@ -634,3 +634,57 @@ class RenderedLinkPathTests(TestCase):
         finally:
             importlib.reload(config.urls)
             clear_url_caches()
+
+
+class CacheInvalidationTests(TestCase):
+    """A supplier price change must reach the storefront, not wait out the TTL.
+
+    The catalogue is cached in Redis for five minutes, so without this an
+    operator would change a supplier price, reload the site, see the old one,
+    and reasonably conclude the feature is broken.
+    """
+
+    def setUp(self):
+        self.country = Country.objects.create(name="Korea", slug="korea", iso2="KR")
+        self.plan = Plan.objects.create(
+            country=self.country,
+            title="Korea 2GB",
+            validity_days=10,
+            cost_usd=Decimal("7.00"),
+            price_usd=Decimal("9.10"),
+        )
+
+    def _cleared_by(self, action):
+        from unittest.mock import patch
+
+        with patch("catalog.signals.invalidate_catalogue") as invalidate:
+            action()
+            return invalidate.called
+
+    def test_creating_an_offer_clears_the_cache(self):
+        def create():
+            SupplierOffer.objects.create(
+                plan=self.plan, provider="esimcard", package_code="kr", cost_usd=Decimal("6.00")
+            )
+
+        self.assertTrue(self._cleared_by(create))
+
+    def test_deleting_an_offer_clears_the_cache(self):
+        offer = SupplierOffer.objects.create(
+            plan=self.plan, provider="esimcard", package_code="kr", cost_usd=Decimal("6.00")
+        )
+        self.assertTrue(self._cleared_by(offer.delete))
+
+    def test_taking_an_offer_out_of_the_running_clears_the_cache(self):
+        cheap = SupplierOffer.objects.create(
+            plan=self.plan, provider="esimcard", package_code="kr", cost_usd=Decimal("6.00")
+        )
+        SupplierOffer.objects.create(
+            plan=self.plan, provider="esimaccess", package_code="KR", cost_usd=Decimal("7.00")
+        )
+
+        def take_out():
+            cheap.is_available = False
+            cheap.save()
+
+        self.assertTrue(self._cleared_by(take_out))
