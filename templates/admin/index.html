@@ -274,7 +274,7 @@
   <div class="fs-rise" style="background:#fff;border:1px solid #ebedf1;border-radius:12px;padding:20px;box-shadow:0 4px 8px rgba(18,28,37,0.04);margin-top:18px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <h2 style="font-size:16px;font-weight:700;margin:0;">Recent orders</h2>
-      <a href="/admin/orders/order/" style="font-size:13px;color:#e59500;font-weight:600;text-decoration:none;">View all</a>
+      <a href="{% url 'admin:orders_order_changelist' %}" style="font-size:13px;color:#e59500;font-weight:600;text-decoration:none;">View all</a>
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:14px;">
       <thead>
@@ -290,7 +290,7 @@
         {% for o in fs_recent_orders %}
         <tr style="border-top:1px solid #f2f3f5;">
           <td style="padding:11px 8px;font-weight:600;">
-            <a href="/admin/orders/order/{{ o.pk }}/change/" style="color:#111e2b;text-decoration:none;">#{{ o.pk }}</a>
+            <a href="{% url 'admin:orders_order_change' o.pk %}" style="color:#111e2b;text-decoration:none;">#{{ o.pk }}</a>
           </td>
           <td style="padding:11px 8px;color:#606b8b;">{{ o.customer.email }}</td>
           <td style="padding:11px 8px;">

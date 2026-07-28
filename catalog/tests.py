@@ -590,3 +590,47 @@ class PlanAdminRenderTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "cheapest")
         self.assertContains(response, "fallback")
+
+
+class RenderedLinkPathTests(TestCase):
+    """No rendered admin page may contain a link hardcoded to /admin/.
+
+    The sidebar was not the only offender — the dashboard template linked to
+    /admin/orders/order/ directly. Asserting against the current settings would
+    prove nothing, because ADMIN_URL_PATH is "admin" in development, so this
+    rebuilds the URLconf under a different path: anything still pointing at
+    /admin/ then stands out.
+    """
+
+    @override_settings(SECURE_SSL_REDIRECT=False, ADMIN_URL_PATH="secret-panel")
+    def test_no_page_links_to_the_old_admin_path(self):
+        import importlib
+
+        import config.urls
+        from django.contrib.auth.models import User
+        from django.urls import clear_url_caches
+
+        importlib.reload(config.urls)
+        clear_url_caches()
+        try:
+            User.objects.create_superuser("link-admin", "l@example.com", "pw-for-tests-only")
+            self.client.force_login(User.objects.get(username="link-admin"))
+
+            pages = ["/secret-panel/"] + [
+                str(item["link"])
+                for group in settings.UNFOLD["SIDEBAR"]["navigation"]
+                for item in group["items"]
+            ]
+            for page in pages:
+                with self.subTest(page=page):
+                    response = self.client.get(page)
+                    self.assertEqual(response.status_code, 200)
+                    body = response.content.decode()
+                    self.assertNotIn(
+                        'href="/admin/',
+                        body,
+                        f"{page} still links to the pre-rename admin path",
+                    )
+        finally:
+            importlib.reload(config.urls)
+            clear_url_caches()
