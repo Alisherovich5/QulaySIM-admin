@@ -9,6 +9,8 @@ SQLAlchemy. The admin UI is themed with django-unfold ("Signal" palette).
 from datetime import timedelta
 from pathlib import Path
 
+from django.urls import reverse_lazy
+
 from decouple import Csv, config
 from django.templatetags.static import static
 
@@ -272,7 +274,7 @@ UNFOLD = {
                     {
                         "title": "Dashboard",
                         "icon": "dashboard",
-                        "link": "/admin/",
+                        "link": reverse_lazy("admin:index"),
                     },
                 ],
             },
@@ -280,9 +282,19 @@ UNFOLD = {
                 "title": "Catalog",
                 "separator": True,
                 "items": [
-                    {"title": "Regions", "icon": "public", "link": "/admin/catalog/region/"},
-                    {"title": "Countries", "icon": "flag", "link": "/admin/catalog/country/"},
-                    {"title": "Plans", "icon": "sim_card", "link": "/admin/catalog/plan/"},
+                    {"title": "Regions", "icon": "public", "link": reverse_lazy("admin:catalog_region_changelist")},
+                    {"title": "Countries", "icon": "flag", "link": reverse_lazy("admin:catalog_country_changelist")},
+                    {"title": "Plans", "icon": "sim_card", "link": reverse_lazy("admin:catalog_plan_changelist")},
+                    {
+                        "title": "Supplier prices",
+                        "icon": "compare_arrows",
+                        "link": reverse_lazy("admin:catalog_supplieroffer_changelist"),
+                    },
+                    {
+                        "title": "Pricing rules",
+                        "icon": "percent",
+                        "link": reverse_lazy("admin:catalog_pricingrule_changelist"),
+                    },
                 ],
             },
             {
@@ -292,30 +304,30 @@ UNFOLD = {
                     {
                         "title": "Orders",
                         "icon": "receipt_long",
-                        "link": "/admin/orders/order/",
+                        "link": reverse_lazy("admin:orders_order_changelist"),
                         "badge": "config.settings._badge_pending_orders",
                     },
-                    {"title": "eSIMs", "icon": "qr_code_2", "link": "/admin/orders/esim/"},
-                    {"title": "Payments", "icon": "payments", "link": "/admin/orders/payment/"},
-                    {"title": "Payme", "icon": "account_balance", "link": "/admin/orders/paymetransaction/"},
-                    {"title": "Promo codes", "icon": "sell", "link": "/admin/orders/promocode/"},
+                    {"title": "eSIMs", "icon": "qr_code_2", "link": reverse_lazy("admin:orders_esim_changelist")},
+                    {"title": "Payments", "icon": "payments", "link": reverse_lazy("admin:orders_payment_changelist")},
+                    {"title": "Payme", "icon": "account_balance", "link": reverse_lazy("admin:orders_paymetransaction_changelist")},
+                    {"title": "Promo codes", "icon": "sell", "link": reverse_lazy("admin:orders_promocode_changelist")},
                 ],
             },
             {
                 "title": "People",
                 "separator": True,
                 "items": [
-                    {"title": "Customers", "icon": "group", "link": "/admin/customers/customer/"},
-                    {"title": "Staff users", "icon": "shield_person", "link": "/admin/auth/user/"},
+                    {"title": "Customers", "icon": "group", "link": reverse_lazy("admin:customers_customer_changelist")},
+                    {"title": "Staff users", "icon": "shield_person", "link": reverse_lazy("admin:auth_user_changelist")},
                 ],
             },
             {
                 "title": "Content",
                 "separator": True,
                 "items": [
-                    {"title": "FAQ", "icon": "quiz", "link": "/admin/content/faq/"},
-                    {"title": "Banners", "icon": "ad", "link": "/admin/content/banner/"},
-                    {"title": "Testimonials", "icon": "reviews", "link": "/admin/content/testimonial/"},
+                    {"title": "FAQ", "icon": "quiz", "link": reverse_lazy("admin:content_faq_changelist")},
+                    {"title": "Banners", "icon": "ad", "link": reverse_lazy("admin:content_banner_changelist")},
+                    {"title": "Testimonials", "icon": "reviews", "link": reverse_lazy("admin:content_testimonial_changelist")},
                 ],
             },
         ],

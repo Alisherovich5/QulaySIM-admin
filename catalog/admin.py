@@ -2,11 +2,11 @@ from django.contrib import admin
 from django import forms
 from django.db import models
 from django.db.models import Count, Min
-from django.utils.html import format_html
-from unfold.admin import ModelAdmin
+from django.utils.html import format_html, format_html_join
+from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 
-from .models import Country, Plan, PricingRule, Region
+from .models import Country, Plan, PricingRule, Region, SupplierOffer
 
 
 @admin.register(Region)
@@ -63,8 +63,23 @@ class CountryAdmin(ModelAdmin):
         return f"${price}" if price is not None else "—"
 
 
+class SupplierOfferInline(TabularInline):
+    """Each supplier's price for this plan, side by side.
+
+    Editing here is the whole comparison workflow: add both suppliers' prices
+    and the cheapest one takes over the plan's cost and fulfilment route on
+    save. Nothing has to be chosen by hand.
+    """
+
+    model = SupplierOffer
+    extra = 1
+    fields = ("provider", "package_code", "cost_usd", "is_available", "unavailable_reason")
+    ordering = ("cost_usd",)
+
+
 @admin.register(Plan)
 class PlanAdmin(ModelAdmin):
+    inlines = (SupplierOfferInline,)
     list_display = (
         "title",
         "scope",
@@ -72,7 +87,7 @@ class PlanAdmin(ModelAdmin):
         "data_col",
         "validity_days",
         "network_type",
-        "provider",
+        "sourcing_col",
         "cost_col",
         "price_badge",
         "margin_col",
@@ -111,6 +126,18 @@ class PlanAdmin(ModelAdmin):
             },
         ),
         (
+            "Supplier sourcing",
+            {
+                "fields": ("sourcing_readout",),
+                "description": (
+                    "Add each supplier's wholesale price under 'Supplier offers' at the "
+                    "bottom of this page. On save the cheapest available one sets the "
+                    "cost, the price, and where the order is placed; the rest become "
+                    "fallbacks used when the winner is out of stock."
+                ),
+            },
+        ),
+        (
             "Pricing",
             {
                 "fields": (
@@ -130,11 +157,97 @@ class PlanAdmin(ModelAdmin):
         ),
         ("Visibility", {"fields": ("is_popular", "is_active", "sort_order")}),
     )
-    readonly_fields = ("margin_readout",)
+    readonly_fields = ("margin_readout", "sourcing_readout")
+
+    def get_queryset(self, request):
+        # `ranked_offers` walks the related set, so without this every row on
+        # the changelist would fetch its own offers — the same N+1 the country
+        # and order lists were already fixed for.
+        return super().get_queryset(request).prefetch_related("offers")
 
     @display(description="Target")
     def target(self, obj):
         return obj.country or obj.region or "Global"
+
+    @display(description="Sourced from")
+    def sourcing_col(self, obj):
+        offers = obj.ranked_offers
+        if not offers:
+            # No offers at all means the cost was typed in by hand, which is
+            # worth distinguishing from a comparison that only has one entrant.
+            return format_html(
+                '<span style="color:#5B6478;">{}</span>'
+                '<span style="color:#8A93A6;font-size:11px;"> manual</span>',
+                obj.provider,
+            )
+
+        winner = offers[0]
+        saving = obj.sourcing_saving_usd
+        if saving is None:
+            return format_html(
+                '<span style="font-weight:600;">{}</span>'
+                '<span style="color:#8A93A6;font-size:11px;"> only source</span>',
+                winner.get_provider_display(),
+            )
+        return format_html(
+            '<span style="font-weight:600;">{}</span>'
+            '<span style="color:#00A37A;font-size:11px;"> −${} vs {}</span>',
+            winner.get_provider_display(),
+            saving,
+            offers[1].get_provider_display(),
+        )
+
+    @display(description="Supplier comparison")
+    def sourcing_readout(self, obj):
+        if obj.pk is None:
+            return "Save the plan, then add supplier prices below to compare them."
+
+        offers = list(obj.offers.all())
+        if not offers:
+            return format_html(
+                "No supplier offers yet, so the cost above is used as typed and "
+                "orders route to <b>{}</b>. Add two offers below to have the "
+                "cheaper one chosen automatically.",
+                obj.provider,
+            )
+
+        rows = []
+        ranked = obj.ranked_offers
+        winner = ranked[0] if ranked else None
+        for offer in sorted(offers, key=lambda o: o.cost_usd):
+            if not offer.is_available:
+                note = offer.unavailable_reason or "unavailable"
+                rows.append(
+                    format_html(
+                        '<li style="color:#8A93A6;">{} — <s>${}</s> · {}</li>',
+                        offer.get_provider_display(),
+                        offer.cost_usd,
+                        note,
+                    )
+                )
+            elif offer == winner:
+                rows.append(
+                    format_html(
+                        '<li><b>{} — ${}</b> '
+                        '<span style="color:#00A37A;font-weight:600;">← ordered from here</span></li>',
+                        offer.get_provider_display(),
+                        offer.cost_usd,
+                    )
+                )
+            else:
+                rows.append(
+                    format_html(
+                        '<li>{} — ${} <span style="color:#5B6478;">· fallback</span></li>',
+                        offer.get_provider_display(),
+                        offer.cost_usd,
+                    )
+                )
+        return format_html(
+            '<ul style="margin:0;padding-left:18px;">{}</ul>',
+            # Joining and re-formatting would treat the markup as a format
+            # string; this keeps each already-escaped row intact.
+            format_html_join("", "{}", ((row,) for row in rows)),
+        )
 
     @display(description="Data")
     def data_col(self, obj):
@@ -267,3 +380,91 @@ class PricingRuleAdmin(ModelAdmin):
                 plan.save(update_fields=["price_usd"])
                 changed += 1
         self.message_user(request, f"{changed} price(s) recalculated across the catalogue.")
+
+
+@admin.register(SupplierOffer)
+class SupplierOfferAdmin(ModelAdmin):
+    """Every supplier price in one list — the catalogue-wide comparison.
+
+    The plan page shows one plan's suppliers; this shows the whole shape of the
+    sourcing decision, which is what answers "where are we overpaying?".
+    """
+
+    list_display = (
+        "plan_col",
+        "provider",
+        "package_code",
+        "cost_badge",
+        "verdict",
+        "is_available",
+        "last_synced_at",
+    )
+    list_filter = ("provider", "is_available", "plan__scope", "plan__is_active")
+    search_fields = ("plan__title", "package_code", "plan__country__name")
+    list_select_related = ("plan", "plan__country")
+    autocomplete_fields = ("plan",)
+    ordering = ("plan__title", "cost_usd")
+    actions = ("mark_available", "mark_unavailable")
+
+    def get_queryset(self, request):
+        # `verdict` compares this offer against its plan's other offers, so the
+        # sibling set is prefetched rather than re-queried per row.
+        return super().get_queryset(request).prefetch_related("plan__offers")
+
+    @display(description="Plan", ordering="plan__title")
+    def plan_col(self, obj):
+        target = obj.plan.country or obj.plan.region or "Global"
+        return format_html(
+            "{}<br><span style=\"color:#8A93A6;font-size:11px;\">{}</span>", obj.plan.title, target
+        )
+
+    @display(description="Cost", ordering="cost_usd")
+    def cost_badge(self, obj):
+        return format_html('<span style="font-weight:600;">${}</span>', obj.cost_usd)
+
+    @display(description="Verdict")
+    def verdict(self, obj):
+        if not obj.is_available:
+            return format_html(
+                '<span style="color:#8A93A6;">out — {}</span>',
+                obj.unavailable_reason or "unavailable",
+            )
+
+        ranked = obj.plan.ranked_offers
+        if len(ranked) < 2:
+            return format_html('<span style="color:#5B6478;">only source</span>')
+
+        if ranked[0].pk == obj.pk:
+            return format_html(
+                '<span style="color:#00A37A;font-weight:600;">cheapest</span>'
+                '<span style="color:#5B6478;font-size:11px;"> · saves ${}</span>',
+                ranked[1].cost_usd - obj.cost_usd,
+            )
+        return format_html(
+            '<span style="color:#5B6478;">fallback</span>'
+            '<span style="color:#8A93A6;font-size:11px;"> · +${} vs {}</span>',
+            obj.cost_usd - ranked[0].cost_usd,
+            ranked[0].get_provider_display(),
+        )
+
+    @admin.action(description="Mark available (put back in the running)")
+    def mark_available(self, request, queryset):
+        count = 0
+        for offer in queryset:
+            offer.is_available = True
+            offer.unavailable_reason = ""
+            # Saved one at a time on purpose: SupplierOffer.save() re-decides
+            # the plan's sourcing, which a bulk update would skip entirely.
+            offer.save()
+            count += 1
+        self.message_user(request, f"{count} offer(s) back in the running; sourcing re-decided.")
+
+    @admin.action(description="Mark unavailable (take out of the running)")
+    def mark_unavailable(self, request, queryset):
+        count = 0
+        for offer in queryset:
+            offer.is_available = False
+            offer.unavailable_reason = offer.unavailable_reason or "taken out by an admin"
+            offer.save()
+            count += 1
+        self.message_user(request, f"{count} offer(s) removed; plans handed to their fallback.")

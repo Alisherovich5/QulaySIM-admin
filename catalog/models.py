@@ -62,14 +62,14 @@ class Plan(models.Model):
     validity_days = models.PositiveIntegerField(default=7)
 
     # --- Pricing -----------------------------------------------------------
-    # What the supplier charges us. Written by the eSIM Access sync or entered
-    # by hand; never shown to customers.
+    # What the supplier charges us; never shown to customers. Derived from the
+    # cheapest SupplierOffer when this plan has any, otherwise entered by hand.
     cost_usd = models.DecimalField(
         max_digits=8,
         decimal_places=2,
         null=True,
         blank=True,
-        help_text="Supplier cost. Leave empty for plans with no supplier.",
+        help_text="Supplier cost. Set automatically from the cheapest supplier offer, if any.",
     )
     # What the customer pays. Recalculated from cost + markup on save unless
     # price_locked is set.
@@ -88,10 +88,13 @@ class Plan(models.Model):
 
     network_type = models.CharField(max_length=2, choices=Network.choices, default=Network.LTE)
     supports_hotspot = models.BooleanField(default=True)
+    # The supplier this plan is currently sourced from, and its code there.
+    # Denormalised from the winning SupplierOffer so that order fulfilment and
+    # the per-supplier pricing rules can filter on a single column.
     provider = models.CharField(
         max_length=20,
         default="mock",
-        help_text="Supplier key. Set to esimaccess only after package mapping is verified.",
+        help_text="Winning supplier. Managed by the offers below when there are any.",
     )
     provider_package_code = models.CharField(
         max_length=120,
@@ -129,6 +132,69 @@ class Plan(models.Model):
 
         return margin_percent(self)
 
+    # --- Supplier sourcing -------------------------------------------------
+
+    @property
+    def ranked_offers(self):
+        """Usable supplier offers, cheapest first.
+
+        This ordering *is* the sourcing decision: the head is where the plan is
+        bought, and the tail is the fallback order when the head fails.
+        """
+        return sorted(
+            (offer for offer in self.offers.all() if offer.is_available),
+            # Provider breaks ties so the winner is stable rather than
+            # depending on row order — an unstable winner would reroute
+            # fulfilment on every save for no reason.
+            key=lambda offer: (offer.cost_usd, offer.provider),
+        )
+
+    @property
+    def winning_offer(self):
+        offers = self.ranked_offers
+        return offers[0] if offers else None
+
+    @property
+    def sourcing_saving_usd(self):
+        """Per-unit saving from the cheapest supplier versus the runner-up.
+
+        None when there is nothing to compare, which is the honest answer:
+        a single offer is not a comparison.
+        """
+        offers = self.ranked_offers
+        if len(offers) < 2:
+            return None
+        return offers[1].cost_usd - offers[0].cost_usd
+
+    def resolve_sourcing(self, *, save=False) -> bool:
+        """Point cost and fulfilment route at the cheapest available supplier.
+
+        A plan with no usable offers keeps whatever cost and provider were
+        entered by hand, so this runs safely over a catalogue that predates
+        supplier comparison, and a supplier outage that empties the offer list
+        does not silently zero out a plan's cost.
+        """
+        if not self.pk:
+            return False
+
+        winner = self.winning_offer
+        if winner is None:
+            return False
+
+        if (
+            self.cost_usd == winner.cost_usd
+            and self.provider == winner.provider
+            and self.provider_package_code == winner.package_code
+        ):
+            return False
+
+        self.cost_usd = winner.cost_usd
+        self.provider = winner.provider
+        self.provider_package_code = winner.package_code
+        if save:
+            self.save()
+        return True
+
     def recalculate_price(self, rules=None) -> bool:
         """Recompute price_usd from cost and the governing rule.
 
@@ -148,10 +214,93 @@ class Plan(models.Model):
         return True
 
     def save(self, *args, **kwargs):
+        # Sourcing first: the winning offer sets the cost that pricing reads,
+        # so the other order would price against the previous supplier.
+        sourced = self.resolve_sourcing()
         # Recalculate on every save so an edited cost or markup takes effect
         # immediately, rather than waiting for someone to run a bulk action.
-        self.recalculate_price()
+        repriced = self.recalculate_price()
+
+        # A caller that narrowed update_fields could not have known that saving
+        # would also move the cost or the route. Widening it keeps those writes
+        # from being silently dropped.
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None and (sourced or repriced):
+            fields = set(update_fields)
+            if sourced:
+                fields |= {"cost_usd", "provider", "provider_package_code"}
+            if repriced:
+                fields.add("price_usd")
+            kwargs["update_fields"] = sorted(fields)
+
         super().save(*args, **kwargs)
+
+
+class SupplierOffer(models.Model):
+    """One supplier's wholesale price for one plan.
+
+    The same eSIM package is resold by several suppliers at prices that differ
+    per destination — eSIM Access may be cheaper for Turkey while eSIMCard wins
+    for Japan. Holding each supplier's price as its own row is what makes them
+    comparable: the cheapest available offer becomes the plan's cost and its
+    fulfilment route, and the losing offers stay on file as fallbacks for when
+    the winner is out of stock or its API is down.
+
+    Customers never see any of this. They see one plan at one price.
+    """
+
+    class Provider(models.TextChoices):
+        ESIMACCESS = "esimaccess", "eSIM Access"
+        ESIMCARD = "esimcard", "eSIMCard"
+        MOCK = "mock", "Mock (no real supplier)"
+
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE, related_name="offers")
+    provider = models.CharField(max_length=20, choices=Provider.choices)
+    package_code = models.CharField(
+        max_length=120, help_text="This supplier's own code for the package, e.g. TR_5_30."
+    )
+    cost_usd = models.DecimalField(
+        max_digits=8, decimal_places=2, help_text="Wholesale price this supplier charges us."
+    )
+    is_available = models.BooleanField(
+        default=True,
+        help_text="Uncheck to take a supplier out of the running without losing its price.",
+    )
+    unavailable_reason = models.CharField(
+        max_length=200, blank=True, help_text="Why it is out — e.g. 'out of stock', 'no balance'."
+    )
+    last_synced_at = models.DateTimeField(
+        null=True, blank=True, help_text="When a price sync last confirmed this offer."
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "catalog_supplieroffer"
+        ordering = ["cost_usd"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["plan", "provider"], name="one_offer_per_plan_per_provider"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(cost_usd__gte=0), name="offer_cost_not_negative"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.get_provider_display()} — ${self.cost_usd}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # A price that does not move sourcing is a price nobody can trust, so
+        # the plan is re-decided here rather than on a schedule.
+        self.plan.resolve_sourcing(save=True)
+
+    def delete(self, *args, **kwargs):
+        plan = self.plan
+        super().delete(*args, **kwargs)
+        # Losing the winning offer must hand the plan to the runner-up
+        # immediately, or fulfilment keeps routing to a supplier we removed.
+        plan.resolve_sourcing(save=True)
 
 
 class PricingRule(models.Model):

@@ -9,7 +9,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.test import TestCase, override_settings
 
-from catalog.models import Country, Plan, PricingRule, Region
+from catalog.models import Country, Plan, PricingRule, Region, SupplierOffer
 from catalog.pricing import calculate_price, margin, margin_percent, resolve_rule
 
 
@@ -285,3 +285,308 @@ class AdminLockoutTests(TestCase):
 
         response = self._attempt("other", "another-long-password")
         self.assertEqual(response.status_code, 302, "an untargeted account should still sign in")
+
+
+class SupplierComparisonTests(TestCase):
+    """The point of holding several supplier prices: the cheapest one wins.
+
+    Each test asserts on cost, provider *and* package code together, because a
+    plan sourced at the right price from the wrong package code would order the
+    wrong eSIM — a failure that a price-only assertion would not catch.
+    """
+
+    def setUp(self):
+        PricingRule.objects.create(scope=PricingRule.Scope.GLOBAL, markup_percent=Decimal("50"))
+        self.country = Country.objects.create(name="Turkey", slug="turkey", iso2="TR")
+        self.plan = Plan.objects.create(
+            country=self.country,
+            title="Turkey 5GB",
+            data_amount_mb=5120,
+            validity_days=30,
+            cost_usd=Decimal("10.00"),
+            price_usd=Decimal("15.00"),
+        )
+
+    def _offer(self, provider, cost, code=None, available=True):
+        return SupplierOffer.objects.create(
+            plan=self.plan,
+            provider=provider,
+            package_code=code or f"{provider.upper()}-TR-5-30",
+            cost_usd=Decimal(cost),
+            is_available=available,
+        )
+
+    def test_cheapest_offer_becomes_the_plans_cost_and_route(self):
+        self._offer("esimaccess", "4.20")
+        self._offer("esimcard", "3.80")
+
+        self.plan.refresh_from_db()
+        self.assertEqual(self.plan.cost_usd, Decimal("3.80"))
+        self.assertEqual(self.plan.provider, "esimcard")
+        self.assertEqual(self.plan.provider_package_code, "ESIMCARD-TR-5-30")
+
+    def test_price_follows_the_cheaper_cost(self):
+        self._offer("esimaccess", "4.20")
+        self._offer("esimcard", "3.80")
+
+        self.plan.refresh_from_db()
+        # 3.80 + 50% — the saving reaches the customer rather than being lost
+        # against a cost the pricing engine never saw.
+        self.assertEqual(self.plan.price_usd, Decimal("5.70"))
+
+    def test_a_dearer_offer_does_not_take_over(self):
+        self._offer("esimcard", "3.80")
+        self._offer("esimaccess", "9.00")
+
+        self.plan.refresh_from_db()
+        self.assertEqual(self.plan.provider, "esimcard")
+        self.assertEqual(self.plan.cost_usd, Decimal("3.80"))
+
+    def test_unavailable_offer_hands_over_to_the_fallback(self):
+        cheap = self._offer("esimcard", "3.80")
+        self._offer("esimaccess", "4.20")
+
+        cheap.is_available = False
+        cheap.unavailable_reason = "out of stock"
+        cheap.save()
+
+        self.plan.refresh_from_db()
+        self.assertEqual(self.plan.provider, "esimaccess")
+        self.assertEqual(self.plan.cost_usd, Decimal("4.20"))
+
+    def test_deleting_the_winner_hands_over_to_the_fallback(self):
+        cheap = self._offer("esimcard", "3.80")
+        self._offer("esimaccess", "4.20")
+        cheap.delete()
+
+        self.plan.refresh_from_db()
+        self.assertEqual(self.plan.provider, "esimaccess")
+        self.assertEqual(self.plan.cost_usd, Decimal("4.20"))
+
+    def test_plan_with_no_offers_keeps_its_hand_entered_cost(self):
+        # The catalogue predates supplier comparison, so sourcing must not
+        # clear the cost of a plan nobody has added offers for.
+        self.plan.save()
+        self.plan.refresh_from_db()
+        self.assertEqual(self.plan.cost_usd, Decimal("10.00"))
+        self.assertEqual(self.plan.provider, "mock")
+
+    def test_losing_every_offer_does_not_zero_the_cost(self):
+        offer = self._offer("esimcard", "3.80")
+        offer.delete()
+
+        self.plan.refresh_from_db()
+        # Both suppliers being out is an outage, not a reason to sell at cost 0.
+        self.assertEqual(self.plan.cost_usd, Decimal("3.80"))
+
+    def test_saving_reports_the_gap_to_the_runner_up(self):
+        self._offer("esimaccess", "4.20")
+        self._offer("esimcard", "3.80")
+
+        self.plan.refresh_from_db()
+        self.assertEqual(self.plan.sourcing_saving_usd, Decimal("0.40"))
+
+    def test_a_single_offer_reports_no_saving(self):
+        self._offer("esimcard", "3.80")
+        self.plan.refresh_from_db()
+        # One price is not a comparison; claiming a saving here would be a lie.
+        self.assertIsNone(self.plan.sourcing_saving_usd)
+
+    def test_unavailable_offers_are_excluded_from_the_ranking(self):
+        self._offer("esimcard", "1.00", available=False)
+        self._offer("esimaccess", "4.20")
+
+        self.plan.refresh_from_db()
+        self.assertEqual([o.provider for o in self.plan.ranked_offers], ["esimaccess"])
+        self.assertEqual(self.plan.cost_usd, Decimal("4.20"))
+
+    def test_one_offer_per_supplier_per_plan(self):
+        from django.db.utils import IntegrityError
+
+        self._offer("esimcard", "3.80")
+        with self.assertRaises(IntegrityError):
+            self._offer("esimcard", "3.50")
+
+    def test_narrowed_update_fields_still_persists_the_new_route(self):
+        # The recalculate action saves with update_fields=["price_usd"]; before
+        # widening it, a sourcing change made in the same save was dropped.
+        self._offer("esimaccess", "4.20")
+        self._offer("esimcard", "3.80")
+        Plan.objects.filter(pk=self.plan.pk).update(
+            provider="esimaccess", cost_usd=Decimal("4.20")
+        )
+
+        plan = Plan.objects.get(pk=self.plan.pk)
+        plan.save(update_fields=["price_usd"])
+
+        plan.refresh_from_db()
+        self.assertEqual(plan.provider, "esimcard")
+        self.assertEqual(plan.cost_usd, Decimal("3.80"))
+
+    def test_changelist_does_not_query_per_row(self):
+        from django.contrib.admin.sites import site
+        from django.test import RequestFactory
+
+        for index in range(12):
+            plan = Plan.objects.create(
+                country=self.country,
+                title=f"Plan {index}",
+                validity_days=7,
+                cost_usd=Decimal("5.00"),
+                price_usd=Decimal("7.50"),
+            )
+            SupplierOffer.objects.create(
+                plan=plan, provider="esimaccess", package_code="A", cost_usd=Decimal("5.00")
+            )
+            SupplierOffer.objects.create(
+                plan=plan, provider="esimcard", package_code="B", cost_usd=Decimal("4.50")
+            )
+
+        model_admin = site._registry[Plan]
+        request = RequestFactory().get("/")
+        plans = list(model_admin.get_queryset(request))
+        with self.assertNumQueries(0):
+            # Prefetched, so rendering the sourcing column touches no database.
+            for plan in plans:
+                model_admin.sourcing_col(plan)
+
+
+class SidebarNavigationTests(TestCase):
+    """Every sidebar link must resolve under the configured admin path.
+
+    These were literal "/admin/..." strings while the deployed admin lives at
+    ADMIN_URL_PATH, so the whole navigation returned 404 in production.
+    """
+
+    def test_links_follow_a_renamed_admin_path(self):
+        """Rebuild the URLconf under a different admin path and re-resolve.
+
+        Asserting the prefix against the current settings would pass for the
+        wrong reason: locally ADMIN_URL_PATH already is "admin", which is
+        exactly the value the hardcoded links happened to match.
+        """
+        import importlib
+
+        import config.urls
+        from django.urls import clear_url_caches
+
+        with override_settings(ADMIN_URL_PATH="secret-panel"):
+            importlib.reload(config.urls)
+            clear_url_caches()
+            try:
+                links = [
+                    str(item["link"])
+                    for group in settings.UNFOLD["SIDEBAR"]["navigation"]
+                    for item in group["items"]
+                ]
+                self.assertTrue(links)
+                for link in links:
+                    self.assertTrue(
+                        link.startswith("/secret-panel/"),
+                        f"{link} did not follow the renamed admin path",
+                    )
+            finally:
+                # Leave the URLconf as the rest of the suite expects it.
+                importlib.reload(config.urls)
+                clear_url_caches()
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_every_sidebar_link_is_a_real_view(self):
+        from django.contrib.auth.models import User
+
+        User.objects.create_superuser("nav-admin", "nav@example.com", "pw-for-tests-only")
+        self.client.force_login(User.objects.get(username="nav-admin"))
+
+        for group in settings.UNFOLD["SIDEBAR"]["navigation"]:
+            for item in group["items"]:
+                with self.subTest(link=str(item["link"])):
+                    response = self.client.get(str(item["link"]))
+                    self.assertEqual(response.status_code, 200)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class PlanAdminRenderTests(TestCase):
+    """The plan editor and its comparison block must actually render.
+
+    A broken format_html call or a fieldset naming a field that does not exist
+    raises at render time, not at check time — so only a request catches it.
+    """
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        PricingRule.objects.create(scope=PricingRule.Scope.GLOBAL, markup_percent=Decimal("40"))
+        self.country = Country.objects.create(name="Japan", slug="japan", iso2="JP")
+        self.plan = Plan.objects.create(
+            country=self.country,
+            title="Japan 3GB",
+            data_amount_mb=3072,
+            validity_days=15,
+            cost_usd=Decimal("6.00"),
+            price_usd=Decimal("8.40"),
+        )
+        User.objects.create_superuser("render-admin", "r@example.com", "pw-for-tests-only")
+        self.client.force_login(User.objects.get(username="render-admin"))
+
+    def _change_url(self):
+        from django.urls import reverse
+
+        return reverse("admin:catalog_plan_change", args=[self.plan.pk])
+
+    def test_change_page_renders_with_no_offers(self):
+        response = self.client.get(self._change_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No supplier offers yet")
+
+    def test_change_page_shows_the_winner_and_the_fallback(self):
+        SupplierOffer.objects.create(
+            plan=self.plan, provider="esimaccess", package_code="JP_3_15", cost_usd=Decimal("6.00")
+        )
+        SupplierOffer.objects.create(
+            plan=self.plan, provider="esimcard", package_code="jp-3gb", cost_usd=Decimal("5.25")
+        )
+
+        response = self.client.get(self._change_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "ordered from here")
+        self.assertContains(response, "fallback")
+
+    def test_change_page_shows_why_an_offer_is_out(self):
+        SupplierOffer.objects.create(
+            plan=self.plan,
+            provider="esimcard",
+            package_code="jp-3gb",
+            cost_usd=Decimal("1.00"),
+            is_available=False,
+            unavailable_reason="no balance",
+        )
+        response = self.client.get(self._change_url())
+        self.assertContains(response, "no balance")
+
+    def test_changelist_renders_the_sourcing_column(self):
+        from django.urls import reverse
+
+        SupplierOffer.objects.create(
+            plan=self.plan, provider="esimaccess", package_code="JP_3_15", cost_usd=Decimal("6.00")
+        )
+        SupplierOffer.objects.create(
+            plan=self.plan, provider="esimcard", package_code="jp-3gb", cost_usd=Decimal("5.25")
+        )
+        response = self.client.get(reverse("admin:catalog_plan_changelist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "eSIMCard")
+        self.assertContains(response, "$0.75")
+
+    def test_supplier_offer_changelist_renders_verdicts(self):
+        from django.urls import reverse
+
+        SupplierOffer.objects.create(
+            plan=self.plan, provider="esimaccess", package_code="JP_3_15", cost_usd=Decimal("6.00")
+        )
+        SupplierOffer.objects.create(
+            plan=self.plan, provider="esimcard", package_code="jp-3gb", cost_usd=Decimal("5.25")
+        )
+        response = self.client.get(reverse("admin:catalog_supplieroffer_changelist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "cheapest")
+        self.assertContains(response, "fallback")
