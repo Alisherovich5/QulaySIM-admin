@@ -54,7 +54,7 @@ BENEFITS = [
 
 TESTIMONIALS = [
     {
-        "name": "Aziza K.",
+        "name": "Aziza Karimova",
         "rating": 5,
         "location": "Tashkent → Tokyo",
         "text": "Activated my eSIM before the plane even landed. Data worked the second I switched off airplane mode.",
@@ -64,23 +64,23 @@ TESTIMONIALS = [
         "text_uz": "Samolyot qo‘nmasdanoq eSIM‘imni faollashtirdim. Aviarejimni o‘chirgan zahotim internet ishladi.",
     },
     {
-        "name": "Daniel M.",
+        "name": "Ibodov Tinchibek",
         "rating": 5,
-        "location": "Berlin → Dubai",
-        "text": "So much cheaper than roaming and setup took under a minute. The app makes topping up effortless.",
-        "location_ru": "Берлин → Дубай",
-        "text_ru": "Намного дешевле роуминга, а настройка заняла меньше минуты. Пополнять через приложение очень удобно.",
-        "location_uz": "Berlin → Dubay",
-        "text_uz": "Roumingdan ancha arzon va sozlash bir daqiqadan kam vaqt oldi. Ilova to‘ldirishni juda osonlashtiradi.",
+        "location": "Samarkand → Dubai",
+        "text": "So much cheaper than roaming and setup took under a minute. Topping up is effortless.",
+        "location_ru": "Самарканд → Дубай",
+        "text_ru": "Намного дешевле роуминга, а настройка заняла меньше минуты. Пополнять очень удобно.",
+        "location_uz": "Samarqand → Dubay",
+        "text_uz": "Roumingdan ancha arzon va sozlash bir daqiqadan kam vaqt oldi. To‘ldirish juda oson.",
     },
     {
-        "name": "Sofia R.",
+        "name": "Nodira Yusupova",
         "rating": 5,
-        "location": "Madrid → Bangkok",
+        "location": "Bukhara → Istanbul",
         "text": "One app for every trip. I keep my number for calls and use the eSIM for data. Brilliant.",
-        "location_ru": "Мадрид → Бангкок",
+        "location_ru": "Бухара → Истанбул",
         "text_ru": "Одно приложение на все поездки. Номер оставляю для звонков, а eSIM — для интернета. Отлично.",
-        "location_uz": "Madrid → Bangkok",
+        "location_uz": "Buxoro → Istanbul",
         "text_uz": "Har bir sayohat uchun bitta ilova. Qo‘ng‘iroqlar uchun raqamimni saqlayman, internet uchun eSIM. Zo‘r.",
     },
 ]
