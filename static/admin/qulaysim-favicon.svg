@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Favicon derived from the Q of the QulaySIM wordmark, so the tab icon and
+       the header logo are the same letterform rather than two different marks.
+       A wordmark cannot be a favicon: at 16px a four-to-one lockup is a smear. -->
+  <defs>
+    <linearGradient id="q" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2FA98C"/>
+      <stop offset="0.6" stop-color="#249279"/>
+      <stop offset="1" stop-color="#15654F"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#q)"/>
+  <g transform="translate(6.000,6.669) scale(0.060790) translate(0,307) scale(0.1,-0.1)" fill="#fff">
+    <path d="M1421 3059 c-262 -23 -527 -116 -749 -263 -135 -90 -344 -307 -436
+-453 -365 -585 -295 -1384 162 -1865 99 -104 214 -197 325 -262 73 -43 274
+-136 295 -136 5 0 36 -8 68 -19 87 -28 337 -61 457 -61 260 0 528 61 747 169
+l62 31 82 -73 c44 -40 96 -85 114 -100 l34 -27 349 0 c316 0 350 2 356 17 4
+11 -5 26 -28 46 -48 42 -99 88 -307 277 l-182 164 24 26 c124 136 241 353 299
+555 112 390 72 804 -111 1155 -214 409 -570 680 -1033 786 -175 39 -339 50
+-528 33z m356 -643 c98 -21 234 -81 326 -146 314 -216 452 -622 346 -1009 -24
+-88 -96 -233 -143 -287 l-33 -38 -104 87 -103 87 -353 0 c-258 0 -354 -3 -359
+-12 -5 -7 15 -31 52 -62 32 -28 112 -100 178 -161 66 -60 148 -135 182 -165
+34 -30 61 -59 60 -65 -5 -19 -122 -36 -256 -37 -194 -2 -343 38 -482 129 -144
+94 -247 215 -323 376 -120 256 -120 570 0 809 53 106 113 184 205 271 145 137
+314 216 510 241 61 7 222 -2 297 -18z"/>
+  </g>
+</svg>

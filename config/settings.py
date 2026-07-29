@@ -218,6 +218,18 @@ UNFOLD = {
     "SITE_HEADER": "QulaySIM",
     "SITE_SUBHEADER": "eSIM commerce control panel",
     "SITE_SYMBOL": "sim_card",
+    # The real wordmark, so the admin and the storefront carry the same brand.
+    # The file fills "Qulay" with currentColor, which follows Unfold's own text
+    # colour and therefore stays legible in both its light and dark themes.
+    "SITE_ICON": lambda request: static("admin/qulaysim-favicon.svg"),
+    "SITE_LOGO": lambda request: static("admin/qulaysim-logo.svg"),
+    "SITE_FAVICONS": [
+        {
+            "rel": "icon",
+            "type": "image/svg+xml",
+            "href": lambda request: static("admin/qulaysim-favicon.svg"),
+        }
+    ],
     "THEME": "light",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": False,

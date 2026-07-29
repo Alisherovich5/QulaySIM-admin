@@ -688,3 +688,48 @@ class CacheInvalidationTests(TestCase):
             cheap.save()
 
         self.assertTrue(self._cleared_by(take_out))
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class BrandAssetTests(TestCase):
+    """The admin must actually serve the wordmark, not just declare it.
+
+    UNFOLD takes SITE_LOGO as a callable, so a wrong static path or a renamed
+    file fails silently — the page renders without a logo and nothing complains.
+    """
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        User.objects.create_superuser("brand-admin", "b@example.com", "pw-for-tests-only")
+
+    def test_logo_and_favicon_files_exist(self):
+        from django.contrib.staticfiles import finders
+
+        for path in ("admin/qulaysim-logo.svg", "admin/qulaysim-favicon.svg"):
+            with self.subTest(path=path):
+                self.assertIsNotNone(finders.find(path), f"{path} is not on the static path")
+
+    def test_wordmark_inherits_the_surrounding_text_colour(self):
+        from django.contrib.staticfiles import finders
+
+        svg = open(finders.find("admin/qulaysim-logo.svg")).read()
+        # "Qulay" is white in the source artwork, which is invisible on a light
+        # admin. currentColor is what makes one file work in both themes.
+        self.assertIn("currentColor", svg)
+        self.assertIn("#249279", svg)
+        self.assertNotIn('fill="#ffffff"', svg.lower())
+
+    def test_admin_pages_reference_the_wordmark(self):
+        from django.urls import reverse
+
+        self.client.force_login(
+            __import__("django.contrib.auth", fromlist=["models"]).models.User.objects.get(
+                username="brand-admin"
+            )
+        )
+        response = self.client.get(reverse("admin:index"))
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        self.assertIn("qulaysim-logo.svg", body)
+        self.assertIn("qulaysim-favicon.svg", body)
