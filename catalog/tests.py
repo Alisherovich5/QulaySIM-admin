@@ -838,3 +838,52 @@ class PriceNoteTests(TestCase):
 
         response = self.client.get(reverse("admin:catalog_plan_change", args=[self.plan.pk]))
         self.assertContains(response, "price_note")
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class LoginRedirectTests(TestCase):
+    """Signing in must land on the admin, never on a 404.
+
+    Django defaults LOGIN_REDIRECT_URL to /accounts/profile/, which this project
+    does not serve. The usual route carries ?next=, which masked it — so this
+    asserts the case without one.
+    """
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        User.objects.create_user(
+            "redirect-admin", "r@example.com", "pw-for-tests-only", is_staff=True, is_superuser=True
+        )
+
+    def test_login_without_next_lands_on_the_admin_index(self):
+        from django.urls import reverse
+
+        response = self.client.post(
+            reverse("admin:login"),
+            {"username": "redirect-admin", "password": "pw-for-tests-only"},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], reverse("admin:index"))
+
+    def test_the_landing_page_actually_exists(self):
+        from django.urls import reverse
+
+        self.client.force_login(
+            __import__("django.contrib.auth", fromlist=["models"]).models.User.objects.get(
+                username="redirect-admin"
+            )
+        )
+        # Asserting the redirect target alone would still pass if that target
+        # were itself broken.
+        self.assertEqual(self.client.get(reverse("admin:index")).status_code, 200)
+
+    def test_login_still_honours_next(self):
+        from django.urls import reverse
+
+        target = reverse("admin:catalog_plan_changelist")
+        response = self.client.post(
+            reverse("admin:login") + f"?next={target}",
+            {"username": "redirect-admin", "password": "pw-for-tests-only", "next": target},
+        )
+        self.assertEqual(response["Location"], target)

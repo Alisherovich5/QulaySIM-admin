@@ -213,6 +213,14 @@ def _badge_pending_orders(request):
     return str(count) if count else None
 
 
+# Django's default is /accounts/profile/, which this project does not serve — so
+# signing in from a login page that carries no ?next= landed on a 404. The normal
+# path (admin.qulaysim.uz → admin → login?next=…) was unaffected, which is why it
+# went unnoticed; a bookmarked login URL was not.
+LOGIN_REDIRECT_URL = reverse_lazy("admin:index")
+LOGOUT_REDIRECT_URL = reverse_lazy("admin:login")
+
+
 UNFOLD = {
     "SITE_TITLE": "QulaySIM Admin",
     "SITE_HEADER": "QulaySIM",
