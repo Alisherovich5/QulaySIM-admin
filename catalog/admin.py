@@ -144,6 +144,7 @@ class PlanAdmin(ModelAdmin):
                     "cost_usd",
                     "markup_percent",
                     "price_usd",
+                    "price_note",
                     "price_locked",
                     "margin_readout",
                 ),
@@ -151,7 +152,9 @@ class PlanAdmin(ModelAdmin):
                     "Enter the supplier cost and the price is calculated on save. "
                     "Leave the markup empty to inherit a pricing rule; fill it in to "
                     "override every rule for this plan alone. Tick 'price locked' to "
-                    "type a price by hand and stop it being recalculated."
+                    "type a price by hand and stop it being recalculated. "
+                    "Use the note for anything the number cannot say on its own, "
+                    "such as '+ deposit' — it is shown to customers beside the price."
                 ),
             },
         ),
@@ -260,8 +263,16 @@ class PlanAdmin(ModelAdmin):
     @display(description="Price")
     def price_badge(self, obj):
         lock = " 🔒" if obj.price_locked else ""
+        note = (
+            format_html('<br><span style="color:#5B6478;font-size:11px;">{}</span>', obj.price_note)
+            if obj.price_note
+            else ""
+        )
         return format_html(
-            '<span style="font-weight:700;color:#0A1F5C;">${}</span>{}', obj.price_usd, lock
+            '<span style="font-weight:700;color:#0A1F5C;">${}</span>{}{}',
+            obj.price_usd,
+            lock,
+            note,
         )
 
     @display(description="Margin")

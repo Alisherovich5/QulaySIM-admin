@@ -733,3 +733,108 @@ class BrandAssetTests(TestCase):
         body = response.content.decode()
         self.assertIn("qulaysim-logo.svg", body)
         self.assertIn("qulaysim-favicon.svg", body)
+
+
+class PriceCeilingTests(TestCase):
+    """A price field an operator can type any figure into.
+
+    The column was max_digits=8, so anything from 1,000,000.00 up was rejected
+    with a validation error that read like a bug rather than a policy.
+    """
+
+    def setUp(self):
+        PricingRule.objects.create(scope=PricingRule.Scope.GLOBAL, markup_percent=Decimal("20"))
+
+    def test_a_price_above_the_old_ceiling_is_accepted(self):
+        plan = Plan.objects.create(
+            title="Enterprise bulk",
+            validity_days=30,
+            price_usd=Decimal("2500000.00"),
+            price_locked=True,
+        )
+        plan.refresh_from_db()
+        self.assertEqual(plan.price_usd, Decimal("2500000.00"))
+
+    def test_a_cost_above_the_old_ceiling_survives_the_pricing_engine(self):
+        plan = Plan.objects.create(
+            title="Enterprise bulk",
+            validity_days=30,
+            cost_usd=Decimal("1500000.00"),
+            price_usd=Decimal("0"),
+        )
+        plan.refresh_from_db()
+        # 1,500,000 + 20% — the calculated price must also clear the old limit,
+        # or raising it on cost alone would just move the failure.
+        self.assertEqual(plan.price_usd, Decimal("1800000.00"))
+
+    def test_a_supplier_offer_above_the_old_ceiling_is_accepted(self):
+        plan = Plan.objects.create(title="Bulk", validity_days=30, price_usd=Decimal("1"))
+        SupplierOffer.objects.create(
+            plan=plan, provider="esimaccess", package_code="BULK", cost_usd=Decimal("1200000.00")
+        )
+        plan.refresh_from_db()
+        self.assertEqual(plan.cost_usd, Decimal("1200000.00"))
+
+    def test_cents_are_still_kept(self):
+        plan = Plan.objects.create(
+            title="Precise", validity_days=7, price_usd=Decimal("1234567.89"), price_locked=True
+        )
+        plan.refresh_from_db()
+        # Widening the integer part must not have cost the decimal part.
+        self.assertEqual(plan.price_usd, Decimal("1234567.89"))
+
+
+class PriceNoteTests(TestCase):
+    """Text beside the price for what an amount cannot express."""
+
+    def setUp(self):
+        self.country = Country.objects.create(name="Oman", slug="oman", iso2="OM")
+        self.plan = Plan.objects.create(
+            country=self.country,
+            title="Oman 5GB",
+            validity_days=30,
+            price_usd=Decimal("500.00"),
+            price_locked=True,
+        )
+
+    def test_note_is_optional(self):
+        self.assertEqual(self.plan.price_note, "")
+
+    def test_note_is_stored_verbatim(self):
+        self.plan.price_note = "+ 200$ depozit, qaytariladi"
+        self.plan.save()
+        self.plan.refresh_from_db()
+        self.assertEqual(self.plan.price_note, "+ 200$ depozit, qaytariladi")
+
+    def test_note_does_not_disturb_the_price_or_the_margin(self):
+        PricingRule.objects.create(scope=PricingRule.Scope.GLOBAL, markup_percent=Decimal("25"))
+        plan = Plan.objects.create(
+            country=self.country,
+            title="Oman 3GB",
+            validity_days=30,
+            cost_usd=Decimal("400.00"),
+            price_usd=Decimal("0"),
+            price_note="+ deposit",
+        )
+        plan.refresh_from_db()
+        # The whole point of keeping the note in its own column: arithmetic
+        # never sees it.
+        self.assertEqual(plan.price_usd, Decimal("500.00"))
+        self.assertEqual(plan.margin_usd, Decimal("100.00"))
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_admin_shows_the_note_next_to_the_price(self):
+        from django.contrib.auth.models import User
+        from django.urls import reverse
+
+        self.plan.price_note = "+ deposit"
+        self.plan.save()
+        User.objects.create_superuser("note-admin", "n@example.com", "pw-for-tests-only")
+        self.client.force_login(User.objects.get(username="note-admin"))
+
+        response = self.client.get(reverse("admin:catalog_plan_changelist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "+ deposit")
+
+        response = self.client.get(reverse("admin:catalog_plan_change", args=[self.plan.pk]))
+        self.assertContains(response, "price_note")

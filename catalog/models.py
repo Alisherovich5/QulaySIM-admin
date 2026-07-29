@@ -64,8 +64,10 @@ class Plan(models.Model):
     # --- Pricing -----------------------------------------------------------
     # What the supplier charges us; never shown to customers. Derived from the
     # cheapest SupplierOffer when this plan has any, otherwise entered by hand.
+    # 12 digits, not 8: the old ceiling was 999,999.99, which is a limit nobody
+    # asked for on a field an operator should be able to type any figure into.
     cost_usd = models.DecimalField(
-        max_digits=8,
+        max_digits=12,
         decimal_places=2,
         null=True,
         blank=True,
@@ -73,7 +75,19 @@ class Plan(models.Model):
     )
     # What the customer pays. Recalculated from cost + markup on save unless
     # price_locked is set.
-    price_usd = models.DecimalField(max_digits=8, decimal_places=2)
+    price_usd = models.DecimalField(max_digits=12, decimal_places=2)
+    # Free text shown next to the price, for the part an amount cannot express:
+    # "+ deposit", "first month only", "per device". Kept separate from
+    # price_usd on purpose — margin, currency conversion and the Payme amount
+    # all read that column, and none of them can divide by "500 + deposit".
+    price_note = models.CharField(
+        max_length=120,
+        blank=True,
+        help_text=(
+            "Optional text shown beside the price, e.g. '+ deposit'. "
+            "The number itself stays in the price field."
+        ),
+    )
     markup_percent = models.DecimalField(
         max_digits=6,
         decimal_places=2,
@@ -260,7 +274,7 @@ class SupplierOffer(models.Model):
         max_length=120, help_text="This supplier's own code for the package, e.g. TR_5_30."
     )
     cost_usd = models.DecimalField(
-        max_digits=8, decimal_places=2, help_text="Wholesale price this supplier charges us."
+        max_digits=12, decimal_places=2, help_text="Wholesale price this supplier charges us."
     )
     is_available = models.BooleanField(
         default=True,
