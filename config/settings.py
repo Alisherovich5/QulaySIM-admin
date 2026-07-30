@@ -339,6 +339,11 @@ UNFOLD = {
                 "items": [
                     {"title": "Customers", "icon": "group", "link": reverse_lazy("admin:customers_customer_changelist")},
                     {"title": "Staff users", "icon": "shield_person", "link": reverse_lazy("admin:auth_user_changelist")},
+                    {
+                        "title": "Social logins",
+                        "icon": "link",
+                        "link": reverse_lazy("admin:customers_socialaccount_changelist"),
+                    },
                 ],
             },
             {

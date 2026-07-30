@@ -7,7 +7,10 @@ class Customer(models.Model):
 
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=150, blank=True)
-    hashed_password = models.CharField(max_length=255)
+    # Blank for accounts that only ever sign in through a provider. The API's
+    # verify_password rejects an empty hash with a constant-time decoy, so a
+    # blank value is not a password anyone can guess — it is the absence of one.
+    hashed_password = models.CharField(max_length=255, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     # Referral program
@@ -58,3 +61,48 @@ class Referral(models.Model):
 
     def __str__(self):
         return f"{self.referrer_id} → {self.referred_email or self.referred_id} ({self.status})"
+
+
+class SocialAccount(models.Model):
+    """A provider identity linked to a customer.
+
+    Its own table rather than columns on Customer, so one person can sign in
+    with Google today and add another provider later without the model growing
+    a pair of fields per provider.
+
+    Linking is keyed on the provider's own user id, never on the e-mail: an
+    address can change hands at the provider, and matching on it would hand the
+    old owner's orders to the new one.
+    """
+
+    class Provider(models.TextChoices):
+        GOOGLE = "google", "Google"
+        TELEGRAM = "telegram", "Telegram"
+
+    customer = models.ForeignKey(
+        "customers.Customer", on_delete=models.CASCADE, related_name="social_accounts"
+    )
+    provider = models.CharField(max_length=20, choices=Provider.choices)
+    provider_uid = models.CharField(
+        max_length=191, help_text="The provider's own immutable id for this user."
+    )
+    email = models.EmailField(
+        blank=True, help_text="Address as the provider reported it, for support only."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_login_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "customers_socialaccount"
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["provider", "provider_uid"], name="one_link_per_provider_identity"
+            ),
+            models.UniqueConstraint(
+                fields=["provider", "customer"], name="one_link_per_customer_per_provider"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.get_provider_display()} — {self.customer_id}"
