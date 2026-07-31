@@ -69,6 +69,17 @@ class DeviceAdmin(ModelAdmin):
     ordering = ("sort_order", "id")
 
 
+def _money_label(value) -> str:
+    """Drop trailing zeros without falling into scientific notation.
+
+    Decimal("10.00") formats as "10.00" under :g and as "1e+1" after normalize(),
+    so neither shortcut works. This is the number an operator reads when deciding
+    what to advertise, and "10.00%" reads like a mistake.
+    """
+    text = f"{value:f}".rstrip("0").rstrip(".")
+    return text or "0"
+
+
 @admin.register(PromoBanner)
 class PromoBannerAdmin(ModelAdmin):
     """The offer bar pinned above the navigation, and the landing-page banner.
@@ -126,9 +137,9 @@ class PromoBannerAdmin(ModelAdmin):
         if not code.is_active:
             return format_html('<span style="color:#E5484D;">code disabled</span>')
         value = (
-            f"{code.discount_value:g}%"
+            f"{_money_label(code.discount_value)}%"
             if code.discount_type == "percent"
-            else f"${code.discount_value:g}"
+            else f"${_money_label(code.discount_value)}"
         )
         return format_html('<b>{}</b>', value)
 
@@ -147,9 +158,9 @@ class PromoBannerAdmin(ModelAdmin):
                 code.code,
             )
         shown = (
-            f"{code.discount_value:g}% off"
+            f"{_money_label(code.discount_value)}% off"
             if code.discount_type == "percent"
-            else f"${code.discount_value:g} off"
+            else f"${_money_label(code.discount_value)} off"
         )
         return format_html(
             'Bar: <b>{}</b> · code <b>{}</b> — the same discount checkout applies.',

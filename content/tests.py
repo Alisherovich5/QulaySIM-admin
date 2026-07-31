@@ -99,3 +99,43 @@ class PromoBannerDiscountTests(TestCase):
         # and take the landing section down with it.
         self.assertIsNone(banner.promo_code)
         self.assertTrue(PromoBanner.objects.filter(pk=banner.pk).exists())
+
+
+class MoneyLabelTests(TestCase):
+    """The figure an operator reads before deciding what to advertise.
+
+    Decimal("10.00") formats as "10.00" under :g and as "1e+1" after normalize(),
+    so the obvious shortcuts both produce something that reads like a mistake.
+    """
+
+    def test_whole_numbers_lose_their_zeros(self):
+        from decimal import Decimal
+
+        from content.admin import _money_label
+
+        self.assertEqual(_money_label(Decimal("10.00")), "10")
+        self.assertEqual(_money_label(Decimal("20.00")), "20")
+
+    def test_no_scientific_notation(self):
+        from decimal import Decimal
+
+        from content.admin import _money_label
+
+        # normalize() turns 20.00 into 1e+1-style output; this must not.
+        self.assertNotIn("e", _money_label(Decimal("20.00")).lower())
+
+    def test_real_cents_survive(self):
+        from decimal import Decimal
+
+        from content.admin import _money_label
+
+        self.assertEqual(_money_label(Decimal("10.50")), "10.5")
+        self.assertEqual(_money_label(Decimal("0.99")), "0.99")
+
+    def test_zero_stays_zero(self):
+        from decimal import Decimal
+
+        from content.admin import _money_label
+
+        # "0.00" would strip to "" without the guard.
+        self.assertEqual(_money_label(Decimal("0.00")), "0")
