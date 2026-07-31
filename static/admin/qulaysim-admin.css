@@ -9,6 +9,89 @@
   --fs-gold-deep: #e59500;
   --fs-secondary: #606b8b;
   --fs-divider: #ebedf1;
+
+  /* Semantic roles, so the dashboard and the import page do not each carry
+     their own copy of every hex. The dark values are chosen against the dark
+     surface rather than derived from the light ones — an automatic flip makes
+     deep golds and deep greens disappear. */
+  --qs-surface: #ffffff;
+  --qs-surface-2: #f2f3f5;
+  --qs-ink: #111e2b;
+  --qs-ink-soft: #606b8b;
+  --qs-ink-mute: #636b7f;
+  --qs-line: #ebedf1;
+  --qs-line-strong: #c9d1de;
+  --qs-shadow: rgba(18, 28, 37, 0.04);
+
+  /* Accent and status. Both themes need a readable version of each, so they
+     are named by role and re-stated below rather than reused blindly. */
+  --qs-accent: #e59500;
+  --qs-accent-soft: #ffcb69;
+  --qs-accent-deep: #955f00;
+  --qs-accent-deeper: #8f5a06;
+  --qs-good: #13bd62;
+  --qs-good-deep: #0c7c42;
+  /* Fills keep the brighter hue; text uses the -text step, which is the same
+     hue walked dark enough to clear the zebra row. Splitting the two is what
+     lets a teal badge stay teal and still be readable. */
+  --qs-teal: #00a37a;
+  --qs-teal-text: #007a5c;
+  --qs-accent-text: #935f00;
+  --qs-blue-text: #2d6ac0;
+  --qs-bad-text: #c13b2c;
+  --qs-bad: #f74c39;
+  --qs-bad-deep: #d6321f;
+  --qs-warn: #f39c12;
+  --qs-violet: #8938fa;
+  --qs-blue: #347bdf;
+  --qs-caution-wash: #fff8ec;
+  --qs-on-accent: #241a00;
+
+  /* Status pill washes. These were 8-digit hexes inline in the template
+     (#13bd62 + "18"); appending alpha to a var() is invalid CSS, which silently
+     removed the pill background altogether. Named here so each theme can pick
+     its own alpha — a 9% tint that reads on white disappears on navy. */
+  --qs-good-wash: rgba(19, 189, 98, 0.09);
+  --qs-warn-wash: rgba(243, 156, 18, 0.12);
+  --qs-bad-wash: rgba(247, 76, 57, 0.09);
+  --qs-neutral-wash: rgba(137, 148, 176, 0.14);
+}
+
+/* Unfold puts `.dark` on <html>; these are the same roles restated for it. */
+.dark {
+  --qs-surface: #1a2530;
+  --qs-surface-2: #141d26;
+  --qs-ink: #e8eef5;
+  --qs-ink-soft: #a5b3c9;
+  --qs-ink-mute: #7e8da4;
+  --qs-line: #26333f;
+  --qs-line-strong: #354553;
+  --qs-shadow: rgba(0, 0, 0, 0.35);
+
+  /* Lifted for contrast: the deep variants are legible on white and invisible
+     on a dark surface, which is why this is not a mechanical inversion. */
+  --qs-accent: #ffb020;
+  --qs-accent-soft: #ffcb69;
+  --qs-accent-deep: #ffcb69;
+  --qs-accent-deeper: #ffdc9a;
+  --qs-good: #34d97e;
+  --qs-good-deep: #34d97e;
+  --qs-teal: #2fc8a2;
+  --qs-bad: #ff6b5a;
+  --qs-bad-deep: #ff8b7d;
+  --qs-warn: #ffb648;
+  --qs-violet: #b07bff;
+  --qs-blue: #6ba4f0;
+  --qs-teal-text: #2fc8a2;
+  --qs-accent-text: #ffb020;
+  --qs-blue-text: #8ab8f5;
+  --qs-bad-text: #ff8b7d;
+  --qs-caution-wash: rgba(255, 176, 32, 0.1);
+  --qs-on-accent: #101017;
+  --qs-good-wash: rgba(52, 217, 126, 0.16);
+  --qs-warn-wash: rgba(255, 182, 72, 0.18);
+  --qs-bad-wash: rgba(255, 107, 90, 0.16);
+  --qs-neutral-wash: rgba(165, 179, 201, 0.16);
 }
 
 html,
@@ -69,8 +152,21 @@ a[class*="bg-primary"] {
 #nav-sidebar h3,
 #nav-sidebar label,
 #nav-sidebar [class*="text-base-"],
-#nav-sidebar [class*="text-font-"] {
+#nav-sidebar [class*="text-font-"],
+/* `text-important` and `text-subtle` carry the account name and e-mail at the
+   sidebar's foot. Without them the name rendered as near-black on navy — 1.1:1,
+   invisible — while everything around it read fine. */
+#nav-sidebar .text-important,
+#nav-sidebar .text-subtle {
   color: #aeb6c7 !important;
+}
+/* The name is the one thing here that should stand out. */
+#nav-sidebar .text-important {
+  color: #ffffff !important;
+}
+/* Any white panel Unfold paints inside the navy sidebar (the search wrapper). */
+#nav-sidebar .bg-white {
+  background-color: var(--fs-navy) !important;
 }
 #nav-sidebar .border-base-200,
 #nav-sidebar [class*="border-base-"] {
@@ -82,15 +178,29 @@ a[class*="bg-primary"] {
 }
 #nav-sidebar a:hover span,
 #nav-sidebar a:hover {
+  /* The sidebar is navy in both themes, so this is literally white — not the
+     page surface, which follows the theme. */
   color: #ffffff !important;
 }
-/* Active nav item -> gold accent */
+/* Active nav item -> gold accent.
+   Unfold marks it with `bg-base-100 text-primary-600 active`, not bg-primary-*,
+   so matching only the latter left the current page as pale grey text on a light
+   pill — 1.7:1 — while every other item read correctly. Both selectors are kept
+   because the class set has changed between Unfold releases. */
+#nav-sidebar a.active,
 #nav-sidebar a[class*="bg-primary"] {
   background-color: var(--fs-navy-hover) !important;
 }
+#nav-sidebar a.active span,
+#nav-sidebar a.active,
 #nav-sidebar a[class*="bg-primary"] span,
 #nav-sidebar a[class*="bg-primary"] {
   color: var(--fs-gold) !important;
+}
+/* Any other light pill Unfold paints inside the navy sidebar. */
+#nav-sidebar [class*="bg-base-100"],
+#nav-sidebar [class*="bg-base-200"] {
+  background-color: var(--fs-navy-hover) !important;
 }
 /* Sidebar search box */
 #nav-sidebar input {
@@ -104,6 +214,58 @@ a[class*="bg-primary"] {
 /* Section dividers / group titles */
 #nav-sidebar [class*="border-t"] {
   border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Account menu — theme switch, language switch, log out ------------------
+   This dropdown lives *inside* #nav-sidebar, so the rules above already
+   recolour its text to sidebar grey. Unfold gives it `bg-white`, which left
+   pale grey on white and, on hover, white on white. Rather than exempt it, it
+   joins the navy: one surface, and the rules above then read correctly. */
+#nav-sidebar nav[x-show="openUserLinks"] {
+  background-color: var(--fs-navy-hover) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45) !important;
+}
+/* The switches are <a> without href and the language options are <button>, so
+   the hover rules above miss the latter entirely. */
+#nav-sidebar nav[x-show="openUserLinks"] button {
+  color: #aeb6c7 !important;
+}
+#nav-sidebar nav[x-show="openUserLinks"] button:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+/* The selected theme and language are marked with text-primary-*, which is our
+   gold — keep it, but make sure hover does not overwrite it back to white. */
+#nav-sidebar nav[x-show="openUserLinks"] [class*="text-primary-"],
+#nav-sidebar nav[x-show="openUserLinks"] [class*="text-primary-"]:hover,
+#nav-sidebar nav[x-show="openUserLinks"] [class*="text-primary-"]:hover span {
+  color: var(--fs-gold) !important;
+}
+/* Log out is red-700 by default: 2.4:1 on navy. Lifted to clear it. */
+#nav-sidebar #logout-form button,
+#nav-sidebar #logout-form button span {
+  color: #ff8b7d !important;
+}
+#nav-sidebar #logout-form button:hover {
+  background-color: rgba(255, 107, 90, 0.16) !important;
+}
+
+/* Unfold's links use text-primary-600 — our gold, which is 2.4:1 on a white
+   page. The sidebar keeps the bright gold (it sits on navy); everywhere else
+   takes the darker text step. */
+[class*="text-primary-"]:not(#nav-sidebar [class*="text-primary-"]) {
+  color: var(--qs-accent-text) !important;
+}
+
+/* Gold primary buttons: Unfold hardcodes `text-white`, which is 2.4:1 on our
+   gold. The ink is dark in both themes because the button itself is gold in
+   both — this is not a theme-dependent choice. */
+[class*="bg-primary-6"],
+[class*="bg-primary-6"] span,
+button[type="submit"].bg-primary-600,
+input[type="submit"] {
+  color: var(--qs-on-accent) !important;
 }
 
 /* Subtle entrance animation for dashboard widgets */
@@ -133,12 +295,12 @@ a[class*="bg-primary"] {
    a label and a value in the legend — hue never carries the meaning alone.
    ========================================================================== */
 .qs-viz {
-  --viz-surface: #ffffff;
+  --viz-surface: var(--qs-surface);
   --viz-track: #edeff3;
-  --viz-ink: #111e2b;
-  --viz-ink-2: #606b8b;
-  --viz-ink-3: #8994b0;
-  --viz-grid: #ebedf1;
+  --viz-ink: var(--qs-ink);
+  --viz-ink-2: var(--qs-ink-soft);
+  --viz-ink-3: var(--qs-ink-mute);
+  --viz-grid: var(--qs-line);
 
   /* ordinal ramp, light (validated) */
   --viz-s1: #86b6ef;
@@ -151,51 +313,38 @@ a[class*="bg-primary"] {
   --viz-good: #0ca30c;
   --viz-warning: #fab219;
   --viz-critical: #d03b3b;
-  --viz-neutral: #8994b0;
+  --viz-neutral: var(--qs-ink-mute);
 
   /* the meter's single hue */
   --viz-meter: #2a78d6;
 
   /* Caution ink + wash for "excluded from the figures" notes. Both modes are
      chosen, not flipped: the dark step is lightened to clear the dark surface. */
-  --viz-caution-ink: #8f5a06;
-  --viz-caution-wash: #fff8ec;
+  --viz-caution-ink: var(--qs-accent-deeper);
+  --viz-caution-wash: var(--qs-caution-wash);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme="light"])) .qs-viz {
-    --viz-caution-ink: #f0b354;
-    --viz-caution-wash: #33291a;
-    --viz-surface: #1c2836;
-    --viz-track: #2b3a4d;
-    --viz-ink: #f5f6f8;
-    --viz-ink-2: #a6b0c6;
-    --viz-ink-3: #8994b0;
-    --viz-grid: #2b3a4d;
-    /* ordinal ramp, dark — re-stepped for the dark surface, not flipped */
-    --viz-s1: #b7d3f6;
-    --viz-s2: #86b6ef;
-    --viz-s3: #3987e5;
-    --viz-s4: #256abf;
-    --viz-s5: #184f95;
-    --viz-meter: #3987e5;
-  }
-}
-:root[data-theme="dark"] .qs-viz {
+/* Unfold's theme switcher is the single authority: it persists auto|light|dark
+   and puts `.dark` on <html>, resolving `auto` against the OS itself. Keying
+   these off `prefers-color-scheme` as well would override an explicit "light"
+   choice on a dark-OS machine — the toggle would visibly not work. */
+.dark .qs-viz {
   --viz-caution-ink: #f0b354;
   --viz-caution-wash: #33291a;
-  --viz-surface: #1c2836;
   --viz-track: #2b3a4d;
-  --viz-ink: #f5f6f8;
-  --viz-ink-2: #a6b0c6;
-  --viz-ink-3: #8994b0;
   --viz-grid: #2b3a4d;
+  /* ordinal ramp, dark — re-stepped for the dark surface, not flipped */
   --viz-s1: #b7d3f6;
   --viz-s2: #86b6ef;
   --viz-s3: #3987e5;
   --viz-s4: #256abf;
   --viz-s5: #184f95;
   --viz-meter: #3987e5;
+  /* Status steps lifted off the dark surface; still label-bearing, never
+     hue-alone. */
+  --viz-good: #35c435;
+  --viz-warning: #ffc043;
+  --viz-critical: #f16b6b;
 }
 
 .qs-card {
@@ -203,9 +352,14 @@ a[class*="bg-primary"] {
   border: 1px solid var(--viz-grid);
   border-radius: 14px;
   padding: 20px;
-  box-shadow: 0 4px 10px rgba(18, 28, 37, 0.04);
+  box-shadow: 0 4px 10px var(--qs-shadow);
   min-width: 0;
 }
+/* Emphasis inside translated copy: the markup is inside {% blocktrans %}, so it
+   carries no inline styles a translator would have to preserve. */
+.qs-card p b { color: var(--viz-ink); }
+.qs-card p code { font-family: ui-monospace, SFMono-Regular, monospace; }
+
 .qs-card h2 { font-size: 15px; font-weight: 700; margin: 0; color: var(--viz-ink); }
 .qs-card .qs-sub { font-size: 12px; color: var(--viz-ink-3); margin: 4px 0 0; }
 
@@ -279,15 +433,16 @@ a[class*="bg-primary"] {
    what would change before committing. */
 .qs-import { max-width: 1100px; }
 .qs-import__lede {
-  color: var(--color-base-500);
+  /* Not --color-base-500: that is one fixed value and ignores the theme. */
+  color: var(--qs-ink-soft);
   font-size: 14px;
   line-height: 1.65;
   margin: 0 0 24px;
   max-width: 68ch;
 }
 .qs-import__form {
-  background: #fff;
-  border: 1px solid var(--color-base-200);
+  background: var(--qs-surface);
+  border: 1px solid var(--qs-line);
   border-radius: 12px;
   padding: 20px 22px;
 }
@@ -301,7 +456,7 @@ a[class*="bg-primary"] {
 .qs-import__field input[type="text"],
 .qs-import__field input[type="file"],
 .qs-import__field select {
-  border: 1px solid var(--color-base-300);
+  border: 1px solid var(--qs-line-strong);
   border-radius: 8px;
   font-size: 14px;
   padding: 9px 11px;
@@ -310,18 +465,20 @@ a[class*="bg-primary"] {
 }
 .qs-import__field select[multiple] { min-height: 150px; }
 .qs-import__help {
-  color: var(--color-base-400);
+  color: var(--qs-ink-mute);
   font-size: 12px;
   line-height: 1.55;
   margin: 6px 0 0;
   max-width: 62ch;
 }
-.qs-import__error { color: #e5484d; font-size: 12px; margin: 6px 0 0; }
+.qs-import__error { color: var(--qs-bad-text); font-size: 12px; margin: 6px 0 0; }
 .qs-import__submit {
-  background: var(--fs-gold-deep);
+  background: var(--qs-accent);
   border: 0;
   border-radius: 9px;
-  color: #fff;
+  /* Ink chosen against the accent, which is deep gold on light and lifted gold
+     on dark — white would drop to ~1.9:1 on the latter. */
+  color: var(--qs-on-accent);
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
@@ -338,26 +495,26 @@ a[class*="bg-primary"] {
   margin: 16px 0 20px;
 }
 .qs-import__counts span {
-  background: #f2f3f5;
+  background: var(--qs-surface-2);
   border-radius: 999px;
   font-size: 13px;
   padding: 6px 14px;
 }
-.qs-import__counts .qs-import__muted { color: var(--color-base-400); }
+.qs-import__counts .qs-import__muted { color: var(--qs-ink-mute); }
 .qs-import__table {
   border-collapse: collapse;
   font-size: 13px;
   width: 100%;
 }
 .qs-import__table th {
-  border-bottom: 1px solid var(--color-base-200);
-  color: var(--color-base-500);
+  border-bottom: 1px solid var(--qs-line);
+  color: var(--qs-ink-soft);
   font-weight: 600;
   padding: 9px 12px;
   text-align: left;
 }
 .qs-import__table td {
-  border-bottom: 1px solid var(--color-base-100);
+  border-bottom: 1px solid var(--qs-line);
   padding: 9px 12px;
 }
 .qs-tag {
@@ -367,11 +524,11 @@ a[class*="bg-primary"] {
   padding: 3px 9px;
   white-space: nowrap;
 }
-.qs-tag--new-plan { background: #e6f6ee; color: #00875a; }
-.qs-tag--new-offer { background: #eef2ff; color: #3b5bdb; }
-.qs-tag--price-change { background: #fff4e5; color: #b8741f; }
+.qs-tag--new-plan { background: var(--qs-surface-2); color: var(--qs-good-deep); }
+.qs-tag--new-offer { background: var(--qs-surface-2); color: var(--qs-blue-text); }
+.qs-tag--price-change { background: var(--qs-caution-wash); color: var(--qs-accent-deep); }
 .qs-import__warn {
-  background: #fff8ec;
+  background: var(--qs-caution-wash);
   border-left: 3px solid var(--fs-gold-deep);
   border-radius: 6px;
   font-size: 13px;

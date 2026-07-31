@@ -7,6 +7,7 @@ from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 
 from .models import Country, Plan, PricingRule, Region, SupplierOffer
+from django.utils.translation import gettext_lazy as _
 
 
 @admin.register(Region)
@@ -19,7 +20,7 @@ class RegionAdmin(ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(_country_count=Count("countries"))
 
-    @display(description="Countries", ordering="_country_count")
+    @display(description=_("Countries"), ordering="_country_count")
     def country_count(self, obj):
         return obj._country_count
 
@@ -53,11 +54,11 @@ class CountryAdmin(ModelAdmin):
     def flag(self, obj):
         return format_html(
             '<span style="font-family:monospace;font-weight:700;letter-spacing:1px;'
-            'padding:2px 6px;border-radius:4px;background:#EEF2FF;color:#1B4DFF;">{}</span>',
+            'padding:2px 6px;border-radius:4px;background:var(--qs-surface-2);color:var(--qs-blue-text);">{}</span>',
             obj.iso2,
         )
 
-    @display(description="From", ordering="_starting_price")
+    @display(description=_("From"), ordering="_starting_price")
     def from_price(self, obj):
         price = obj._starting_price
         return f"${price}" if price is not None else "—"
@@ -118,9 +119,9 @@ class PlanAdmin(ModelAdmin):
     list_select_related = ("country", "region")
     actions = ("recalculate_prices",)
     fieldsets = (
-        ("Plan", {"fields": ("title", "scope", "country", "region")}),
+        (_("Plan"), {"fields": ("title", "scope", "country", "region")}),
         (
-            "Data & validity",
+            _("Data & validity"),
             {
                 "fields": (
                     "data_amount_mb",
@@ -134,10 +135,10 @@ class PlanAdmin(ModelAdmin):
             },
         ),
         (
-            "Supplier sourcing",
+            _("Supplier sourcing"),
             {
                 "fields": ("sourcing_readout",),
-                "description": (
+                "description": _(
                     "Add each supplier's wholesale price under 'Supplier offers' at the "
                     "bottom of this page. On save the cheapest available one sets the "
                     "cost, the price, and where the order is placed; the rest become "
@@ -146,7 +147,7 @@ class PlanAdmin(ModelAdmin):
             },
         ),
         (
-            "Pricing",
+            _("Pricing"),
             {
                 "fields": (
                     "cost_usd",
@@ -156,7 +157,7 @@ class PlanAdmin(ModelAdmin):
                     "price_locked",
                     "margin_readout",
                 ),
-                "description": (
+                "description": _(
                     "Enter the supplier cost and the price is calculated on save. "
                     "Leave the markup empty to inherit a pricing rule; fill it in to "
                     "override every rule for this plan alone. Tick 'price locked' to "
@@ -166,7 +167,7 @@ class PlanAdmin(ModelAdmin):
                 ),
             },
         ),
-        ("Visibility", {"fields": ("is_popular", "is_active", "sort_order")}),
+        (_("Visibility"), {"fields": ("is_popular", "is_active", "sort_order")}),
     )
     readonly_fields = ("margin_readout", "sourcing_readout")
 
@@ -266,20 +267,21 @@ class PlanAdmin(ModelAdmin):
         )
         return redirect(reverse("admin:catalog_plan_changelist"))
 
-    @display(description="Target")
+    @display(description=_("Target"))
     def target(self, obj):
         return obj.country or obj.region or "Global"
 
-    @display(description="Sourced from")
+    @display(description=_("Sourced from"))
     def sourcing_col(self, obj):
         offers = obj.ranked_offers
         if not offers:
             # No offers at all means the cost was typed in by hand, which is
             # worth distinguishing from a comparison that only has one entrant.
             return format_html(
-                '<span style="color:#5B6478;">{}</span>'
-                '<span style="color:#8A93A6;font-size:11px;"> manual</span>',
+                '<span style="color:var(--qs-ink-soft);">{}</span>'
+                '<span style="color:var(--qs-ink-mute);font-size:11px;"> {}</span>',
                 obj.provider,
+                _("manual"),
             )
 
         winner = offers[0]
@@ -287,28 +289,33 @@ class PlanAdmin(ModelAdmin):
         if saving is None:
             return format_html(
                 '<span style="font-weight:600;">{}</span>'
-                '<span style="color:#8A93A6;font-size:11px;"> only source</span>',
+                '<span style="color:var(--qs-ink-mute);font-size:11px;"> {}</span>',
                 winner.get_provider_display(),
+                _("only source"),
             )
         return format_html(
             '<span style="font-weight:600;">{}</span>'
-            '<span style="color:#00A37A;font-size:11px;"> −${} vs {}</span>',
+            '<span style="color:var(--qs-teal-text);font-size:11px;"> −${} {} {}</span>',
             winner.get_provider_display(),
             saving,
+            # "vs" as a word so a translator can render the comparison naturally.
+            _("vs"),
             offers[1].get_provider_display(),
         )
 
-    @display(description="Supplier comparison")
+    @display(description=_("Supplier comparison"))
     def sourcing_readout(self, obj):
         if obj.pk is None:
-            return "Save the plan, then add supplier prices below to compare them."
+            return _("Save the plan, then add supplier prices below to compare them.")
 
         offers = list(obj.offers.all())
         if not offers:
             return format_html(
-                "No supplier offers yet, so the cost above is used as typed and "
-                "orders route to <b>{}</b>. Add two offers below to have the "
-                "cheaper one chosen automatically.",
+                _(
+                    "No supplier offers yet, so the cost above is used as typed "
+                    "and orders route to <b>{}</b>. Add two offers below to have "
+                    "the cheaper one chosen automatically."
+                ),
                 obj.provider,
             )
 
@@ -317,10 +324,10 @@ class PlanAdmin(ModelAdmin):
         winner = ranked[0] if ranked else None
         for offer in sorted(offers, key=lambda o: o.cost_usd):
             if not offer.is_available:
-                note = offer.unavailable_reason or "unavailable"
+                note = offer.unavailable_reason or _("unavailable")
                 rows.append(
                     format_html(
-                        '<li style="color:#8A93A6;">{} — <s>${}</s> · {}</li>',
+                        '<li style="color:var(--qs-ink-mute);">{} — <s>${}</s> · {}</li>',
                         offer.get_provider_display(),
                         offer.cost_usd,
                         note,
@@ -330,17 +337,19 @@ class PlanAdmin(ModelAdmin):
                 rows.append(
                     format_html(
                         '<li><b>{} — ${}</b> '
-                        '<span style="color:#00A37A;font-weight:600;">← ordered from here</span></li>',
+                        '<span style="color:var(--qs-teal-text);font-weight:600;">← {}</span></li>',
                         offer.get_provider_display(),
                         offer.cost_usd,
+                        _("ordered from here"),
                     )
                 )
             else:
                 rows.append(
                     format_html(
-                        '<li>{} — ${} <span style="color:#5B6478;">· fallback</span></li>',
+                        '<li>{} — ${} <span style="color:var(--qs-ink-soft);">· {}</span></li>',
                         offer.get_provider_display(),
                         offer.cost_usd,
+                        _("fallback"),
                     )
                 )
         return format_html(
@@ -350,45 +359,45 @@ class PlanAdmin(ModelAdmin):
             format_html_join("", "{}", ((row,) for row in rows)),
         )
 
-    @display(description="Data")
+    @display(description=_("Data"))
     def data_col(self, obj):
         return obj.data_label
 
-    @display(description="Cost")
+    @display(description=_("Cost"))
     def cost_col(self, obj):
         return f"${obj.cost_usd}" if obj.cost_usd is not None else "—"
 
-    @display(description="Price")
+    @display(description=_("Price"))
     def price_badge(self, obj):
         lock = " 🔒" if obj.price_locked else ""
         note = (
-            format_html('<br><span style="color:#5B6478;font-size:11px;">{}</span>', obj.price_note)
+            format_html('<br><span style="color:var(--qs-ink-soft);font-size:11px;">{}</span>', obj.price_note)
             if obj.price_note
             else ""
         )
         return format_html(
-            '<span style="font-weight:700;color:#0A1F5C;">${}</span>{}{}',
+            '<span style="font-weight:700;color:var(--qs-ink);">${}</span>{}{}',
             obj.price_usd,
             lock,
             note,
         )
 
-    @display(description="Margin")
+    @display(description=_("Margin"))
     def margin_col(self, obj):
         amount = obj.margin_usd
         if amount is None:
             return "—"
         percent = obj.margin_percent
-        colour = "#00A37A" if amount > 0 else "#E5484D"
+        colour = "var(--qs-teal-text)" if amount > 0 else "var(--qs-bad-text)"
         return format_html(
             '<span style="color:{};font-weight:600;">${}</span>'
-            '<span style="color:#5B6478;font-size:11px;"> ({}%)</span>',
+            '<span style="color:var(--qs-ink-soft);font-size:11px;"> ({}%)</span>',
             colour,
             amount,
             percent,
         )
 
-    @display(description="Calculated margin")
+    @display(description=_("Calculated margin"))
     def margin_readout(self, obj):
         if obj.pk is None or obj.cost_usd is None:
             return "Enter a supplier cost to see the margin."
@@ -407,7 +416,7 @@ class PlanAdmin(ModelAdmin):
             source,
         )
 
-    @admin.action(description="Recalculate prices from cost and rules")
+    @admin.action(description=_("Recalculate prices from cost and rules"))
     def recalculate_prices(self, request, queryset):
         rules = list(PricingRule.objects.filter(is_active=True))
         changed = 0
@@ -434,27 +443,27 @@ class PricingRuleAdmin(ModelAdmin):
     actions = ("apply_to_catalogue",)
     fieldsets = (
         (
-            "Applies to",
+            _("Applies to"),
             {
                 "fields": ("scope", "provider", "country"),
-                "description": (
+                "description": _(
                     "Pick one. 'Everything' is the house default; a supplier or "
                     "destination rule overrides it for the plans it covers."
                 ),
             },
         ),
-        ("Markup", {"fields": ("markup_percent", "min_margin_usd", "rounding")}),
-        ("Admin", {"fields": ("is_active", "note")}),
+        (_("Markup"), {"fields": ("markup_percent", "min_margin_usd", "rounding")}),
+        (_("Admin"), {"fields": ("is_active", "note")}),
     )
 
-    @display(description="Applies to", ordering="scope")
+    @display(description=_("Applies to"), ordering="scope")
     def scope_label(self, obj):
         return str(obj).rsplit(" +", 1)[0]
 
-    @display(description="Markup", ordering="markup_percent")
+    @display(description=_("Markup"), ordering="markup_percent")
     def markup_badge(self, obj):
         return format_html(
-            '<span style="font-weight:700;color:#0A1F5C;">+{}%</span>', obj.markup_percent
+            '<span style="font-weight:700;color:var(--qs-ink);">+{}%</span>', obj.markup_percent
         )
 
     def get_queryset(self, request):
@@ -471,7 +480,7 @@ class PricingRuleAdmin(ModelAdmin):
         )
         return qs
 
-    @display(description="Plans covered")
+    @display(description=_("Plans covered"))
     def affected(self, obj):
         if obj.scope == PricingRule.Scope.PROVIDER:
             return self._by_provider.get(obj.provider, 0)
@@ -479,7 +488,7 @@ class PricingRuleAdmin(ModelAdmin):
             return self._by_country.get(obj.country_id, 0)
         return self._plan_total
 
-    @admin.action(description="Recalculate every affected plan now")
+    @admin.action(description=_("Recalculate every affected plan now"))
     def apply_to_catalogue(self, request, queryset):
         rules = list(PricingRule.objects.filter(is_active=True))
         plans = Plan.objects.filter(price_locked=False, cost_usd__isnull=False)
@@ -520,43 +529,52 @@ class SupplierOfferAdmin(ModelAdmin):
         # sibling set is prefetched rather than re-queried per row.
         return super().get_queryset(request).prefetch_related("plan__offers")
 
-    @display(description="Plan", ordering="plan__title")
+    @display(description=_("Plan"), ordering="plan__title")
     def plan_col(self, obj):
         target = obj.plan.country or obj.plan.region or "Global"
         return format_html(
-            "{}<br><span style=\"color:#8A93A6;font-size:11px;\">{}</span>", obj.plan.title, target
+            "{}<br><span style=\"color:var(--qs-ink-mute);font-size:11px;\">{}</span>", obj.plan.title, target
         )
 
-    @display(description="Cost", ordering="cost_usd")
+    @display(description=_("Cost"), ordering="cost_usd")
     def cost_badge(self, obj):
         return format_html('<span style="font-weight:600;">${}</span>', obj.cost_usd)
 
-    @display(description="Verdict")
+    @display(description=_("Verdict"))
     def verdict(self, obj):
         if not obj.is_available:
             return format_html(
-                '<span style="color:#8A93A6;">out — {}</span>',
-                obj.unavailable_reason or "unavailable",
+                '<span style="color:var(--qs-ink-mute);">{} — {}</span>',
+                _("out"),
+                obj.unavailable_reason or _("unavailable"),
             )
 
         ranked = obj.plan.ranked_offers
         if len(ranked) < 2:
-            return format_html('<span style="color:#5B6478;">only source</span>')
+            return format_html(
+                '<span style="color:var(--qs-ink-soft);">{}</span>', _("only source")
+            )
 
         if ranked[0].pk == obj.pk:
             return format_html(
-                '<span style="color:#00A37A;font-weight:600;">cheapest</span>'
-                '<span style="color:#5B6478;font-size:11px;"> · saves ${}</span>',
-                ranked[1].cost_usd - obj.cost_usd,
+                '<span style="color:var(--qs-teal-text);font-weight:600;">{}</span>'
+                '<span style="color:var(--qs-ink-soft);font-size:11px;"> · {}</span>',
+                _("cheapest"),
+                # Formatted here rather than inside the markup so the phrase, not
+                # the layout, is what a translator sees.
+                _("saves ${amount}").format(amount=ranked[1].cost_usd - obj.cost_usd),
             )
         return format_html(
-            '<span style="color:#5B6478;">fallback</span>'
-            '<span style="color:#8A93A6;font-size:11px;"> · +${} vs {}</span>',
-            obj.cost_usd - ranked[0].cost_usd,
-            ranked[0].get_provider_display(),
+            '<span style="color:var(--qs-ink-soft);">{}</span>'
+            '<span style="color:var(--qs-ink-mute);font-size:11px;"> · {}</span>',
+            _("fallback"),
+            _("+${amount} vs {provider}").format(
+                amount=obj.cost_usd - ranked[0].cost_usd,
+                provider=ranked[0].get_provider_display(),
+            ),
         )
 
-    @admin.action(description="Mark available (put back in the running)")
+    @admin.action(description=_("Mark available (put back in the running)"))
     def mark_available(self, request, queryset):
         count = 0
         for offer in queryset:
@@ -568,7 +586,7 @@ class SupplierOfferAdmin(ModelAdmin):
             count += 1
         self.message_user(request, f"{count} offer(s) back in the running; sourcing re-decided.")
 
-    @admin.action(description="Mark unavailable (take out of the running)")
+    @admin.action(description=_("Mark unavailable (take out of the running)"))
     def mark_unavailable(self, request, queryset):
         count = 0
         for offer in queryset:

@@ -7,6 +7,8 @@ from django.conf import settings
 from django.db.models import Count, DecimalField, ExpressionWrapper, F, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
+from django.utils.formats import date_format
+from django.utils.translation import gettext_lazy as _
 
 
 def dashboard_callback(request, context):
@@ -47,8 +49,8 @@ def dashboard_callback(request, context):
     max_val = max(revenue_buckets.values()) or Decimal("1")
     chart = [
         {
-            "label": day.strftime("%d %b"),
-            "short": day.strftime("%d"),
+            "label": date_format(day, "d M"),
+            "short": date_format(day, "d"),
             "value": float(value),
             "cost": float(cost_buckets[day]),
             "profit": float(value - cost_buckets[day]),
@@ -170,17 +172,17 @@ def dashboard_callback(request, context):
         return out, total
 
     status_rows = [
-        ("Paid", Order.objects.filter(status=Order.Status.PAID).count(), "good"),
-        ("Pending", Order.objects.filter(status=Order.Status.PENDING).count(), "warning"),
-        ("Cancelled", Order.objects.filter(status=Order.Status.CANCELLED).count(), "neutral"),
-        ("Refunded", Order.objects.filter(status=Order.Status.REFUNDED).count(), "critical"),
+        (_("Paid"), Order.objects.filter(status=Order.Status.PAID).count(), "good"),
+        (_("Pending"), Order.objects.filter(status=Order.Status.PENDING).count(), "warning"),
+        (_("Cancelled"), Order.objects.filter(status=Order.Status.CANCELLED).count(), "neutral"),
+        (_("Refunded"), Order.objects.filter(status=Order.Status.REFUNDED).count(), "critical"),
     ]
     status_arcs, status_total = _arcs([r for r in status_rows if r[1] > 0])
 
     # Margin buckets are an ordered scale, not identities, so they take one
     # sequential hue light→dark. A loss is a status, not a step on that ramp.
     margin_rows = [
-        ("Loss", margin_buckets["loss"], "loss"),
+        (_("Loss"), margin_buckets["loss"], "loss"),
         ("0–20%", margin_buckets["0-20"], "s1"),
         ("20–40%", margin_buckets["20-40"], "s2"),
         ("40–60%", margin_buckets["40-60"], "s3"),

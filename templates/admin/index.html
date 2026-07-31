@@ -2,77 +2,77 @@
 {% load i18n %}
 
 {% block content %}
-<div style="font-family:'Roboto',sans-serif;color:#111e2b;">
+<div style="font-family:'Roboto',sans-serif;color:var(--qs-ink);">
 
   <div class="fs-rise" style="margin-bottom:6px;">
-    <h1 style="font-size:28px;font-weight:700;margin:0;">Dashboard</h1>
-    <p style="color:#606b8b;margin:6px 0 0;font-size:14px;">
-      Live overview of QulaySIM sales, customers and eSIM activity.
+    <h1 style="font-size:28px;font-weight:700;margin:0;">{% trans "Dashboard" %}</h1>
+    <p style="color:var(--qs-ink-soft);margin:6px 0 0;font-size:14px;">
+      {% trans "Live overview of QulaySIM sales, customers and eSIM activity." %}
     </p>
   </div>
 
   <!-- Stat cards -->
   <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:22px;">
     {% with cards="revenue" %}{% endwith %}
-    <div class="fs-rise" style="background:#fff;border:1px solid #ebedf1;border-radius:12px;padding:20px;box-shadow:0 4px 8px rgba(18,28,37,0.04);">
+    <div class="fs-rise" style="background:var(--qs-surface);border:1px solid var(--qs-line);border-radius:12px;padding:20px;box-shadow:0 4px 8px var(--qs-shadow);">
       <div style="display:flex;align-items:center;gap:12px;">
-        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,#ffcb69,#e59500);color:#fff;">
+        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,var(--qs-accent-soft),var(--qs-accent));color:var(--qs-surface);">
           <span class="material-symbols-outlined">payments</span>
         </span>
         <div>
           <div style="font-size:26px;font-weight:700;line-height:1;">${{ fs_revenue|floatformat:2 }}</div>
-          <div style="font-size:13px;color:#606b8b;margin-top:4px;">Total revenue</div>
+          <div style="font-size:13px;color:var(--qs-ink-soft);margin-top:4px;">{% trans "Total revenue" %}</div>
         </div>
       </div>
     </div>
 
-    <div class="fs-rise" style="background:#fff;border:1px solid #ebedf1;border-radius:12px;padding:20px;box-shadow:0 4px 8px rgba(18,28,37,0.04);">
+    <div class="fs-rise" style="background:var(--qs-surface);border:1px solid var(--qs-line);border-radius:12px;padding:20px;box-shadow:0 4px 8px var(--qs-shadow);">
       <div style="display:flex;align-items:center;gap:12px;">
-        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:#347bdf;color:#fff;">
+        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:var(--qs-blue);color:var(--qs-surface);">
           <span class="material-symbols-outlined">receipt_long</span>
         </span>
         <div>
           <div style="font-size:26px;font-weight:700;line-height:1;">{{ fs_orders_count }}</div>
-          <div style="font-size:13px;color:#606b8b;margin-top:4px;">Orders · {{ fs_pending_count }} pending</div>
+          <div style="font-size:13px;color:var(--qs-ink-soft);margin-top:4px;">{% blocktrans with n=fs_pending_count %}Orders · {{ n }} pending{% endblocktrans %}</div>
         </div>
       </div>
     </div>
 
-    <div class="fs-rise" style="background:#fff;border:1px solid #ebedf1;border-radius:12px;padding:20px;box-shadow:0 4px 8px rgba(18,28,37,0.04);">
+    <div class="fs-rise" style="background:var(--qs-surface);border:1px solid var(--qs-line);border-radius:12px;padding:20px;box-shadow:0 4px 8px var(--qs-shadow);">
       <div style="display:flex;align-items:center;gap:12px;">
-        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:#8938fa;color:#fff;">
+        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:var(--qs-violet);color:var(--qs-surface);">
           <span class="material-symbols-outlined">group</span>
         </span>
         <div>
           <div style="font-size:26px;font-weight:700;line-height:1;">{{ fs_customers_count }}</div>
-          <div style="font-size:13px;color:#606b8b;margin-top:4px;">Customers</div>
+          <div style="font-size:13px;color:var(--qs-ink-soft);margin-top:4px;">{% trans "Customers" %}</div>
         </div>
       </div>
     </div>
 
-    <div class="fs-rise" style="background:#fff;border:1px solid #ebedf1;border-radius:12px;padding:20px;box-shadow:0 4px 8px rgba(18,28,37,0.04);">
+    <div class="fs-rise" style="background:var(--qs-surface);border:1px solid var(--qs-line);border-radius:12px;padding:20px;box-shadow:0 4px 8px var(--qs-shadow);">
       <div style="display:flex;align-items:center;gap:12px;">
-        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:#13bd62;color:#fff;">
+        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:var(--qs-good);color:var(--qs-surface);">
           <span class="material-symbols-outlined">sim_card</span>
         </span>
         <div>
-          <div style="font-size:26px;font-weight:700;line-height:1;">{{ fs_active_esims }}<span style="font-size:15px;color:#8994b0;font-weight:500;">/{{ fs_total_esims }}</span></div>
-          <div style="font-size:13px;color:#606b8b;margin-top:4px;">Active eSIMs</div>
+          <div style="font-size:26px;font-weight:700;line-height:1;">{{ fs_active_esims }}<span style="font-size:15px;color:var(--qs-ink-mute);font-weight:500;">/{{ fs_total_esims }}</span></div>
+          <div style="font-size:13px;color:var(--qs-ink-soft);margin-top:4px;">{% trans "Active eSIMs" %}</div>
         </div>
       </div>
     </div>
 
-    <div class="fs-rise" style="background:#fff;border:1px solid #ebedf1;border-radius:12px;padding:20px;box-shadow:0 4px 8px rgba(18,28,37,0.04);">
+    <div class="fs-rise" style="background:var(--qs-surface);border:1px solid var(--qs-line);border-radius:12px;padding:20px;box-shadow:0 4px 8px var(--qs-shadow);">
       <div style="display:flex;align-items:center;gap:12px;">
-        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:#00a37a;color:#fff;">
+        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:var(--qs-teal);color:var(--qs-surface);">
           <span class="material-symbols-outlined">trending_up</span>
         </span>
         <div>
           <div style="font-size:26px;font-weight:700;line-height:1;">${{ fs_profit|floatformat:2 }}</div>
-          <div style="font-size:13px;color:#606b8b;margin-top:4px;">Profit · {{ fs_margin_percent }}% margin</div>
+          <div style="font-size:13px;color:var(--qs-ink-soft);margin-top:4px;">{% blocktrans with pct=fs_margin_percent %}Profit · {{ pct }}% margin{% endblocktrans %}</div>
           {% if fs_uncosted_revenue %}
-          <div style="font-size:11px;color:#8f5a06;margin-top:3px;" title="Orders with no line items have no traceable supplier cost, so they are left out of the margin rather than counted as pure profit.">
-            excludes ${{ fs_uncosted_revenue|floatformat:2 }} with no cost data
+          <div style="font-size:11px;color:var(--qs-accent-deeper);margin-top:3px;" title="{% trans 'Orders with no line items have no traceable supplier cost, so they are left out of the margin rather than counted as pure profit.' %}">
+            {% blocktrans with amount=fs_uncosted_revenue|floatformat:2 %}excludes ${{ amount }} with no cost data{% endblocktrans %}
           </div>
           {% endif %}
         </div>
@@ -82,42 +82,42 @@
 
   <!-- Chart + top destinations -->
   <div style="display:grid;gap:16px;grid-template-columns:2fr 1fr;margin-top:18px;">
-    <div class="fs-rise" style="background:#fff;border:1px solid #ebedf1;border-radius:12px;padding:20px;box-shadow:0 4px 8px rgba(18,28,37,0.04);min-width:0;">
+    <div class="fs-rise" style="background:var(--qs-surface);border:1px solid var(--qs-line);border-radius:12px;padding:20px;box-shadow:0 4px 8px var(--qs-shadow);min-width:0;">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <h2 style="font-size:16px;font-weight:700;margin:0;">Revenue &amp; profit · last 14 days</h2>
-        <div style="display:flex;gap:14px;font-size:12px;color:#606b8b;">
-          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#e59500;"></span> profit</span>
-          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#c9d1de;"></span> supplier cost</span>
+        <h2 style="font-size:16px;font-weight:700;margin:0;">{% trans "Revenue &amp; profit · last 14 days" %}</h2>
+        <div style="display:flex;gap:14px;font-size:12px;color:var(--qs-ink-soft);">
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--qs-accent);"></span> {% trans "profit" %}</span>
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--qs-line-strong);"></span> {% trans "supplier cost" %}</span>
         </div>
       </div>
       <div style="display:flex;gap:22px;margin-top:12px;font-size:13px;">
-        <div><span style="color:#606b8b;">Revenue</span> <b style="color:#111e2b;">${{ fs_period_revenue|floatformat:2 }}</b></div>
-        <div><span style="color:#606b8b;">Cost</span> <b style="color:#111e2b;">${{ fs_period_cost|floatformat:2 }}</b></div>
-        <div><span style="color:#606b8b;">Profit</span> <b style="color:#00a37a;">${{ fs_period_profit|floatformat:2 }}</b></div>
+        <div><span style="color:var(--qs-ink-soft);">{% trans "Revenue" %}</span> <b style="color:var(--qs-ink);">${{ fs_period_revenue|floatformat:2 }}</b></div>
+        <div><span style="color:var(--qs-ink-soft);">{% trans "Cost" %}</span> <b style="color:var(--qs-ink);">${{ fs_period_cost|floatformat:2 }}</b></div>
+        <div><span style="color:var(--qs-ink-soft);">{% trans "Profit" %}</span> <b style="color:var(--qs-teal-text);">${{ fs_period_profit|floatformat:2 }}</b></div>
       </div>
       <div style="display:flex;align-items:flex-end;gap:6px;height:180px;margin-top:16px;">
         {% for d in fs_chart %}
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;"
-             title="{{ d.label }} — revenue ${{ d.value|floatformat:2 }}, cost ${{ d.cost|floatformat:2 }}, profit ${{ d.profit|floatformat:2 }}">
-          <div style="width:100%;height:{{ d.pct }}%;min-height:3px;border-radius:6px 6px 0 0;overflow:hidden;display:flex;flex-direction:column;transition:height .4s ease;background:linear-gradient(180deg,#ffcb69,#e59500);">
-            <div style="height:{{ d.cost_pct }}%;background:#c9d1de;margin-top:auto;"></div>
+             title="{% blocktrans with day=d.label revenue=d.value|floatformat:2 cost=d.cost|floatformat:2 profit=d.profit|floatformat:2 %}{{ day }} — revenue ${{ revenue }}, cost ${{ cost }}, profit ${{ profit }}{% endblocktrans %}">
+          <div style="width:100%;height:{{ d.pct }}%;min-height:3px;border-radius:6px 6px 0 0;overflow:hidden;display:flex;flex-direction:column;transition:height .4s ease;background:linear-gradient(180deg,var(--qs-accent-soft),var(--qs-accent));">
+            <div style="height:{{ d.cost_pct }}%;background:var(--qs-line-strong);margin-top:auto;"></div>
           </div>
-          <span style="font-size:10px;color:#8994b0;">{{ d.short }}</span>
+          <span style="font-size:10px;color:var(--qs-ink-mute);">{{ d.short }}</span>
         </div>
         {% endfor %}
       </div>
     </div>
 
-    <div class="fs-rise" style="background:#fff;border:1px solid #ebedf1;border-radius:12px;padding:20px;box-shadow:0 4px 8px rgba(18,28,37,0.04);">
-      <h2 style="font-size:16px;font-weight:700;margin:0 0 14px;">Top destinations</h2>
+    <div class="fs-rise" style="background:var(--qs-surface);border:1px solid var(--qs-line);border-radius:12px;padding:20px;box-shadow:0 4px 8px var(--qs-shadow);">
+      <h2 style="font-size:16px;font-weight:700;margin:0 0 14px;">{% trans "Top destinations" %}</h2>
       {% for c in fs_top_countries %}
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f2f3f5;">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--qs-surface-2);">
         <img src="https://flagcdn.com/w40/{{ c.plan__country__iso2|lower }}.png" alt="" style="width:26px;height:18px;border-radius:3px;object-fit:cover;" />
         <span style="flex:1;font-size:14px;font-weight:500;">{{ c.plan__country__name }}</span>
-        <span style="font-size:13px;color:#606b8b;font-weight:600;">{{ c.c }}</span>
+        <span style="font-size:13px;color:var(--qs-ink-soft);font-weight:600;">{{ c.c }}</span>
       </div>
       {% empty %}
-      <p style="color:#8994b0;font-size:13px;">No eSIMs sold yet.</p>
+      <p style="color:var(--qs-ink-mute);font-size:13px;">{% trans "No eSIMs sold yet." %}</p>
       {% endfor %}
     </div>
   </div>
@@ -134,10 +134,10 @@
   <div class="qs-viz qs-grid-3">
 
     <div class="qs-card fs-rise">
-      <h2>Profit margin</h2>
-      <p class="qs-sub">Share of measurable revenue kept as profit.</p>
+      <h2>{% trans "Profit margin" %}</h2>
+      <p class="qs-sub">{% trans "Share of measurable revenue kept as profit." %}</p>
       <svg class="qs-donut" width="190" height="190" viewBox="0 0 42 42" role="img"
-           aria-label="Profit margin {{ fs_margin_percent }} percent">
+           aria-label="{% blocktrans with pct=fs_margin_percent %}Profit margin {{ pct }} percent{% endblocktrans %}">
         <circle class="qs-track" cx="21" cy="21" r="15.9155" stroke-width="3.4"></circle>
         <circle class="qs-meter-arc" cx="21" cy="21" r="15.9155" stroke-width="3.4"
                 stroke-dasharray="{{ fs_margin_percent|floatformat:1 }} {{ fs_margin_track }}"
@@ -145,15 +145,15 @@
                 stroke-linecap="round"></circle>
         <g class="qs-donut-centre">
           <text class="qs-figure" x="21" y="21.2">{{ fs_margin_percent }}%</text>
-          <text class="qs-caption" x="21" y="25.2">MARGIN</text>
+          <text class="qs-caption" x="21" y="25.2">{% trans "MARGIN" %}</text>
         </g>
       </svg>
       <ul class="qs-legend">
-        <li><span class="qs-name">Profit</span><span class="qs-val">${{ fs_profit|floatformat:2 }}</span></li>
-        <li><span class="qs-name">Supplier cost</span><span class="qs-val">${{ fs_cost|floatformat:2 }}</span></li>
+        <li><span class="qs-name">{% trans "Profit" %}</span><span class="qs-val">${{ fs_profit|floatformat:2 }}</span></li>
+        <li><span class="qs-name">{% trans "Supplier cost" %}</span><span class="qs-val">${{ fs_cost|floatformat:2 }}</span></li>
         {% if fs_uncosted_revenue %}
-        <li title="Orders with no line items carry no traceable cost, so they are left out of the ratio rather than counted as pure profit.">
-          <span class="qs-name" style="color:var(--viz-caution-ink);">Excluded — no cost data</span>
+        <li title="{% trans 'Orders with no line items carry no traceable cost, so they are left out of the ratio rather than counted as pure profit.' %}">
+          <span class="qs-name" style="color:var(--viz-caution-ink);">{% trans "Excluded — no cost data" %}</span>
           <span class="qs-val">${{ fs_uncosted_revenue|floatformat:2 }}</span>
         </li>
         {% endif %}
@@ -161,11 +161,11 @@
     </div>
 
     <div class="qs-card fs-rise">
-      <h2>Orders by status</h2>
-      <p class="qs-sub">Every order ever placed.</p>
+      <h2>{% trans "Orders by status" %}</h2>
+      <p class="qs-sub">{% trans "Every order ever placed." %}</p>
       {% if fs_status_arcs %}
       <svg class="qs-donut" width="190" height="190" viewBox="0 0 42 42" role="img"
-           aria-label="Orders by status">
+           aria-label="{% trans 'Orders by status' %}">
         <circle class="qs-track" cx="21" cy="21" r="15.9155" stroke-width="3.4"></circle>
         {% for a in fs_status_arcs %}
         <circle class="qs-seg qs-seg-{{ a.role }}" cx="21" cy="21" r="15.9155" stroke-width="3.4"
@@ -176,7 +176,7 @@
         {% endfor %}
         <g class="qs-donut-centre">
           <text class="qs-figure" x="21" y="21.2">{{ fs_status_total }}</text>
-          <text class="qs-caption" x="21" y="25.2">ORDERS</text>
+          <text class="qs-caption" x="21" y="25.2">{% trans "ORDERS" %}</text>
         </g>
       </svg>
       <ul class="qs-legend">
@@ -189,15 +189,15 @@
         </li>
         {% endfor %}
       </ul>
-      {% else %}<p class="qs-empty">No orders yet.</p>{% endif %}
+      {% else %}<p class="qs-empty">{% trans "No orders yet." %}</p>{% endif %}
     </div>
 
     <div class="qs-card fs-rise">
-      <h2>Margin spread</h2>
-      <p class="qs-sub">Active plans grouped by profit over supplier cost.</p>
+      <h2>{% trans "Margin spread" %}</h2>
+      <p class="qs-sub">{% trans "Active plans grouped by profit over supplier cost." %}</p>
       {% if fs_margin_arcs %}
       <svg class="qs-donut" width="190" height="190" viewBox="0 0 42 42" role="img"
-           aria-label="Active plans by margin band">
+           aria-label="{% trans 'Active plans by margin band' %}">
         <circle class="qs-track" cx="21" cy="21" r="15.9155" stroke-width="3.4"></circle>
         {% for a in fs_margin_arcs %}
         <circle class="qs-seg qs-seg-{{ a.role }}" cx="21" cy="21" r="15.9155" stroke-width="3.4"
@@ -208,7 +208,7 @@
         {% endfor %}
         <g class="qs-donut-centre">
           <text class="qs-figure" x="21" y="21.2">{{ fs_margin_total }}</text>
-          <text class="qs-caption" x="21" y="25.2">PLANS</text>
+          <text class="qs-caption" x="21" y="25.2">{% trans "PLANS" %}</text>
         </g>
       </svg>
       <ul class="qs-legend">
@@ -222,7 +222,7 @@
         {% endfor %}
       </ul>
       {% else %}
-      <p class="qs-empty">No plans carry a supplier cost yet.</p>
+      <p class="qs-empty">{% trans "No plans carry a supplier cost yet." %}</p>
       {% endif %}
     </div>
 
@@ -236,15 +236,14 @@
   <div class="qs-viz" style="margin-top:18px;">
     <div class="qs-card fs-rise">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <h2>Supply mix</h2>
-        <a href="/{{ fs_admin_path }}/catalog/pricingrule/" style="font-size:13px;color:#e59500;font-weight:600;text-decoration:none;">Pricing rules</a>
+        <h2>{% trans "Supply mix" %}</h2>
+        <a href="/{{ fs_admin_path }}/catalog/pricingrule/" style="font-size:13px;color:var(--qs-accent-text);font-weight:600;text-decoration:none;">{% trans "Pricing rules" %}</a>
       </div>
-      <p class="qs-sub">Where active plans come from.</p>
+      <p class="qs-sub">{% trans "Where active plans come from." %}</p>
       {% if fs_supply_mix|length == 1 %}
         {% for s in fs_supply_mix %}
         <p style="margin:16px 0 0;font-size:14px;color:var(--viz-ink-2);">
-          All <b style="color:var(--viz-ink);">{{ s.count }}</b> active plans come from
-          <b style="color:var(--viz-ink);">{{ s.provider }}</b>.
+          {% blocktrans with count=s.count provider=s.provider %}All <b>{{ count }}</b> active plans come from <b>{{ provider }}</b>.{% endblocktrans %}
         </p>
         {% endfor %}
       {% else %}
@@ -262,8 +261,8 @@
       {% endif %}
       {% if fs_unpriced_plans %}
       <p style="margin:16px 0 0;padding:9px 12px;border-radius:8px;background:var(--viz-caution-wash);color:var(--viz-caution-ink);font-size:12px;">
-        {{ fs_unpriced_plans }} active plan(s) have no supplier cost, so they are excluded from the margin figures.
-        Run <code style="font-family:ui-monospace,monospace;">manage.py backfill_costs</code> or set a cost.
+        {% blocktrans count n=fs_unpriced_plans %}{{ n }} active plan has no supplier cost, so it is excluded from the margin figures.{% plural %}{{ n }} active plans have no supplier cost, so they are excluded from the margin figures.{% endblocktrans %}
+        {% blocktrans %}Run <code>manage.py backfill_costs</code> or set a cost.{% endblocktrans %}
       </p>
       {% endif %}
     </div>
@@ -271,44 +270,44 @@
   </div>
 
   <!-- Recent orders -->
-  <div class="fs-rise" style="background:#fff;border:1px solid #ebedf1;border-radius:12px;padding:20px;box-shadow:0 4px 8px rgba(18,28,37,0.04);margin-top:18px;">
+  <div class="fs-rise" style="background:var(--qs-surface);border:1px solid var(--qs-line);border-radius:12px;padding:20px;box-shadow:0 4px 8px var(--qs-shadow);margin-top:18px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-      <h2 style="font-size:16px;font-weight:700;margin:0;">Recent orders</h2>
-      <a href="{% url 'admin:orders_order_changelist' %}" style="font-size:13px;color:#e59500;font-weight:600;text-decoration:none;">View all</a>
+      <h2 style="font-size:16px;font-weight:700;margin:0;">{% trans "Recent orders" %}</h2>
+      <a href="{% url 'admin:orders_order_changelist' %}" style="font-size:13px;color:var(--qs-accent-text);font-weight:600;text-decoration:none;">{% trans "View all" %}</a>
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:14px;">
       <thead>
-        <tr style="text-align:left;color:#8994b0;font-size:12px;text-transform:uppercase;letter-spacing:.04em;">
-          <th style="padding:10px 8px;">Order</th>
-          <th style="padding:10px 8px;">Customer</th>
-          <th style="padding:10px 8px;">Status</th>
-          <th style="padding:10px 8px;text-align:right;">Total</th>
-          <th style="padding:10px 8px;text-align:right;">Date</th>
+        <tr style="text-align:left;color:var(--qs-ink-mute);font-size:12px;text-transform:uppercase;letter-spacing:.04em;">
+          <th style="padding:10px 8px;">{% trans "Order" %}</th>
+          <th style="padding:10px 8px;">{% trans "Customer" %}</th>
+          <th style="padding:10px 8px;">{% trans "Status" %}</th>
+          <th style="padding:10px 8px;text-align:right;">{% trans "Total" %}</th>
+          <th style="padding:10px 8px;text-align:right;">{% trans "Date" %}</th>
         </tr>
       </thead>
       <tbody>
         {% for o in fs_recent_orders %}
-        <tr style="border-top:1px solid #f2f3f5;">
+        <tr style="border-top:1px solid var(--qs-surface-2);">
           <td style="padding:11px 8px;font-weight:600;">
-            <a href="{% url 'admin:orders_order_change' o.pk %}" style="color:#111e2b;text-decoration:none;">#{{ o.pk }}</a>
+            <a href="{% url 'admin:orders_order_change' o.pk %}" style="color:var(--qs-ink);text-decoration:none;">#{{ o.pk }}</a>
           </td>
-          <td style="padding:11px 8px;color:#606b8b;">{{ o.customer.email }}</td>
+          <td style="padding:11px 8px;color:var(--qs-ink-soft);">{{ o.customer.email }}</td>
           <td style="padding:11px 8px;">
             {% if o.status == "paid" %}
-            <span style="background:#13bd6218;color:#0f9b52;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;">Paid</span>
+            <span style="background:var(--qs-good-wash);color:var(--qs-good-deep);padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;">{% trans "Paid" %}</span>
             {% elif o.status == "pending" %}
-            <span style="background:#f39c121f;color:#c47d00;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;">Pending</span>
+            <span style="background:var(--qs-warn-wash);color:var(--qs-accent-deep);padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;">{% trans "Pending" %}</span>
             {% elif o.status == "refunded" %}
-            <span style="background:#f74c3918;color:#d6321f;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;">Refunded</span>
+            <span style="background:var(--qs-bad-wash);color:var(--qs-bad-deep);padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;">{% trans "Refunded" %}</span>
             {% else %}
-            <span style="background:#8994b018;color:#606b8b;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;">{{ o.get_status_display }}</span>
+            <span style="background:var(--qs-neutral-wash);color:var(--qs-ink-soft);padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;">{{ o.get_status_display }}</span>
             {% endif %}
           </td>
           <td style="padding:11px 8px;text-align:right;font-weight:700;">${{ o.total|floatformat:2 }}</td>
-          <td style="padding:11px 8px;text-align:right;color:#8994b0;">{{ o.created_at|date:"d M, H:i" }}</td>
+          <td style="padding:11px 8px;text-align:right;color:var(--qs-ink-mute);">{{ o.created_at|date:"d M, H:i" }}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="5" style="padding:20px;text-align:center;color:#8994b0;">No orders yet.</td></tr>
+        <tr><td colspan="5" style="padding:20px;text-align:center;color:var(--qs-ink-mute);">{% trans "No orders yet." %}</td></tr>
         {% endfor %}
       </tbody>
     </table>

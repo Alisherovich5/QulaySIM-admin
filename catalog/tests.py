@@ -505,6 +505,7 @@ class SidebarNavigationTests(TestCase):
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(LANGUAGE_CODE="en")
 class PlanAdminRenderTests(TestCase):
     """The plan editor and its comparison block must actually render.
 
@@ -890,6 +891,7 @@ class LoginRedirectTests(TestCase):
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(LANGUAGE_CODE="en")
 class SupplierImportPageTests(TestCase):
     """Uploading a wholesaler price list instead of building eleven objects.
 

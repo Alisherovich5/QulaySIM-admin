@@ -1,18 +1,19 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 class Customer(models.Model):
     """Storefront customer. Passwords are hashed by the FastAPI service
     (passlib/bcrypt) and stored here; Django admin treats this read-mostly."""
 
-    email = models.EmailField(unique=True)
-    full_name = models.CharField(max_length=150, blank=True)
+    email = models.EmailField(unique=True, verbose_name=_("email"))
+    full_name = models.CharField(max_length=150, blank=True, verbose_name=_("full name"))
     # Blank for accounts that only ever sign in through a provider. The API's
     # verify_password rejects an empty hash with a constant-time decoy, so a
     # blank value is not a password anyone can guess — it is the absence of one.
-    hashed_password = models.CharField(max_length=255, blank=True)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    hashed_password = models.CharField(max_length=255, blank=True, verbose_name=_("hashed password"))
+    is_active = models.BooleanField(default=True, verbose_name=_("is active"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"))
     # The avatar lives in the database rather than a media volume: at this size
     # it is a few kilobytes, and keeping it here means the nightly pg_dump
     # already backs it up, with no volume to mount, no extra route to serve and
@@ -20,20 +21,23 @@ class Customer(models.Model):
     #
     # Always re-encoded WebP written by the API, never the bytes the customer
     # uploaded — that is what strips EXIF and anything hidden in the original.
-    avatar_webp = models.BinaryField(null=True, blank=True, editable=False)
-    avatar_updated_at = models.DateTimeField(null=True, blank=True, editable=False)
+    avatar_webp = models.BinaryField(null=True, blank=True, editable=False, verbose_name=_("avatar webp"))
+    avatar_updated_at = models.DateTimeField(null=True, blank=True, editable=False, verbose_name=_("avatar updated at"))
     # Referral program
-    referral_code = models.CharField(max_length=12, unique=True, null=True, blank=True)
+    referral_code = models.CharField(max_length=12, unique=True, null=True, blank=True, verbose_name=_("referral code"))
     referred_by = models.ForeignKey(
         "self",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
         related_name="referrals_made",
+        verbose_name=_("referred by"),
     )
 
     class Meta:
         db_table = "customers_customer"
+        verbose_name = _("customer")
+        verbose_name_plural = _("customers")
         ordering = ["-created_at"]
 
     def __str__(self):
@@ -49,7 +53,8 @@ class Referral(models.Model):
         COMPLETED = "completed", "Completed"
 
     referrer = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, related_name="referrals"
+        Customer, on_delete=models.CASCADE, related_name="referrals",
+        verbose_name=_("referrer"),
     )
     referred = models.ForeignKey(
         Customer,
@@ -57,15 +62,18 @@ class Referral(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="referred_via",
+        verbose_name=_("referred"),
     )
-    referred_email = models.EmailField(blank=True)
-    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
-    reward_code = models.CharField(max_length=40, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    completed_at = models.DateTimeField(null=True, blank=True)
+    referred_email = models.EmailField(blank=True, verbose_name=_("referred email"))
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING, verbose_name=_("status"))
+    reward_code = models.CharField(max_length=40, blank=True, verbose_name=_("reward code"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"))
+    completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("completed at"))
 
     class Meta:
         db_table = "customers_referral"
+        verbose_name = _("referral")
+        verbose_name_plural = _("referrals")
         ordering = ["-created_at"]
 
     def __str__(self):
@@ -89,20 +97,25 @@ class SocialAccount(models.Model):
         TELEGRAM = "telegram", "Telegram"
 
     customer = models.ForeignKey(
-        "customers.Customer", on_delete=models.CASCADE, related_name="social_accounts"
+        "customers.Customer", on_delete=models.CASCADE, related_name="social_accounts",
+        verbose_name=_("customer"),
     )
-    provider = models.CharField(max_length=20, choices=Provider.choices)
+    provider = models.CharField(max_length=20, choices=Provider.choices, verbose_name=_("provider"))
     provider_uid = models.CharField(
-        max_length=191, help_text="The provider's own immutable id for this user."
+        max_length=191, help_text=_("The provider's own immutable id for this user."),
+        verbose_name=_("provider uid"),
     )
     email = models.EmailField(
-        blank=True, help_text="Address as the provider reported it, for support only."
+        blank=True, help_text=_("Address as the provider reported it, for support only."),
+        verbose_name=_("email"),
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    last_login_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"))
+    last_login_at = models.DateTimeField(null=True, blank=True, verbose_name=_("last login at"))
 
     class Meta:
         db_table = "customers_socialaccount"
+        verbose_name = _("social account")
+        verbose_name_plural = _("social accounts")
         ordering = ["-created_at"]
         constraints = [
             models.UniqueConstraint(

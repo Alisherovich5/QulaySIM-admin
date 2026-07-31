@@ -9,7 +9,7 @@ longer rests on the path being unguessable.
 
 from django.conf import settings
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 from django.views.generic import RedirectView
 
 from config.health import healthz
@@ -22,5 +22,10 @@ urlpatterns = [
         RedirectView.as_view(url=f"/{settings.ADMIN_URL_PATH}/", permanent=False),
         name="root",
     ),
+    # Backs the language switcher in the header. Without this the switcher
+    # renders and posts into a 404, so the language never changes.
+    # `set_language` only accepts a redirect target on this host, and only
+    # accepts a code from LANGUAGES, so it is not an open redirect.
+    path("i18n/", include("django.conf.urls.i18n")),
     path(f"{settings.ADMIN_URL_PATH}/", admin.site.urls),
 ]

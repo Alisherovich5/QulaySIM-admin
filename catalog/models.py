@@ -1,13 +1,16 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 class Region(models.Model):
-    name = models.CharField(max_length=80, unique=True)
-    slug = models.SlugField(max_length=80, unique=True)
-    sort_order = models.PositiveIntegerField(default=0)
+    name = models.CharField(max_length=80, unique=True, verbose_name=_("name"))
+    slug = models.SlugField(max_length=80, unique=True, verbose_name=_("slug"))
+    sort_order = models.PositiveIntegerField(default=0, verbose_name=_("sort order"))
 
     class Meta:
         db_table = "catalog_region"
+        verbose_name = _("region")
+        verbose_name_plural = _("regions")
         ordering = ["sort_order", "name"]
 
     def __str__(self):
@@ -15,20 +18,23 @@ class Region(models.Model):
 
 
 class Country(models.Model):
-    name = models.CharField(max_length=120, unique=True)
-    slug = models.SlugField(max_length=120, unique=True)
-    iso2 = models.CharField(max_length=2, help_text="ISO 3166-1 alpha-2 code, e.g. UZ")
+    name = models.CharField(max_length=120, unique=True, verbose_name=_("name"))
+    slug = models.SlugField(max_length=120, unique=True, verbose_name=_("slug"))
+    iso2 = models.CharField(max_length=2, help_text=_("ISO 3166-1 alpha-2 code, e.g. UZ"), verbose_name=_("iso2"))
     region = models.ForeignKey(
-        Region, on_delete=models.SET_NULL, null=True, blank=True, related_name="countries"
+        Region, on_delete=models.SET_NULL, null=True, blank=True, related_name="countries",
+        verbose_name=_("region"),
     )
-    is_popular = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-    sort_order = models.PositiveIntegerField(default=0)
+    is_popular = models.BooleanField(default=False, verbose_name=_("is popular"))
+    is_active = models.BooleanField(default=True, verbose_name=_("is active"))
+    sort_order = models.PositiveIntegerField(default=0, verbose_name=_("sort order"))
 
     class Meta:
         db_table = "catalog_country"
+        verbose_name = _("country")
+        verbose_name_plural = _("countries")
         ordering = ["sort_order", "name"]
-        verbose_name_plural = "countries"
+        verbose_name_plural = _("countries")
 
     def __str__(self):
         return f"{self.name} ({self.iso2})"
@@ -49,17 +55,19 @@ class Plan(models.Model):
         LTE = "4G", "4G / LTE"
         FIVE_G = "5G", "5G"
 
-    scope = models.CharField(max_length=10, choices=Scope.choices, default=Scope.LOCAL)
+    scope = models.CharField(max_length=10, choices=Scope.choices, default=Scope.LOCAL, verbose_name=_("scope"))
     country = models.ForeignKey(
-        Country, on_delete=models.CASCADE, null=True, blank=True, related_name="plans"
+        Country, on_delete=models.CASCADE, null=True, blank=True, related_name="plans",
+        verbose_name=_("country"),
     )
     region = models.ForeignKey(
-        Region, on_delete=models.CASCADE, null=True, blank=True, related_name="plans"
+        Region, on_delete=models.CASCADE, null=True, blank=True, related_name="plans",
+        verbose_name=_("region"),
     )
-    title = models.CharField(max_length=120)
-    data_amount_mb = models.PositiveIntegerField(default=1024, help_text="Ignored when unlimited")
-    is_unlimited = models.BooleanField(default=False)
-    validity_days = models.PositiveIntegerField(default=7)
+    title = models.CharField(max_length=120, verbose_name=_("title"))
+    data_amount_mb = models.PositiveIntegerField(default=1024, help_text=_("Ignored when unlimited"), verbose_name=_("data amount mb"))
+    is_unlimited = models.BooleanField(default=False, verbose_name=_("is unlimited"))
+    validity_days = models.PositiveIntegerField(default=7, verbose_name=_("validity days"))
 
     # --- Pricing -----------------------------------------------------------
     # What the supplier charges us; never shown to customers. Derived from the
@@ -71,11 +79,12 @@ class Plan(models.Model):
         decimal_places=2,
         null=True,
         blank=True,
-        help_text="Supplier cost. Set automatically from the cheapest supplier offer, if any.",
+        help_text=_("Supplier cost. Set automatically from the cheapest supplier offer, if any."),
+        verbose_name=_("cost usd"),
     )
     # What the customer pays. Recalculated from cost + markup on save unless
     # price_locked is set.
-    price_usd = models.DecimalField(max_digits=12, decimal_places=2)
+    price_usd = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("price usd"))
     # Free text shown next to the price, for the part an amount cannot express:
     # "+ deposit", "first month only", "per device". Kept separate from
     # price_usd on purpose — margin, currency conversion and the Payme amount
@@ -83,44 +92,51 @@ class Plan(models.Model):
     price_note = models.CharField(
         max_length=120,
         blank=True,
-        help_text=(
+        help_text=_(
             "Optional text shown beside the price, e.g. '+ deposit'. "
             "The number itself stays in the price field."
         ),
+        verbose_name=_("price note"),
     )
     markup_percent = models.DecimalField(
         max_digits=6,
         decimal_places=2,
         null=True,
         blank=True,
-        help_text="Overrides every pricing rule for this plan only. Leave empty to inherit.",
+        help_text=_("Overrides every pricing rule for this plan only. Leave empty to inherit."),
+        verbose_name=_("markup percent"),
     )
     price_locked = models.BooleanField(
         default=False,
-        help_text="Keep the price exactly as typed; never recalculate it from cost.",
+        help_text=_("Keep the price exactly as typed; never recalculate it from cost."),
+        verbose_name=_("price locked"),
     )
 
-    network_type = models.CharField(max_length=2, choices=Network.choices, default=Network.LTE)
-    supports_hotspot = models.BooleanField(default=True)
+    network_type = models.CharField(max_length=2, choices=Network.choices, default=Network.LTE, verbose_name=_("network type"))
+    supports_hotspot = models.BooleanField(default=True, verbose_name=_("supports hotspot"))
     # The supplier this plan is currently sourced from, and its code there.
     # Denormalised from the winning SupplierOffer so that order fulfilment and
     # the per-supplier pricing rules can filter on a single column.
     provider = models.CharField(
         max_length=20,
         default="mock",
-        help_text="Winning supplier. Managed by the offers below when there are any.",
+        help_text=_("Winning supplier. Managed by the offers below when there are any."),
+        verbose_name=_("provider"),
     )
     provider_package_code = models.CharField(
         max_length=120,
         blank=True,
-        help_text="Supplier package slug/code, e.g. JP_1_7 for eSIM Access.",
+        help_text=_("Supplier package slug/code, e.g. JP_1_7 for eSIM Access."),
+        verbose_name=_("provider package code"),
     )
-    is_popular = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-    sort_order = models.PositiveIntegerField(default=0)
+    is_popular = models.BooleanField(default=False, verbose_name=_("is popular"))
+    is_active = models.BooleanField(default=True, verbose_name=_("is active"))
+    sort_order = models.PositiveIntegerField(default=0, verbose_name=_("sort order"))
 
     class Meta:
         db_table = "catalog_plan"
+        verbose_name = _("plan")
+        verbose_name_plural = _("plans")
         ordering = ["sort_order", "price_usd"]
 
     def __str__(self):
@@ -268,28 +284,35 @@ class SupplierOffer(models.Model):
         ESIMCARD = "esimcard", "eSIMCard"
         MOCK = "mock", "Mock (no real supplier)"
 
-    plan = models.ForeignKey(Plan, on_delete=models.CASCADE, related_name="offers")
-    provider = models.CharField(max_length=20, choices=Provider.choices)
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE, related_name="offers", verbose_name=_("plan"))
+    provider = models.CharField(max_length=20, choices=Provider.choices, verbose_name=_("provider"))
     package_code = models.CharField(
-        max_length=120, help_text="This supplier's own code for the package, e.g. TR_5_30."
+        max_length=120, help_text=_("This supplier's own code for the package, e.g. TR_5_30."),
+        verbose_name=_("package code"),
     )
     cost_usd = models.DecimalField(
-        max_digits=12, decimal_places=2, help_text="Wholesale price this supplier charges us."
+        max_digits=12, decimal_places=2, help_text=_("Wholesale price this supplier charges us."),
+        verbose_name=_("cost usd"),
     )
     is_available = models.BooleanField(
         default=True,
-        help_text="Uncheck to take a supplier out of the running without losing its price.",
+        help_text=_("Uncheck to take a supplier out of the running without losing its price."),
+        verbose_name=_("is available"),
     )
     unavailable_reason = models.CharField(
-        max_length=200, blank=True, help_text="Why it is out — e.g. 'out of stock', 'no balance'."
+        max_length=200, blank=True, help_text=_("Why it is out — e.g. 'out of stock', 'no balance'."),
+        verbose_name=_("unavailable reason"),
     )
     last_synced_at = models.DateTimeField(
-        null=True, blank=True, help_text="When a price sync last confirmed this offer."
+        null=True, blank=True, help_text=_("When a price sync last confirmed this offer."),
+        verbose_name=_("last synced at"),
     )
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("updated at"))
 
     class Meta:
         db_table = "catalog_supplieroffer"
+        verbose_name = _("supplier offer")
+        verbose_name_plural = _("supplier offers")
         ordering = ["cost_usd"]
         constraints = [
             models.UniqueConstraint(
@@ -336,11 +359,12 @@ class PricingRule(models.Model):
         HALF = "half", "Round up to 0.50"
         WHOLE = "whole", "Round up to whole dollar"
 
-    scope = models.CharField(max_length=10, choices=Scope.choices, default=Scope.GLOBAL)
+    scope = models.CharField(max_length=10, choices=Scope.choices, default=Scope.GLOBAL, verbose_name=_("scope"))
     provider = models.CharField(
         max_length=20,
         blank=True,
-        help_text="Required when the scope is 'One supplier', e.g. esimaccess.",
+        help_text=_("Required when the scope is 'One supplier', e.g. esimaccess."),
+        verbose_name=_("provider"),
     )
     country = models.ForeignKey(
         Country,
@@ -348,26 +372,32 @@ class PricingRule(models.Model):
         blank=True,
         on_delete=models.CASCADE,
         related_name="pricing_rules",
-        help_text="Required when the scope is 'One destination'.",
+        help_text=_("Required when the scope is 'One destination'."),
+        verbose_name=_("country"),
     )
     markup_percent = models.DecimalField(
-        max_digits=6, decimal_places=2, default=30, help_text="Added on top of supplier cost."
+        max_digits=6, decimal_places=2, default=30, help_text=_("Added on top of supplier cost."),
+        verbose_name=_("markup percent"),
     )
     min_margin_usd = models.DecimalField(
         max_digits=8,
         decimal_places=2,
         default=0,
-        help_text="Profit floor. A percentage on a cheap plan can be pennies; this prevents that.",
+        help_text=_("Profit floor. A percentage on a cheap plan can be pennies; this prevents that."),
+        verbose_name=_("min margin usd"),
     )
     rounding = models.CharField(
-        max_length=10, choices=Rounding.choices, default=Rounding.NONE
+        max_length=10, choices=Rounding.choices, default=Rounding.NONE,
+        verbose_name=_("rounding"),
     )
-    is_active = models.BooleanField(default=True)
-    note = models.CharField(max_length=200, blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True, verbose_name=_("is active"))
+    note = models.CharField(max_length=200, blank=True, verbose_name=_("note"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("updated at"))
 
     class Meta:
         db_table = "catalog_pricingrule"
+        verbose_name = _("pricing rule")
+        verbose_name_plural = _("pricing rules")
         ordering = ["scope", "provider", "country__name"]
         constraints = [
             models.UniqueConstraint(

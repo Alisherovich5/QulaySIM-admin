@@ -4,6 +4,7 @@ from unfold.admin import ModelAdmin
 from unfold.decorators import display
 
 from .models import FAQ, Banner, Benefit, Device, PromoBanner, Testimonial
+from django.utils.translation import gettext_lazy as _
 
 
 @admin.register(FAQ)
@@ -15,9 +16,9 @@ class FAQAdmin(ModelAdmin):
     ordering = ("sort_order", "id")
     fieldsets = (
         (None, {"fields": ("category", "sort_order", "is_active")}),
-        ("English", {"fields": ("question", "answer")}),
-        ("Русский", {"fields": ("question_ru", "answer_ru")}),
-        ("Oʻzbekcha", {"fields": ("question_uz", "answer_uz")}),
+        (_("English"), {"fields": ("question", "answer")}),
+        (_("Русский"), {"fields": ("question_ru", "answer_ru")}),
+        (_("Oʻzbekcha"), {"fields": ("question_uz", "answer_uz")}),
     )
 
 
@@ -30,9 +31,9 @@ class BenefitAdmin(ModelAdmin):
     ordering = ("sort_order", "id")
     fieldsets = (
         (None, {"fields": ("icon", "sort_order", "is_active")}),
-        ("English", {"fields": ("title", "text")}),
-        ("Русский", {"fields": ("title_ru", "text_ru")}),
-        ("Oʻzbekcha", {"fields": ("title_uz", "text_uz")}),
+        (_("English"), {"fields": ("title", "text")}),
+        (_("Русский"), {"fields": ("title_ru", "text_ru")}),
+        (_("Oʻzbekcha"), {"fields": ("title_uz", "text_uz")}),
     )
 
 
@@ -46,16 +47,16 @@ class TestimonialAdmin(ModelAdmin):
     actions = ("approve_reviews", "reject_reviews")
     fieldsets = (
         (None, {"fields": ("customer", "name", "rating", "moderation_status", "sort_order", "is_active")}),
-        ("English", {"fields": ("location", "text")}),
-        ("Русский", {"fields": ("location_ru", "text_ru")}),
-        ("Oʻzbekcha", {"fields": ("location_uz", "text_uz")}),
+        (_("English"), {"fields": ("location", "text")}),
+        (_("Русский"), {"fields": ("location_ru", "text_ru")}),
+        (_("Oʻzbekcha"), {"fields": ("location_uz", "text_uz")}),
     )
 
-    @admin.action(description="Approve selected reviews")
+    @admin.action(description=_("Approve selected reviews"))
     def approve_reviews(self, request, queryset):
         queryset.update(moderation_status=Testimonial.ModerationStatus.APPROVED, is_active=True)
 
-    @admin.action(description="Reject selected reviews")
+    @admin.action(description=_("Reject selected reviews"))
     def reject_reviews(self, request, queryset):
         queryset.update(moderation_status=Testimonial.ModerationStatus.REJECTED)
 
@@ -98,10 +99,10 @@ class PromoBannerAdmin(ModelAdmin):
     readonly_fields = ("discount_readout",)
     fieldsets = (
         (
-            "Offer",
+            _("Offer"),
             {
                 "fields": ("promo_code", "discount_readout", "code", "cta_link", "is_active"),
-                "description": (
+                "description": _(
                     "Pick the promo code this advertises. The discount comes from that "
                     "code, so the bar and the checkout always agree. The plain 'code' "
                     "field is only used when nothing is linked."
@@ -109,33 +110,41 @@ class PromoBannerAdmin(ModelAdmin):
             },
         ),
         (
-            "Bar text (short)",
+            _("Bar text (short)"),
             {
                 "fields": ("strip_text", "strip_text_ru", "strip_text_uz"),
-                "description": (
+                "description": _(
                     "Optional. Leave empty and the bar writes itself from the "
                     "discount — \"20% off\" or \"$20 off\"."
                 ),
             },
         ),
-        ("English", {"fields": ("eyebrow", "title", "text")}),
-        ("Русский", {"fields": ("eyebrow_ru", "title_ru", "text_ru")}),
-        ("Oʻzbekcha", {"fields": ("eyebrow_uz", "title_uz", "text_uz")}),
+        (_("English"), {"fields": ("eyebrow", "title", "text")}),
+        (_("Русский"), {"fields": ("eyebrow_ru", "title_ru", "text_ru")}),
+        (_("Oʻzbekcha"), {"fields": ("eyebrow_uz", "title_uz", "text_uz")}),
     )
 
-    @display(description="Code", ordering="promo_code__code")
+    @display(description=_("Code"), ordering="promo_code__code")
     def code_col(self, obj):
         if obj.promo_code:
             return obj.promo_code.code
-        return format_html('<span style="color:#8A93A6;">{} (not linked)</span>', obj.code)
+        return format_html(
+            '<span style="color:var(--qs-ink-mute);">{} ({})</span>',
+            obj.code,
+            _("not linked"),
+        )
 
-    @display(description="Discount")
+    @display(description=_("Discount"))
     def discount_col(self, obj):
         code = obj.promo_code
         if code is None:
-            return format_html('<span style="color:#E5484D;">no code linked</span>')
+            return format_html(
+                '<span style="color:var(--qs-bad-text);">{}</span>', _("no code linked")
+            )
         if not code.is_active:
-            return format_html('<span style="color:#E5484D;">code disabled</span>')
+            return format_html(
+                '<span style="color:var(--qs-bad-text);">{}</span>', _("code disabled")
+            )
         value = (
             f"{_money_label(code.discount_value)}%"
             if code.discount_type == "percent"
@@ -143,29 +152,35 @@ class PromoBannerAdmin(ModelAdmin):
         )
         return format_html('<b>{}</b>', value)
 
-    @display(description="What the site will show")
+    @display(description=_("What the site will show"))
     def discount_readout(self, obj):
         code = obj.promo_code
         if code is None:
-            return (
+            return _(
                 "No promo code linked, so the bar falls back to its built-in wording "
                 "and the site shows no figure. Link one above."
             )
         if not code.is_active:
             return format_html(
-                '<span style="color:#E5484D;">{} is disabled, so nothing is advertised. '
-                "An expired offer must not stay on the bar.</span>",
-                code.code,
+                '<span style="color:var(--qs-bad-text);">{}</span>',
+                _(
+                    "%(code)s is disabled, so nothing is advertised. An expired "
+                    "offer must not stay on the bar."
+                )
+                % {"code": code.code},
             )
         shown = (
-            f"{_money_label(code.discount_value)}% off"
+            _("%(value)s%% off") % {"value": _money_label(code.discount_value)}
             if code.discount_type == "percent"
-            else f"${_money_label(code.discount_value)} off"
+            else _("$%(value)s off") % {"value": _money_label(code.discount_value)}
         )
+        # The values stay as format_html arguments rather than being interpolated
+        # into the format string: a promo code is operator-entered text, and
+        # pre-interpolating it would put it into the markup unescaped.
         return format_html(
-            'Bar: <b>{}</b> · code <b>{}</b> — the same discount checkout applies.',
-            shown,
-            code.code,
+            _("Bar: <b>{shown}</b> · code <b>{code}</b> — the same discount checkout applies."),
+            shown=shown,
+            code=code.code,
         )
 
 

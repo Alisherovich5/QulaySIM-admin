@@ -10,6 +10,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
 from decouple import Csv, config
 from django.templatetags.static import static
@@ -54,6 +55,9 @@ MIDDLEWARE = [
     # entire admin — Unfold's CSS included — loads unstyled behind a 404.
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    # Order matters: after the session, which is where the chosen language is
+    # stored, and before CommonMiddleware.
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -178,8 +182,20 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
+# The staff who use this admin work in Uzbek; Russian and English are here
+# because the back office is shared with the supplier side. Django ships
+# translations for all three, so most of the interface is covered without any
+# .po file of our own — only our own strings need one.
+LANGUAGE_CODE = "uz"
+LANGUAGES = [
+    ("uz", "O‘zbekcha"),
+    ("ru", "Русский"),
+    ("en", "English"),
+]
+LOCALE_PATHS = [BASE_DIR / "locale"]
+# Display only — USE_TZ keeps storage in UTC. Staff read "today" as Tashkent
+# today, which is what the dashboard's day boundaries should mean.
+TIME_ZONE = "Asia/Tashkent"
 USE_I18N = True
 USE_TZ = True
 
@@ -222,9 +238,9 @@ LOGOUT_REDIRECT_URL = reverse_lazy("admin:login")
 
 
 UNFOLD = {
-    "SITE_TITLE": "QulaySIM Admin",
-    "SITE_HEADER": "QulaySIM",
-    "SITE_SUBHEADER": "eSIM commerce control panel",
+    "SITE_TITLE": _("QulaySIM Admin"),
+    "SITE_HEADER": _("QulaySIM"),
+    "SITE_SUBHEADER": _("eSIM commerce control panel"),
     "SITE_SYMBOL": "sim_card",
     # The real wordmark, so the admin and the storefront carry the same brand.
     # The file fills "Qulay" with currentColor, which follows Unfold's own text
@@ -238,7 +254,10 @@ UNFOLD = {
             "href": lambda request: static("admin/qulaysim-favicon.svg"),
         }
     ],
-    "THEME": "light",
+    # The "THEME" key is deliberately absent: setting it *forces* that theme and
+    # removes Unfold's light/dark switcher from the header. Leaving it out gives
+    # each staff member auto|light|dark, persisted per browser.
+    "SHOW_LANGUAGES": True,
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": False,
     "BORDER_RADIUS": "12px",
@@ -288,76 +307,76 @@ UNFOLD = {
         "show_all_applications": False,
         "navigation": [
             {
-                "title": "Overview",
+                "title": _("Overview"),
                 "separator": False,
                 "items": [
                     {
-                        "title": "Dashboard",
+                        "title": _("Dashboard"),
                         "icon": "dashboard",
                         "link": reverse_lazy("admin:index"),
                     },
                 ],
             },
             {
-                "title": "Catalog",
+                "title": _("Catalog"),
                 "separator": True,
                 "items": [
-                    {"title": "Regions", "icon": "public", "link": reverse_lazy("admin:catalog_region_changelist")},
-                    {"title": "Countries", "icon": "flag", "link": reverse_lazy("admin:catalog_country_changelist")},
-                    {"title": "Plans", "icon": "sim_card", "link": reverse_lazy("admin:catalog_plan_changelist")},
+                    {"title": _("Regions"), "icon": "public", "link": reverse_lazy("admin:catalog_region_changelist")},
+                    {"title": _("Countries"), "icon": "flag", "link": reverse_lazy("admin:catalog_country_changelist")},
+                    {"title": _("Plans"), "icon": "sim_card", "link": reverse_lazy("admin:catalog_plan_changelist")},
                     {
-                        "title": "Supplier prices",
+                        "title": _("Supplier prices"),
                         "icon": "compare_arrows",
                         "link": reverse_lazy("admin:catalog_supplieroffer_changelist"),
                     },
                     {
-                        "title": "Import prices",
+                        "title": _("Import prices"),
                         "icon": "upload_file",
                         "link": reverse_lazy("admin:catalog_plan_import_prices"),
                     },
                     {
-                        "title": "Pricing rules",
+                        "title": _("Pricing rules"),
                         "icon": "percent",
                         "link": reverse_lazy("admin:catalog_pricingrule_changelist"),
                     },
                 ],
             },
             {
-                "title": "Commerce",
+                "title": _("Commerce"),
                 "separator": True,
                 "items": [
                     {
-                        "title": "Orders",
+                        "title": _("Orders"),
                         "icon": "receipt_long",
                         "link": reverse_lazy("admin:orders_order_changelist"),
                         "badge": "config.settings._badge_pending_orders",
                     },
-                    {"title": "eSIMs", "icon": "qr_code_2", "link": reverse_lazy("admin:orders_esim_changelist")},
-                    {"title": "Payments", "icon": "payments", "link": reverse_lazy("admin:orders_payment_changelist")},
-                    {"title": "Payme", "icon": "account_balance", "link": reverse_lazy("admin:orders_paymetransaction_changelist")},
-                    {"title": "Promo codes", "icon": "sell", "link": reverse_lazy("admin:orders_promocode_changelist")},
+                    {"title": _("eSIMs"), "icon": "qr_code_2", "link": reverse_lazy("admin:orders_esim_changelist")},
+                    {"title": _("Payments"), "icon": "payments", "link": reverse_lazy("admin:orders_payment_changelist")},
+                    {"title": _("Payme"), "icon": "account_balance", "link": reverse_lazy("admin:orders_paymetransaction_changelist")},
+                    {"title": _("Promo codes"), "icon": "sell", "link": reverse_lazy("admin:orders_promocode_changelist")},
                 ],
             },
             {
-                "title": "People",
+                "title": _("People"),
                 "separator": True,
                 "items": [
-                    {"title": "Customers", "icon": "group", "link": reverse_lazy("admin:customers_customer_changelist")},
-                    {"title": "Staff users", "icon": "shield_person", "link": reverse_lazy("admin:auth_user_changelist")},
+                    {"title": _("Customers"), "icon": "group", "link": reverse_lazy("admin:customers_customer_changelist")},
+                    {"title": _("Staff users"), "icon": "shield_person", "link": reverse_lazy("admin:auth_user_changelist")},
                     {
-                        "title": "Social logins",
+                        "title": _("Social logins"),
                         "icon": "link",
                         "link": reverse_lazy("admin:customers_socialaccount_changelist"),
                     },
                 ],
             },
             {
-                "title": "Content",
+                "title": _("Content"),
                 "separator": True,
                 "items": [
-                    {"title": "FAQ", "icon": "quiz", "link": reverse_lazy("admin:content_faq_changelist")},
-                    {"title": "Banners", "icon": "ad", "link": reverse_lazy("admin:content_banner_changelist")},
-                    {"title": "Testimonials", "icon": "reviews", "link": reverse_lazy("admin:content_testimonial_changelist")},
+                    {"title": _("FAQ"), "icon": "quiz", "link": reverse_lazy("admin:content_faq_changelist")},
+                    {"title": _("Banners"), "icon": "ad", "link": reverse_lazy("admin:content_banner_changelist")},
+                    {"title": _("Testimonials"), "icon": "reviews", "link": reverse_lazy("admin:content_testimonial_changelist")},
                 ],
             },
         ],

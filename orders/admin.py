@@ -5,25 +5,31 @@ from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 
 from .models import ESIM, Order, OrderItem, Payment, PaymeTransaction, PromoCode
+from django.utils.translation import gettext_lazy as _
 
-_STATUS_COLORS = {
-    "pending": "#FFB020",
-    "paid": "#00C9A7",
-    "active": "#00C9A7",
-    "success": "#00C9A7",
-    "cancelled": "#5B6478",
-    "expired": "#5B6478",
-    "refunded": "#E5484D",
-    "failed": "#E5484D",
+# (ink, wash) per status. A wash behind coloured ink reads in both themes;
+# white text on a mid-tone fill was 2.4:1 on gold and 3.0:1 on teal, and
+# darkening the fill enough to fix that would make the dark theme unreadable.
+_STATUS_STYLES = {
+    "pending": ("var(--qs-accent-text)", "var(--qs-warn-wash)"),
+    "paid": ("var(--qs-teal-text)", "var(--qs-good-wash)"),
+    "active": ("var(--qs-teal-text)", "var(--qs-good-wash)"),
+    "success": ("var(--qs-teal-text)", "var(--qs-good-wash)"),
+    "cancelled": ("var(--qs-ink-soft)", "var(--qs-neutral-wash)"),
+    "expired": ("var(--qs-ink-soft)", "var(--qs-neutral-wash)"),
+    "refunded": ("var(--qs-bad-text)", "var(--qs-bad-wash)"),
+    "failed": ("var(--qs-bad-text)", "var(--qs-bad-wash)"),
 }
+_NEUTRAL_STYLE = ("var(--qs-ink-soft)", "var(--qs-neutral-wash)")
 
 
 def _status_badge(value, label):
-    color = _STATUS_COLORS.get(value, "#5B6478")
+    ink, wash = _STATUS_STYLES.get(value, _NEUTRAL_STYLE)
     return format_html(
         '<span style="display:inline-block;padding:2px 10px;border-radius:999px;'
-        'font-size:11px;font-weight:700;color:#fff;background:{};">{}</span>',
-        color,
+        'font-size:11px;font-weight:700;color:{};background:{};">{}</span>',
+        ink,
+        wash,
         label,
     )
 
@@ -51,7 +57,7 @@ class PromoCodeAdmin(ModelAdmin):
     search_fields = ("code",)
     ordering = ("-created_at",)
 
-    @display(description="Usage")
+    @display(description=_("Usage"))
     def usage(self, obj):
         cap = obj.max_uses or "∞"
         return f"{obj.used_count} / {cap}"
@@ -74,11 +80,11 @@ class OrderAdmin(ModelAdmin):
         # queries on a default-sized page.
         return super().get_queryset(request).annotate(_item_count=Count("items"))
 
-    @display(description="Status")
+    @display(description=_("Status"))
     def status_badge(self, obj):
         return _status_badge(obj.status, obj.get_status_display())
 
-    @display(description="Items", ordering="_item_count")
+    @display(description=_("Items"), ordering="_item_count")
     def item_count(self, obj):
         return obj._item_count
 
@@ -92,24 +98,24 @@ class ESIMAdmin(ModelAdmin):
     readonly_fields = ("qr_preview", "iccid", "qr_payload", "created_at")
     ordering = ("-created_at",)
 
-    @display(description="Status")
+    @display(description=_("Status"))
     def status_badge(self, obj):
         return _status_badge(obj.status, obj.get_status_display())
 
-    @display(description="Data used")
+    @display(description=_("Data used"))
     def usage_bar(self, obj):
         if obj.data_total_mb == 0:
             return "Unlimited"
         pct = min(100, round(obj.data_used_mb / obj.data_total_mb * 100))
         return format_html(
-            '<div style="width:120px;background:#E3E8F0;border-radius:999px;height:8px;">'
-            '<div style="width:{}%;background:#1B4DFF;height:8px;border-radius:999px;"></div>'
-            '</div><span style="font-size:11px;color:#5B6478;">{}%</span>',
+            '<div style="width:120px;background:var(--qs-line);border-radius:999px;height:8px;">'
+            '<div style="width:{}%;background:var(--qs-blue);height:8px;border-radius:999px;"></div>'
+            '</div><span style="font-size:11px;color:var(--qs-ink-soft);">{}%</span>',
             pct,
             pct,
         )
 
-    @display(description="QR code")
+    @display(description=_("QR code"))
     def qr_preview(self, obj):
         if obj.qr_image:
             return format_html('<img src="{}" style="width:160px;height:160px;" />', obj.qr_image)
@@ -124,7 +130,7 @@ class PaymentAdmin(ModelAdmin):
     readonly_fields = ("created_at",)
     ordering = ("-created_at",)
 
-    @display(description="Status")
+    @display(description=_("Status"))
     def status_badge(self, obj):
         return _status_badge(obj.status, obj.get_status_display())
 
@@ -147,16 +153,23 @@ class PaymeTransactionAdmin(ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False
 
-    @display(description="Amount")
+    @display(description=_("Amount"))
     def amount_display(self, obj):
         return f"{obj.amount_uzs:,.2f} so‘m"
 
-    @display(description="State", ordering="state")
+    @display(description=_("State"), ordering="state")
     def state_badge(self, obj):
-        colours = {1: "#FFB020", 2: "#00C9A7", -1: "#5B6478", -2: "#E5484D"}
+        styles = {
+            1: ("var(--qs-accent-text)", "var(--qs-warn-wash)"),
+            2: ("var(--qs-teal-text)", "var(--qs-good-wash)"),
+            -1: _NEUTRAL_STYLE,
+            -2: ("var(--qs-bad-text)", "var(--qs-bad-wash)"),
+        }
+        ink, wash = styles.get(obj.state, _NEUTRAL_STYLE)
         return format_html(
             '<span style="display:inline-block;padding:2px 10px;border-radius:999px;'
-            'font-size:11px;font-weight:700;color:#fff;background:{};">{}</span>',
-            colours.get(obj.state, "#5B6478"),
+            'font-size:11px;font-weight:700;color:{};background:{};">{}</span>',
+            ink,
+            wash,
             obj.get_state_display(),
         )

@@ -4,9 +4,9 @@
 {% block content %}
 <div class="qs-import">
   <p class="qs-import__lede">
-    Setting up one destination by hand means creating eleven objects — a country,
+    {% blocktrans %}Setting up one destination by hand means creating eleven objects — a country,
     four tariffs and their supplier offers. Upload the wholesaler's price export
-    instead: the preview shows exactly what would change before anything is written.
+    instead: the preview shows exactly what would change before anything is written.{% endblocktrans %}
   </p>
 
   <form method="post" enctype="multipart/form-data" class="qs-import__form">
@@ -19,29 +19,28 @@
         {% for error in field.errors %}<p class="qs-import__error">{{ error }}</p>{% endfor %}
       </div>
     {% endfor %}
-    <button type="submit" class="qs-import__submit">Read the file</button>
+    <button type="submit" class="qs-import__submit">{% trans "Read the file" %}</button>
   </form>
 
   {% if previewed %}
     <div class="qs-import__result">
-      <h2>Preview — nothing has been written</h2>
+      <h2>{% trans "Preview — nothing has been written" %}</h2>
       <p class="qs-import__help">
-        {{ prices.rows_read }} row(s) read{% if prices.rows_skipped %},
-        {{ prices.rows_skipped }} unusable and skipped{% endif %}.
+        {% blocktrans count n=prices.rows_read %}{{ n }} row read{% plural %}{{ n }} rows read{% endblocktrans %}{% if prices.rows_skipped %}{% blocktrans count n=prices.rows_skipped %}, {{ n }} unusable and skipped{% plural %}, {{ n }} unusable and skipped{% endblocktrans %}{% endif %}.
       </p>
 
       <div class="qs-import__counts">
-        <span><b>{{ count_new_plans }}</b> new tariff(s)</span>
-        <span><b>{{ count_new_offers }}</b> new supplier price(s)</span>
-        <span><b>{{ count_price_changes }}</b> price change(s)</span>
-        <span class="qs-import__muted"><b>{{ count_unchanged }}</b> unchanged</span>
+        <span>{% blocktrans count n=count_new_plans %}<b>{{ n }}</b> new tariff{% plural %}<b>{{ n }}</b> new tariffs{% endblocktrans %}</span>
+        <span>{% blocktrans count n=count_new_offers %}<b>{{ n }}</b> new supplier price{% plural %}<b>{{ n }}</b> new supplier prices{% endblocktrans %}</span>
+        <span>{% blocktrans count n=count_price_changes %}<b>{{ n }}</b> price change{% plural %}<b>{{ n }}</b> price changes{% endblocktrans %}</span>
+        <span class="qs-import__muted">{% blocktrans with n=count_unchanged %}<b>{{ n }}</b> unchanged{% endblocktrans %}</span>
       </div>
 
       {% if changes %}
         <table class="qs-import__table">
           <thead>
-            <tr><th>Destination</th><th>Tariff</th><th>What happens</th>
-                <th>Supplier cost</th><th>Retail price</th></tr>
+            <tr><th>{% trans "Destination" %}</th><th>{% trans "Tariff" %}</th><th>{% trans "What happens" %}</th>
+                <th>{% trans "Supplier cost" %}</th><th>{% trans "Retail price" %}</th></tr>
           </thead>
           <tbody>
             {% for change in changes %}
@@ -49,7 +48,7 @@
               <tr>
                 <td>{{ change.country }}</td>
                 <td>{{ change.label }}</td>
-                <td><span class="qs-tag qs-tag--{{ change.kind }}">{{ change.kind }}</span></td>
+                <td><span class="qs-tag qs-tag--{{ change.kind }}">{% if change.kind == "new-plan" %}{% trans "new tariff" %}{% elif change.kind == "new-offer" %}{% trans "new price" %}{% elif change.kind == "price-change" %}{% trans "price change" %}{% else %}{{ change.kind }}{% endif %}</span></td>
                 <td>
                   {% if change.previous_cost %}${{ change.previous_cost }} →{% endif %}
                   ${{ change.cost_usd }}
@@ -65,15 +64,15 @@
           </tbody>
         </table>
         <p class="qs-import__warn">
-          To write these, submit again with <b>“Preview only”</b> unchecked.
+          {% blocktrans %}To write these, submit again with <b>“Preview only”</b> unchecked.
           Applying moves supplier costs, and retail prices follow through the
-          pricing rules.
+          pricing rules.{% endblocktrans %}
         </p>
       {% else %}
         <p class="qs-import__warn">
-          Nothing in this file matches a destination in the catalogue. Check that
+          {% blocktrans %}Nothing in this file matches a destination in the catalogue. Check that
           the <code>location</code> column holds ISO codes such as TR or AE, and
-          that those destinations exist.
+          that those destinations exist.{% endblocktrans %}
         </p>
       {% endif %}
     </div>

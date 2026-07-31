@@ -8,6 +8,7 @@ from unfold.decorators import display
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
 from .models import Customer, Referral, SocialAccount
+from django.utils.translation import gettext_lazy as _
 
 # Re-register Django's built-in auth models with Unfold styling.
 admin.site.unregister(User)
@@ -38,7 +39,7 @@ class CustomerAdmin(ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(_order_count=Count("orders"))
 
-    @display(description="Orders", ordering="_order_count")
+    @display(description=_("Orders"), ordering="_order_count")
     def order_count(self, obj):
         return obj._order_count
 
@@ -72,11 +73,11 @@ class SocialAccountAdmin(ModelAdmin):
         # A link is only ever created by a verified sign-in.
         return False
 
-    @display(description="Customer", ordering="customer__email")
+    @display(description=_("Customer"), ordering="customer__email")
     def customer_email(self, obj):
         return obj.customer.email
 
-    @display(description="Provider id")
+    @display(description=_("Provider id"))
     def uid_tail(self, obj):
         # The full id is not secret, but it is long and identifies a person at
         # the provider; the tail is enough to match up a support request.

@@ -5,6 +5,7 @@ from __future__ import annotations
 from django import forms
 
 from catalog.models import Country, SupplierOffer
+from django.utils.translation import gettext_lazy as _
 
 MAX_UPLOAD_BYTES = 8 * 1024 * 1024
 
@@ -12,12 +13,12 @@ MAX_UPLOAD_BYTES = 8 * 1024 * 1024
 class SupplierPriceUploadForm(forms.Form):
     provider = forms.ChoiceField(
         choices=[(c, l) for c, l in SupplierOffer.Provider.choices if c != "mock"],
-        label="Wholesaler",
-        help_text="Which supplier's price list this file is.",
+        label=_("Wholesaler"),
+        help_text=_("Which supplier's price list this file is."),
     )
     csv_file = forms.FileField(
-        label="Price list (CSV)",
-        help_text=(
+        label=_("Price list (CSV)"),
+        help_text=_(
             "Needs the columns package_code, location, data_gb, days, cost_usd. "
             "The export from the supplier's portal already has them."
         ),
@@ -25,8 +26,8 @@ class SupplierPriceUploadForm(forms.Form):
     dry_run = forms.BooleanField(
         required=False,
         initial=True,
-        label="Preview only — do not write anything",
-        help_text=(
+        label=_("Preview only — do not write anything"),
+        help_text=_(
             "Leave this on the first time. Applying moves supplier costs, which "
             "moves retail prices through the pricing rules."
         ),
@@ -34,8 +35,8 @@ class SupplierPriceUploadForm(forms.Form):
     only_countries = forms.ModelMultipleChoiceField(
         queryset=Country.objects.order_by("name"),
         required=False,
-        label="Limit to these destinations",
-        help_text=(
+        label=_("Limit to these destinations"),
+        help_text=_(
             "Leave empty to apply the whole file. Choosing destinations is how you "
             "set one up without repricing everything else."
         ),

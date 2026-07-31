@@ -31,10 +31,21 @@ COPY --from=builder /opt/venv /opt/venv
 WORKDIR /srv
 COPY --chown=app:app . .
 
-# Collect static at build time so the image is immutable at runtime. The dummy
-# key is only used by this command; the real one comes from the environment.
-RUN SECRET_KEY=build-only DEBUG=False /opt/venv/bin/python manage.py collectstatic --noinput \
- && chown -R app:app /srv/staticfiles
+# Compile the translation catalogues from source rather than trusting the .mo
+# files in the repository: only the .mo is read at runtime, so a .po edited
+# without a recompile would ship silently as the previous wording. gettext is
+# installed and removed in the same layer so msgfmt does not stay in the image.
+#
+# Collect static at build time too, so the image is immutable at runtime. The
+# dummy key is only used by these commands; the real one comes from the
+# environment.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends gettext \
+ && SECRET_KEY=build-only DEBUG=False /opt/venv/bin/python manage.py compilemessages --locale=uz --locale=ru \
+ && apt-get purge -y --auto-remove gettext \
+ && rm -rf /var/lib/apt/lists/* \
+ && SECRET_KEY=build-only DEBUG=False /opt/venv/bin/python manage.py collectstatic --noinput \
+ && chown -R app:app /srv/staticfiles /srv/locale
 
 USER app
 EXPOSE 8000
