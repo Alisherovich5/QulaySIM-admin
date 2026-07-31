@@ -311,6 +311,11 @@ UNFOLD = {
                         "link": reverse_lazy("admin:catalog_supplieroffer_changelist"),
                     },
                     {
+                        "title": "Import prices",
+                        "icon": "upload_file",
+                        "link": reverse_lazy("admin:catalog_plan_import_prices"),
+                    },
+                    {
                         "title": "Pricing rules",
                         "icon": "percent",
                         "link": reverse_lazy("admin:catalog_pricingrule_changelist"),

@@ -79,6 +79,14 @@ class SupplierOfferInline(TabularInline):
 
 @admin.register(Plan)
 class PlanAdmin(ModelAdmin):
+    """Plans, plus the supplier-price import page.
+
+    Setting up one destination by hand means creating eleven objects — a
+    country, four plans and six supplier offers — which is why the import lives
+    here: upload the wholesaler's export, see exactly what would change, then
+    commit it.
+    """
+
     inlines = (SupplierOfferInline,)
     list_display = (
         "title",
@@ -167,6 +175,96 @@ class PlanAdmin(ModelAdmin):
         # the changelist would fetch its own offers — the same N+1 the country
         # and order lists were already fixed for.
         return super().get_queryset(request).prefetch_related("offers")
+
+
+    # --- Supplier price import ---------------------------------------------
+
+    def get_urls(self):
+        from django.urls import path
+
+        return [
+            path(
+                "import-prices/",
+                self.admin_site.admin_view(self.import_prices_view),
+                name="catalog_plan_import_prices",
+            ),
+            *super().get_urls(),
+        ]
+
+    def import_prices_view(self, request):
+        """Upload a wholesaler price list; preview first, write only on confirm.
+
+        Wrapped in `admin_site.admin_view`, so it is behind the same login,
+        permission and CSRF protection as every other admin page rather than
+        being a second, weaker door into the catalogue.
+        """
+        from django.contrib import messages
+        from django.shortcuts import redirect, render
+        from django.urls import reverse
+
+        from catalog import supplier_import
+        from catalog.forms import SupplierPriceUploadForm
+
+        if not self.has_change_permission(request):
+            messages.error(request, "You do not have permission to change plans.")
+            return redirect(reverse("admin:catalog_plan_changelist"))
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Import supplier prices",
+            "opts": self.model._meta,
+        }
+
+        if request.method != "POST":
+            context["form"] = SupplierPriceUploadForm()
+            return render(request, "admin/catalog/import_prices.html", context)
+
+        form = SupplierPriceUploadForm(request.POST, request.FILES)
+        if not form.is_valid():
+            context["form"] = form
+            return render(request, "admin/catalog/import_prices.html", context)
+
+        provider = form.cleaned_data["provider"]
+        countries = form.cleaned_data["only_countries"]
+        iso2 = [c.iso2 for c in countries] if countries else None
+        prices = supplier_import.parse(form.cleaned_data["csv_file"])
+
+        if prices.missing_columns:
+            messages.error(
+                request,
+                "That file is missing the columns: "
+                + ", ".join(sorted(prices.missing_columns)),
+            )
+            context["form"] = form
+            return render(request, "admin/catalog/import_prices.html", context)
+
+        changes = supplier_import.plan_changes(prices, provider, iso2=iso2)
+
+        if form.cleaned_data["dry_run"]:
+            # Two uploads rather than carrying the file through a confirm step:
+            # an 8 MB CSV does not belong in a hidden field or a session, and
+            # this matches how the management command works.
+            context.update(
+                form=form,
+                prices=prices,
+                changes=changes,
+                # Separate names rather than a dict: Django templates cannot
+                # index a dict by a hyphenated key without a custom filter.
+                count_new_plans=sum(1 for c in changes if c.kind == "new-plan"),
+                count_new_offers=sum(1 for c in changes if c.kind == "new-offer"),
+                count_price_changes=sum(1 for c in changes if c.kind == "price-change"),
+                count_unchanged=sum(1 for c in changes if c.kind == "unchanged"),
+                previewed=True,
+            )
+            return render(request, "admin/catalog/import_prices.html", context)
+
+        result = supplier_import.apply(prices, provider, iso2=iso2)
+        messages.success(
+            request,
+            f"{provider}: {result['plans_created']} plan(s) created, "
+            f"{result['offers_created']} offer(s) added. Prices were recalculated.",
+        )
+        return redirect(reverse("admin:catalog_plan_changelist"))
 
     @display(description="Target")
     def target(self, obj):

@@ -1,0 +1,82 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="qs-import">
+  <p class="qs-import__lede">
+    Setting up one destination by hand means creating eleven objects — a country,
+    four tariffs and their supplier offers. Upload the wholesaler's price export
+    instead: the preview shows exactly what would change before anything is written.
+  </p>
+
+  <form method="post" enctype="multipart/form-data" class="qs-import__form">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="qs-import__field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<p class="qs-import__help">{{ field.help_text }}</p>{% endif %}
+        {% for error in field.errors %}<p class="qs-import__error">{{ error }}</p>{% endfor %}
+      </div>
+    {% endfor %}
+    <button type="submit" class="qs-import__submit">Read the file</button>
+  </form>
+
+  {% if previewed %}
+    <div class="qs-import__result">
+      <h2>Preview — nothing has been written</h2>
+      <p class="qs-import__help">
+        {{ prices.rows_read }} row(s) read{% if prices.rows_skipped %},
+        {{ prices.rows_skipped }} unusable and skipped{% endif %}.
+      </p>
+
+      <div class="qs-import__counts">
+        <span><b>{{ count_new_plans }}</b> new tariff(s)</span>
+        <span><b>{{ count_new_offers }}</b> new supplier price(s)</span>
+        <span><b>{{ count_price_changes }}</b> price change(s)</span>
+        <span class="qs-import__muted"><b>{{ count_unchanged }}</b> unchanged</span>
+      </div>
+
+      {% if changes %}
+        <table class="qs-import__table">
+          <thead>
+            <tr><th>Destination</th><th>Tariff</th><th>What happens</th>
+                <th>Supplier cost</th><th>Retail price</th></tr>
+          </thead>
+          <tbody>
+            {% for change in changes %}
+              {% if change.kind != "unchanged" %}
+              <tr>
+                <td>{{ change.country }}</td>
+                <td>{{ change.label }}</td>
+                <td><span class="qs-tag qs-tag--{{ change.kind }}">{{ change.kind }}</span></td>
+                <td>
+                  {% if change.previous_cost %}${{ change.previous_cost }} →{% endif %}
+                  ${{ change.cost_usd }}
+                </td>
+                <td>
+                  {% if change.price_before %}
+                    ${{ change.price_before }} → <b>${{ change.price_after }}</b>
+                  {% else %}—{% endif %}
+                </td>
+              </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+        <p class="qs-import__warn">
+          To write these, submit again with <b>“Preview only”</b> unchecked.
+          Applying moves supplier costs, and retail prices follow through the
+          pricing rules.
+        </p>
+      {% else %}
+        <p class="qs-import__warn">
+          Nothing in this file matches a destination in the catalogue. Check that
+          the <code>location</code> column holds ISO codes such as TR or AE, and
+          that those destinations exist.
+        </p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

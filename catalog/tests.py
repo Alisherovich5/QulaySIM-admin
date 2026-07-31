@@ -887,3 +887,142 @@ class LoginRedirectTests(TestCase):
             {"username": "redirect-admin", "password": "pw-for-tests-only", "next": target},
         )
         self.assertEqual(response["Location"], target)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class SupplierImportPageTests(TestCase):
+    """Uploading a wholesaler price list instead of building eleven objects.
+
+    The page has to be safe in two ways: behind admin auth like every other
+    admin page, and a preview must write nothing at all — an operator who is
+    checking what would happen has not agreed to it happening.
+    """
+
+    CSV = (
+        "package_code,location,data_gb,days,cost_usd\n"
+        "TR_3_15,TR,3,15,1.42\n"
+        "TR_5_30,TR,5,30,2.30\n"
+        "TR_1_7,TR,1,7,0.60\n"
+        "XX_9_99,XX,9,99,5.00\n"       # a destination we do not sell
+        "TR_777,TR,7,77,9.99\n"        # a shape with no rung in the ladder
+    )
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+        from django.urls import reverse
+
+        PricingRule.objects.create(scope=PricingRule.Scope.GLOBAL, markup_percent=Decimal("30"))
+        self.turkey = Country.objects.create(name="Turkey", slug="turkey", iso2="TR")
+        self.url = reverse("admin:catalog_plan_import_prices")
+        User.objects.create_superuser("import-admin", "i@example.com", "pw-for-tests-only")
+        self.staff = User.objects.create_user(
+            "no-perms", "n@example.com", "pw-for-tests-only", is_staff=True
+        )
+
+    def _upload(self, *, dry_run, csv=None, user="import-admin"):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.contrib.auth.models import User
+
+        self.client.force_login(User.objects.get(username=user))
+        data = {
+            "provider": "esimaccess",
+            "csv_file": SimpleUploadedFile(
+                "prices.csv", (csv or self.CSV).encode(), content_type="text/csv"
+            ),
+        }
+        if dry_run:
+            data["dry_run"] = "on"
+        return self.client.post(self.url, data)
+
+    def test_anonymous_is_redirected_to_login(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("login", response["Location"])
+
+    def test_staff_without_change_permission_cannot_import(self):
+        response = self._upload(dry_run=False, user="no-perms")
+        self.assertEqual(response.status_code, 302)
+        # The whole point of the page is writing to the catalogue, so a user who
+        # may not change plans must not reach it.
+        self.assertEqual(Plan.objects.count(), 0)
+
+    def test_preview_writes_nothing(self):
+        response = self._upload(dry_run=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "nothing has been written")
+        self.assertEqual(Plan.objects.count(), 0)
+        self.assertEqual(SupplierOffer.objects.count(), 0)
+
+    def test_preview_reports_what_would_be_created(self):
+        response = self._upload(dry_run=True)
+        body = response.content.decode()
+        # Three rows match a rung of the ladder; the other two do not.
+        self.assertIn("Turkey 3 GB · 15 days", body)
+        self.assertIn("Turkey 1 GB · 7 days", body)
+        self.assertNotIn("7 GB · 77 days", body)
+
+    def test_applying_creates_the_plans_and_offers(self):
+        self._upload(dry_run=False)
+        self.assertEqual(Plan.objects.filter(country=self.turkey).count(), 3)
+        self.assertEqual(SupplierOffer.objects.count(), 3)
+        plan = Plan.objects.get(data_amount_mb=3072, validity_days=15)
+        self.assertEqual(plan.cost_usd, Decimal("1.42"))
+        # 1.42 + 30% — the retail price follows from the cost, not the file.
+        self.assertEqual(plan.price_usd, Decimal("1.85"))
+
+    def test_the_middle_rung_is_the_one_promoted(self):
+        self._upload(dry_run=False)
+        popular = Plan.objects.filter(is_popular=True)
+        self.assertEqual([p.data_amount_mb for p in popular], [3072])
+
+    def test_unknown_destinations_are_ignored_not_invented(self):
+        self._upload(dry_run=False)
+        self.assertFalse(Country.objects.filter(iso2="XX").exists())
+
+    def test_reapplying_updates_rather_than_duplicates(self):
+        self._upload(dry_run=False)
+        cheaper = self.CSV.replace("TR_3_15,TR,3,15,1.42", "TR_3_15,TR,3,15,0.99")
+        self._upload(dry_run=False, csv=cheaper)
+        self.assertEqual(SupplierOffer.objects.filter(provider="esimaccess").count(), 3)
+        plan = Plan.objects.get(data_amount_mb=3072, validity_days=15)
+        plan.refresh_from_db()
+        self.assertEqual(plan.cost_usd, Decimal("0.99"))
+
+    def test_limiting_to_a_destination_leaves_others_alone(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.contrib.auth.models import User
+
+        japan = Country.objects.create(name="Japan", slug="japan", iso2="JP")
+        csv = self.CSV + "JP_3_15,JP,3,15,1.70\n"
+        self.client.force_login(User.objects.get(username="import-admin"))
+        self.client.post(
+            self.url,
+            {
+                "provider": "esimaccess",
+                "csv_file": SimpleUploadedFile("p.csv", csv.encode(), content_type="text/csv"),
+                "only_countries": [str(self.turkey.pk)],
+            },
+        )
+        self.assertEqual(Plan.objects.filter(country=japan).count(), 0)
+        self.assertEqual(Plan.objects.filter(country=self.turkey).count(), 3)
+
+    def test_a_file_missing_columns_is_refused_with_a_reason(self):
+        response = self._upload(dry_run=True, csv="foo,bar\n1,2\n")
+        self.assertEqual(Plan.objects.count(), 0)
+        self.assertContains(response, "missing the columns")
+
+    def test_a_non_csv_upload_is_refused(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.contrib.auth.models import User
+
+        self.client.force_login(User.objects.get(username="import-admin"))
+        response = self.client.post(
+            self.url,
+            {
+                "provider": "esimaccess",
+                "csv_file": SimpleUploadedFile("p.xlsx", b"\x50\x4b\x03\x04\xff\xfe", content_type="application/octet-stream"),
+                "dry_run": "on",
+            },
+        )
+        self.assertEqual(Plan.objects.count(), 0)
+        self.assertContains(response, "Export it as CSV")
