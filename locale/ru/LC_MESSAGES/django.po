@@ -1,11 +1,12 @@
 # QulaySIM admin interface.
 # Uzbek and Russian for our own strings, plus the admin strings
 # django-unfold and Django leave untranslated — see config/i18n_extra.py.
+#: config/tests_i18n.py:234
 msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 03:09+0500\n"
+"POT-Creation-Date: 2026-08-01 04:41+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -13,50 +14,120 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
+"(n%100>=11 && n%100<=14)? 2 : 3);\n"
 
-#: catalog/admin.py:23 config/settings.py:325
+#: catalog/admin.py:24 config/settings.py:325
 msgid "Countries"
 msgstr "Страны"
 
-#: catalog/admin.py:61 config/i18n_extra.py:49
+#: catalog/admin.py:37
+msgid "Landing page"
+msgstr "Главная страница"
+
+#: catalog/admin.py:42
+msgid "Promoted"
+msgstr "Показывается"
+
+#: catalog/admin.py:43
+msgid "Not promoted"
+msgstr "Не продвигается"
+
+#: catalog/admin.py:44
+msgid "Promoted with no plans"
+msgstr "Продвигается, но без тарифов"
+
+#: catalog/admin.py:158
+msgid "On the site"
+msgstr "Место на сайте"
+
+#: catalog/admin.py:167
+msgid "not shown — inactive"
+msgstr "не показывается — неактивна"
+
+#: catalog/admin.py:176
+msgid "Active plans"
+msgstr "Активные тарифы"
+
+#: catalog/admin.py:184
+msgid "empty card on the site"
+msgstr "пустая карточка на сайте"
+
+#: catalog/admin.py:186
+msgid "no active plans"
+msgstr "нет активных тарифов"
+
+#: catalog/admin.py:192 config/i18n_extra.py:49
 msgid "From"
 msgstr "От"
 
-#: catalog/admin.py:122 catalog/admin.py:532
+#: catalog/admin.py:215
+msgid "Promote to the landing page"
+msgstr "Показывать на главной"
+
+#: catalog/admin.py:240
+#, python-brace-format
+msgid "{count} destination(s) added to the landing page."
+msgstr "{count} направлений добавлено на главную."
+
+#: catalog/admin.py:250
+#, python-brace-format
+msgid "{count} were already promoted and were left where they are."
+msgstr "{count} уже показывались и оставлены на своих местах."
+
+#: catalog/admin.py:256
+msgid "Remove from the landing page"
+msgstr "Убрать с главной"
+
+#: catalog/admin.py:268
+#, python-brace-format
+msgid "{count} destination(s) removed from the landing page."
+msgstr "{count} направлений убрано с главной."
+
+#: catalog/admin.py:294
+#, python-brace-format
+msgid ""
+"No active plans yet: {names}. They will show as empty cards on the site "
+"until a plan is added."
+msgstr ""
+"Пока нет активных тарифов: {names}. Пока тариф не добавлен, на сайте они "
+"будут пустыми карточками."
+
+#: catalog/admin.py:363 catalog/admin.py:773
 msgid "Plan"
 msgstr "Тариф"
 
-#: catalog/admin.py:124
+#: catalog/admin.py:365
 msgid "Data & validity"
 msgstr "Трафик и срок"
 
-#: catalog/admin.py:138
+#: catalog/admin.py:379
 msgid "Supplier sourcing"
 msgstr "Выбор поставщика"
 
-#: catalog/admin.py:142
+#: catalog/admin.py:383
 msgid ""
-"Add each supplier's wholesale price under 'Supplier offers' at the bottom of"
-" this page. On save the cheapest available one sets the cost, the price, and"
-" where the order is placed; the rest become fallbacks used when the winner "
-"is out of stock."
+"Add each supplier's wholesale price under 'Supplier offers' at the bottom of "
+"this page. On save the cheapest available one sets the cost, the price, and "
+"where the order is placed; the rest become fallbacks used when the winner is "
+"out of stock."
 msgstr ""
 "Внесите оптовую цену каждого поставщика в раздел «Предложения поставщиков» "
 "внизу страницы. При сохранении самое дешёвое из доступных задаёт "
 "себестоимость, цену и то, куда уходит заказ; остальные становятся резервом "
 "на случай, если у победителя закончится наличие."
 
-#: catalog/admin.py:150
+#: catalog/admin.py:391
 msgid "Pricing"
 msgstr "Ценообразование"
 
-#: catalog/admin.py:161
+#: catalog/admin.py:402
 msgid ""
 "Enter the supplier cost and the price is calculated on save. Leave the "
 "markup empty to inherit a pricing rule; fill it in to override every rule "
-"for this plan alone. Tick 'price locked' to type a price by hand and stop it"
-" being recalculated. Use the note for anything the number cannot say on its "
+"for this plan alone. Tick 'price locked' to type a price by hand and stop it "
+"being recalculated. Use the note for anything the number cannot say on its "
 "own, such as '+ deposit' — it is shown to customers beside the price."
 msgstr ""
 "Введите себестоимость поставщика — цена рассчитается при сохранении. "
@@ -66,39 +137,39 @@ msgstr ""
 "пересчёт. Примечание — для того, что не выражается числом, например «+ "
 "депозит»; клиент увидит его рядом с ценой."
 
-#: catalog/admin.py:170
+#: catalog/admin.py:411
 msgid "Visibility"
 msgstr "Отображение"
 
-#: catalog/admin.py:270
+#: catalog/admin.py:511
 msgid "Target"
 msgstr "Применяется к"
 
-#: catalog/admin.py:274
+#: catalog/admin.py:515
 msgid "Sourced from"
 msgstr "Источник"
 
-#: catalog/admin.py:284
+#: catalog/admin.py:525
 msgid "manual"
 msgstr "вручную"
 
-#: catalog/admin.py:294 catalog/admin.py:555
+#: catalog/admin.py:535 catalog/admin.py:796
 msgid "only source"
 msgstr "единственный источник"
 
-#: catalog/admin.py:302
+#: catalog/admin.py:543
 msgid "vs"
 msgstr "против"
 
-#: catalog/admin.py:306
+#: catalog/admin.py:547
 msgid "Supplier comparison"
 msgstr "Сравнение поставщиков"
 
-#: catalog/admin.py:309
+#: catalog/admin.py:550
 msgid "Save the plan, then add supplier prices below to compare them."
 msgstr "Сохраните тариф, затем добавьте ниже цены поставщиков для сравнения."
 
-#: catalog/admin.py:315
+#: catalog/admin.py:556
 #, python-brace-format
 msgid ""
 "No supplier offers yet, so the cost above is used as typed and orders route "
@@ -109,47 +180,47 @@ msgstr ""
 "введена, а заказы идут в <b>{}</b>. Добавьте ниже два предложения, чтобы "
 "более дешёвое выбиралось автоматически."
 
-#: catalog/admin.py:327 catalog/admin.py:549
+#: catalog/admin.py:568 catalog/admin.py:790
 msgid "unavailable"
 msgstr "недоступен"
 
-#: catalog/admin.py:343
+#: catalog/admin.py:584
 msgid "ordered from here"
 msgstr "заказ идёт отсюда"
 
-#: catalog/admin.py:352 catalog/admin.py:570
+#: catalog/admin.py:593 catalog/admin.py:811
 msgid "fallback"
 msgstr "резерв"
 
-#: catalog/admin.py:362
+#: catalog/admin.py:603
 msgid "Data"
 msgstr "Трафик"
 
-#: catalog/admin.py:366 catalog/admin.py:539 templates/admin/index.html:95
+#: catalog/admin.py:607 catalog/admin.py:780 templates/admin/index.html:95
 msgid "Cost"
 msgstr "Себестоимость"
 
-#: catalog/admin.py:370
+#: catalog/admin.py:611
 msgid "Price"
 msgstr "Цена"
 
-#: catalog/admin.py:385
+#: catalog/admin.py:626
 msgid "Margin"
 msgstr "Маржа"
 
-#: catalog/admin.py:400
+#: catalog/admin.py:641
 msgid "Calculated margin"
 msgstr "Расчётная маржа"
 
-#: catalog/admin.py:419
+#: catalog/admin.py:660
 msgid "Recalculate prices from cost and rules"
 msgstr "Пересчитать цены по себестоимости и правилам"
 
-#: catalog/admin.py:446 catalog/admin.py:459
+#: catalog/admin.py:687 catalog/admin.py:700
 msgid "Applies to"
 msgstr "Применяется к"
 
-#: catalog/admin.py:450
+#: catalog/admin.py:691
 msgid ""
 "Pick one. 'Everything' is the house default; a supplier or destination rule "
 "overrides it for the plans it covers."
@@ -157,49 +228,49 @@ msgstr ""
 "Выберите одно. «Всё» — правило по умолчанию; правило по поставщику или "
 "направлению переопределяет его для охваченных тарифов."
 
-#: catalog/admin.py:455 catalog/admin.py:463
+#: catalog/admin.py:696 catalog/admin.py:704
 msgid "Markup"
 msgstr "Наценка"
 
-#: catalog/admin.py:456
+#: catalog/admin.py:697
 msgid "Admin"
 msgstr "Админ"
 
-#: catalog/admin.py:483
+#: catalog/admin.py:724
 msgid "Plans covered"
 msgstr "Охваченные тарифы"
 
-#: catalog/admin.py:491
+#: catalog/admin.py:732
 msgid "Recalculate every affected plan now"
 msgstr "Пересчитать все затронутые тарифы сейчас"
 
-#: catalog/admin.py:543
+#: catalog/admin.py:784
 msgid "Verdict"
 msgstr "Вывод"
 
-#: catalog/admin.py:548
+#: catalog/admin.py:789
 msgid "out"
 msgstr "выведен"
 
-#: catalog/admin.py:562
+#: catalog/admin.py:803
 msgid "cheapest"
 msgstr "самый дешёвый"
 
-#: catalog/admin.py:565
+#: catalog/admin.py:806
 #, python-brace-format
 msgid "saves ${amount}"
 msgstr "экономит ${amount}"
 
-#: catalog/admin.py:571
+#: catalog/admin.py:812
 #, python-brace-format
 msgid "+${amount} vs {provider}"
 msgstr "+${amount} к {provider}"
 
-#: catalog/admin.py:577
+#: catalog/admin.py:818
 msgid "Mark available (put back in the running)"
 msgstr "Отметить доступным (вернуть в отбор)"
 
-#: catalog/admin.py:589
+#: catalog/admin.py:830
 msgid "Mark unavailable (take out of the running)"
 msgstr "Отметить недоступным (убрать из отбора)"
 
@@ -224,8 +295,8 @@ msgid ""
 "Needs the columns package_code, location, data_gb, days, cost_usd. The "
 "export from the supplier's portal already has them."
 msgstr ""
-"Нужны столбцы package_code, location, data_gb, days, cost_usd. В выгрузке из"
-" портала поставщика они уже есть."
+"Нужны столбцы package_code, location, data_gb, days, cost_usd. В выгрузке из "
+"портала поставщика они уже есть."
 
 #: catalog/forms.py:29
 msgid "Preview only — do not write anything"
@@ -251,100 +322,112 @@ msgstr ""
 "Оставьте пустым, чтобы применить весь файл. Выбор направлений — способ "
 "настроить одно, не переоценивая всё остальное."
 
-#: catalog/models.py:6 catalog/models.py:21 config/i18n_extra.py:224
+#: catalog/models.py:7 catalog/models.py:37 config/i18n_extra.py:224
 #: content/models.py:99 content/models.py:130
 msgid "name"
 msgstr "название"
 
-#: catalog/models.py:7 catalog/models.py:22
+#: catalog/models.py:11 catalog/models.py:41
+msgid "name ru"
+msgstr "название (ru)"
+
+#: catalog/models.py:12 catalog/models.py:42
+msgid "Russian name. Leave blank to show the English one."
+msgstr "Название по-русски. Оставьте пустым — покажется английское."
+
+#: catalog/models.py:17 catalog/models.py:47
+msgid "name uz"
+msgstr "название (uz)"
+
+#: catalog/models.py:18 catalog/models.py:48
+msgid "Uzbek name. Leave blank to show the English one."
+msgstr "Название по-узбекски. Оставьте пустым — покажется английское."
+
+#: catalog/models.py:20 catalog/models.py:50
 msgid "slug"
 msgstr "слаг"
 
-#: catalog/models.py:8 catalog/models.py:30 catalog/models.py:134
+#: catalog/models.py:21 catalog/models.py:58 catalog/models.py:162
 #: content/models.py:20 content/models.py:42 content/models.py:69
 #: content/models.py:114 content/models.py:131
-#| msgid "order"
 msgid "sort order"
 msgstr "порядок сортировки"
 
-#: catalog/models.py:12 catalog/models.py:26 catalog/models.py:65
+#: catalog/models.py:25 catalog/models.py:54 catalog/models.py:93
 msgid "region"
 msgstr "регион"
 
-#: catalog/models.py:13
+#: catalog/models.py:26
 msgid "regions"
 msgstr "регионы"
 
-#: catalog/models.py:23
+#: catalog/models.py:51
 msgid "ISO 3166-1 alpha-2 code, e.g. UZ"
 msgstr "Код ISO 3166-1 alpha-2, например UZ"
 
-#: catalog/models.py:23
+#: catalog/models.py:51
 msgid "iso2"
 msgstr "код ISO2"
 
-#: catalog/models.py:28 catalog/models.py:132
+#: catalog/models.py:56 catalog/models.py:160
 msgid "is popular"
 msgstr "популярный"
 
-#: catalog/models.py:29 catalog/models.py:133 catalog/models.py:393
+#: catalog/models.py:57 catalog/models.py:161 catalog/models.py:421
 #: content/models.py:21 content/models.py:41 content/models.py:70
 #: content/models.py:115 content/models.py:132 content/models.py:184
 #: customers/models.py:15 orders/models.py:37
-#| msgid "active"
 msgid "is active"
 msgstr "активен"
 
-#: catalog/models.py:34 catalog/models.py:61 catalog/models.py:376
+#: catalog/models.py:62 catalog/models.py:89 catalog/models.py:404
 msgid "country"
 msgstr "страна"
 
-#: catalog/models.py:35 catalog/models.py:37
+#: catalog/models.py:63 catalog/models.py:65
 msgid "countries"
 msgstr "страны"
 
-#: catalog/models.py:58 catalog/models.py:362
+#: catalog/models.py:86 catalog/models.py:390
 msgid "scope"
 msgstr "область"
 
-#: catalog/models.py:67 content/models.py:36 content/models.py:63
+#: catalog/models.py:95 content/models.py:36 content/models.py:63
 #: content/models.py:149
 msgid "title"
 msgstr "заголовок"
 
-#: catalog/models.py:68
+#: catalog/models.py:96
 msgid "Ignored when unlimited"
 msgstr "Игнорируется при безлимите"
 
-#: catalog/models.py:68
+#: catalog/models.py:96
 msgid "data amount mb"
 msgstr "трафик, МБ"
 
-#: catalog/models.py:69
-#| msgid "0 = unlimited"
+#: catalog/models.py:97
 msgid "is unlimited"
 msgstr "безлимитный"
 
-#: catalog/models.py:70 orders/models.py:142
+#: catalog/models.py:98 orders/models.py:142
 msgid "validity days"
 msgstr "срок действия, дней"
 
-#: catalog/models.py:82
+#: catalog/models.py:110
 msgid ""
 "Supplier cost. Set automatically from the cheapest supplier offer, if any."
 msgstr ""
 "Себестоимость поставщика. Если есть предложения, берётся из самого дешёвого."
 
-#: catalog/models.py:83 catalog/models.py:295
+#: catalog/models.py:111 catalog/models.py:323
 msgid "cost usd"
 msgstr "себестоимость, USD"
 
-#: catalog/models.py:87
-#| msgid "pricing rules"
+#: catalog/models.py:115
 msgid "price usd"
 msgstr "цена, USD"
 
-#: catalog/models.py:96
+#: catalog/models.py:124
 msgid ""
 "Optional text shown beside the price, e.g. '+ deposit'. The number itself "
 "stays in the price field."
@@ -352,135 +435,126 @@ msgstr ""
 "Необязательный текст рядом с ценой, например «+ депозит». Само число "
 "остаётся в поле цены."
 
-#: catalog/models.py:99
-#| msgid "price change"
+#: catalog/models.py:127
 msgid "price note"
 msgstr "примечание к цене"
 
-#: catalog/models.py:106
+#: catalog/models.py:134
 msgid ""
 "Overrides every pricing rule for this plan only. Leave empty to inherit."
 msgstr ""
-"Переопределяет все правила ценообразования только для этого тарифа. Оставьте"
-" пустым, чтобы применилось правило."
+"Переопределяет все правила ценообразования только для этого тарифа. Оставьте "
+"пустым, чтобы применилось правило."
 
-#: catalog/models.py:107 catalog/models.py:380
+#: catalog/models.py:135 catalog/models.py:408
 msgid "markup percent"
 msgstr "наценка, %"
 
-#: catalog/models.py:111
+#: catalog/models.py:139
 msgid "Keep the price exactly as typed; never recalculate it from cost."
 msgstr "Цена остаётся точно как введена; из себестоимости не пересчитывается."
 
-#: catalog/models.py:112
-#| msgid "price change"
+#: catalog/models.py:140
 msgid "price locked"
 msgstr "цена зафиксирована"
 
-#: catalog/models.py:115
-#| msgid "content type"
+#: catalog/models.py:143
 msgid "network type"
 msgstr "тип сети"
 
-#: catalog/models.py:116
-#| msgid "supplier cost"
+#: catalog/models.py:144
 msgid "supports hotspot"
 msgstr "поддерживает точку доступа"
 
-#: catalog/models.py:123
+#: catalog/models.py:151
 msgid "Winning supplier. Managed by the offers below when there are any."
 msgstr "Победивший поставщик. Если есть предложения ниже, управляется ими."
 
-#: catalog/models.py:124 catalog/models.py:288 catalog/models.py:367
+#: catalog/models.py:152 catalog/models.py:316 catalog/models.py:395
 #: customers/models.py:103 orders/models.py:88 orders/models.py:135
-#| msgid "Provider id"
 msgid "provider"
 msgstr "провайдер"
 
-#: catalog/models.py:129
+#: catalog/models.py:157
 msgid "Supplier package slug/code, e.g. JP_1_7 for eSIM Access."
 msgstr "Код пакета поставщика, например JP_1_7 для eSIM Access."
 
-#: catalog/models.py:130
+#: catalog/models.py:158
 msgid "provider package code"
 msgstr "код пакета провайдера"
 
-#: catalog/models.py:138 catalog/models.py:287 orders/models.py:105
+#: catalog/models.py:166 catalog/models.py:315 orders/models.py:105
 #: orders/models.py:125
 msgid "plan"
 msgstr "тариф"
 
-#: catalog/models.py:139
+#: catalog/models.py:167
 msgid "plans"
 msgstr "тарифы"
 
-#: catalog/models.py:290
+#: catalog/models.py:318
 msgid "This supplier's own code for the package, e.g. TR_5_30."
 msgstr "Собственный код пакета у этого поставщика, например TR_5_30."
 
-#: catalog/models.py:291
+#: catalog/models.py:319
 msgid "package code"
 msgstr "код пакета"
 
-#: catalog/models.py:294
+#: catalog/models.py:322
 msgid "Wholesale price this supplier charges us."
 msgstr "Оптовая цена, которую берёт с нас этот поставщик."
 
-#: catalog/models.py:299
-msgid ""
-"Uncheck to take a supplier out of the running without losing its price."
+#: catalog/models.py:327
+msgid "Uncheck to take a supplier out of the running without losing its price."
 msgstr ""
 "Снимите отметку, чтобы убрать поставщика из отбора, не удаляя его цену."
 
-#: catalog/models.py:300
-#| msgid "unavailable"
+#: catalog/models.py:328
 msgid "is available"
 msgstr "доступен"
 
-#: catalog/models.py:303
+#: catalog/models.py:331
 msgid "Why it is out — e.g. 'out of stock', 'no balance'."
 msgstr "Почему выведен — например «нет наличия», «нет баланса»."
 
-#: catalog/models.py:304
-#| msgid "unavailable"
+#: catalog/models.py:332
 msgid "unavailable reason"
 msgstr "причина недоступности"
 
-#: catalog/models.py:307
+#: catalog/models.py:335
 msgid "When a price sync last confirmed this offer."
 msgstr "Когда синхронизация цен последний раз подтвердила это предложение."
 
-#: catalog/models.py:308
-#| msgid "last name"
+#: catalog/models.py:336
 msgid "last synced at"
 msgstr "последняя синхронизация"
 
-#: catalog/models.py:310 catalog/models.py:395 content/models.py:185
+#: catalog/models.py:338 catalog/models.py:423 content/models.py:185
 #: orders/models.py:219
 msgid "updated at"
 msgstr "обновлено"
 
-#: catalog/models.py:314
+#: catalog/models.py:342
 msgid "supplier offer"
 msgstr "предложение поставщика"
 
-#: catalog/models.py:315
+#: catalog/models.py:343
 msgid "supplier offers"
 msgstr "предложения поставщиков"
 
-#: catalog/models.py:366
+#: catalog/models.py:394
 msgid "Required when the scope is 'One supplier', e.g. esimaccess."
 msgstr "Обязательно, когда область — «Один поставщик», например esimaccess."
 
-#: catalog/models.py:375
+#: catalog/models.py:403
 msgid "Required when the scope is 'One destination'."
 msgstr "Обязательно, когда область — «Одно направление»."
 
-#: catalog/models.py:379
+#: catalog/models.py:407
 msgid "Added on top of supplier cost."
 msgstr "Добавляется к себестоимости поставщика."
 
-#: catalog/models.py:386
+#: catalog/models.py:414
 msgid ""
 "Profit floor. A percentage on a cheap plan can be pennies; this prevents "
 "that."
@@ -488,24 +562,23 @@ msgstr ""
 "Минимальная прибыль. Процент от дешёвого тарифа может быть копейками; это "
 "исключает такой случай."
 
-#: catalog/models.py:387
+#: catalog/models.py:415
 msgid "min margin usd"
 msgstr "минимальная маржа, USD"
 
-#: catalog/models.py:391
-#| msgid "Pending"
+#: catalog/models.py:419
 msgid "rounding"
 msgstr "округление"
 
-#: catalog/models.py:394
+#: catalog/models.py:422
 msgid "note"
 msgstr "примечание"
 
-#: catalog/models.py:399
+#: catalog/models.py:427
 msgid "pricing rule"
 msgstr "правило ценообразования"
 
-#: catalog/models.py:400
+#: catalog/models.py:428
 msgid "pricing rules"
 msgstr "правила ценообразования"
 
@@ -703,11 +776,11 @@ msgstr "Исправьте ошибку ниже."
 
 #: config/i18n_extra.py:68
 msgid ""
-"Please enter your old password, for security’s sake, and then enter your new"
-" password twice so we can verify you typed it in correctly."
+"Please enter your old password, for security’s sake, and then enter your new "
+"password twice so we can verify you typed it in correctly."
 msgstr ""
-"Введите старый пароль — из соображений безопасности, — а затем дважды новый,"
-" чтобы мы могли убедиться, что вы набрали его верно."
+"Введите старый пароль — из соображений безопасности, — а затем дважды новый, "
+"чтобы мы могли убедиться, что вы набрали его верно."
 
 #: config/i18n_extra.py:69
 msgid "Previous"
@@ -819,8 +892,8 @@ msgstr "Этот элемент будет удалён."
 
 #: config/i18n_extra.py:96
 msgid ""
-"This object doesn’t have a change history. It probably wasn’t added via this"
-" admin site."
+"This object doesn’t have a change history. It probably wasn’t added via this "
+"admin site."
 msgstr ""
 "У этого объекта нет истории изменений. Вероятно, он был добавлен не через "
 "эту панель администратора."
@@ -989,8 +1062,8 @@ msgstr ""
 #: config/i18n_extra.py:134
 #, python-format
 msgid ""
-"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the"
-" following protected related objects:"
+"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the "
+"following protected related objects:"
 msgstr ""
 "Удаление %(object_name)s '%(escaped_object)s' потребует удаления следующих "
 "связанных защищенных объектов:"
@@ -1058,16 +1131,16 @@ msgid ""
 "Enter a valid username. This value may contain only English letters, "
 "numbers, and @/./+/-/_ characters."
 msgstr ""
-"Введите корректное имя пользователя. Допустимы только латинские буквы, цифры"
-" и символы @/./+/-/_ ."
+"Введите корректное имя пользователя. Допустимы только латинские буквы, цифры "
+"и символы @/./+/-/_ ."
 
 #: config/i18n_extra.py:144
 msgid ""
 "Enter a valid username. This value may contain only letters, numbers, and "
 "@/./+/-/_ characters."
 msgstr ""
-"Введите правильное имя пользователя. Оно может содержать только буквы, цифры"
-" и знаки @/./+/-/_."
+"Введите правильное имя пользователя. Оно может содержать только буквы, цифры "
+"и знаки @/./+/-/_."
 
 #: config/i18n_extra.py:145
 msgid "Enter new password"
@@ -1079,8 +1152,8 @@ msgstr "Фильтр элементов навигации"
 
 #: config/i18n_extra.py:147
 msgid ""
-"First, enter a username and password. Then, you’ll be able to edit more user"
-" options."
+"First, enter a username and password. Then, you’ll be able to edit more user "
+"options."
 msgstr ""
 "Сначала введите имя пользователя и пароль. Затем можно будет изменить "
 "остальные настройки."
@@ -1204,8 +1277,8 @@ msgstr "Пожалуйста, перейдите на эту страницу и
 #: config/i18n_extra.py:172
 msgid "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
 msgstr ""
-"Обязательное поле. Не более 150 символов. Только буквы, цифры и символы "
-"@/./+/-/_."
+"Обязательное поле. Не более 150 символов. Только буквы, цифры и символы @/./"
+"+/-/_."
 
 #: config/i18n_extra.py:173
 #, python-format
@@ -1241,9 +1314,9 @@ msgstr "К основному"
 
 #: config/i18n_extra.py:180
 msgid ""
-"Something’s wrong with your database installation. Make sure the appropriate"
-" database tables have been created, and make sure the database is readable "
-"by the appropriate user."
+"Something’s wrong with your database installation. Make sure the appropriate "
+"database tables have been created, and make sure the database is readable by "
+"the appropriate user."
 msgstr ""
 "Ваша база данных неправильно настроена. Убедитесь, что соответствующие "
 "таблицы были созданы, и что соответствующему пользователю разрешен к ним "
@@ -1285,8 +1358,8 @@ msgid ""
 "The password reset link was invalid, possibly because it has already been "
 "used.  Please request a new password reset."
 msgstr ""
-"Неверная ссылка для восстановления пароля. Возможно, ей уже воспользовались."
-" Пожалуйста, попробуйте восстановить пароль еще раз."
+"Неверная ссылка для восстановления пароля. Возможно, ей уже воспользовались. "
+"Пожалуйста, попробуйте восстановить пароль еще раз."
 
 #: config/i18n_extra.py:188
 #, python-brace-format
@@ -1298,15 +1371,12 @@ msgstr "{name} \"{obj}\" был успешно добавлен."
 msgid ""
 "The {name} “{obj}” was added successfully. You may add another {name} below."
 msgstr ""
-"{name} “{obj}“ был успешно добавлен. Вы можете добавить еще один {name} "
-"ниже."
+"{name} “{obj}“ был успешно добавлен. Вы можете добавить еще один {name} ниже."
 
 #: config/i18n_extra.py:190
 #, python-brace-format
-msgid ""
-"The {name} “{obj}” was added successfully. You may edit it again below."
-msgstr ""
-"{name} «{obj}» успешно добавлен. Ниже его можно отредактировать снова."
+msgid "The {name} “{obj}” was added successfully. You may edit it again below."
+msgstr "{name} «{obj}» успешно добавлен. Ниже его можно отредактировать снова."
 
 #: config/i18n_extra.py:191
 #, python-brace-format
@@ -1320,16 +1390,15 @@ msgstr "{name} “{obj}“ был изменен. Вы можете добави
 msgid ""
 "The {name} “{obj}” was changed successfully. You may edit it again below."
 msgstr ""
-"{name} “{obj}“ был изменен успешно. Вы можете отредактировать его снова "
-"ниже."
+"{name} “{obj}“ был изменен успешно. Вы можете отредактировать его снова ниже."
 
 #: config/i18n_extra.py:193
 msgid ""
 "There’s been an error. It’s been reported to the site administrators via "
 "email and should be fixed shortly. Thanks for your patience."
 msgstr ""
-"Произошла ошибка. О ней сообщено администраторам сайта по электронной почте,"
-" ошибка должна быть вскоре исправлена. Благодарим вас за терпение."
+"Произошла ошибка. О ней сообщено администраторам сайта по электронной почте, "
+"ошибка должна быть вскоре исправлена. Благодарим вас за терпение."
 
 #: config/i18n_extra.py:194
 msgid "This password is entirely numeric."
@@ -1372,12 +1441,12 @@ msgstr ""
 #: config/i18n_extra.py:202
 #, python-format
 msgid ""
-"You are authenticated as %(username)s, but are not authorized to access this"
-" page. Would you like to login to a different account?"
+"You are authenticated as %(username)s, but are not authorized to access this "
+"page. Would you like to login to a different account?"
 msgstr ""
 "Вы вошли в систему как %(username)s, однако у вас недостаточно прав для "
-"просмотра данной страницы. Возможно, вы хотели бы войти в систему, используя"
-" другую учётную запись?"
+"просмотра данной страницы. Возможно, вы хотели бы войти в систему, используя "
+"другую учётную запись?"
 
 #: config/i18n_extra.py:203
 msgid "You may edit it again below."
@@ -1525,7 +1594,7 @@ msgstr "версия"
 msgid "work factor"
 msgstr "рабочий фактор"
 
-#: config/i18n_extra.py:243 config/tests_i18n.py:111
+#: config/i18n_extra.py:243 config/tests_i18n.py:174
 #, python-format
 msgid "Add %(name)s"
 msgstr "Добавить %(name)s"
@@ -1675,8 +1744,8 @@ msgid ""
 "when nothing is linked."
 msgstr ""
 "Выберите промокод, который это рекламирует. Скидка берётся из него, поэтому "
-"полоса и оформление заказа всегда совпадают. Простое поле «код» используется"
-" только когда ничего не связано."
+"полоса и оформление заказа всегда совпадают. Простое поле «код» используется "
+"только когда ничего не связано."
 
 #: content/admin.py:113
 msgid "Bar text (short)"
@@ -1751,7 +1820,6 @@ msgstr ""
 "скидка."
 
 #: content/models.py:13
-#| msgid "Destination"
 msgid "question"
 msgstr "вопрос"
 
@@ -1796,7 +1864,6 @@ msgid "cta text"
 msgstr "текст кнопки"
 
 #: content/models.py:40 content/models.py:183
-#| msgid "not linked"
 msgid "cta link"
 msgstr "ссылка кнопки"
 
@@ -1860,12 +1927,10 @@ msgid "English (base), e.g. 'Tashkent → Tokyo'."
 msgstr "Английский (основа), например «Tashkent → Tokyo»."
 
 #: content/models.py:100
-#| msgid "Action"
 msgid "location"
 msgstr "местоположение"
 
 #: content/models.py:102
-#| msgid "Select action to run"
 msgid "location ru"
 msgstr "местоположение (ru)"
 
@@ -1874,12 +1939,10 @@ msgid "location uz"
 msgstr "местоположение (uz)"
 
 #: content/models.py:106
-#| msgid "iterations"
 msgid "rating"
 msgstr "оценка"
 
 #: content/models.py:111
-#| msgid "Orders by status"
 msgid "moderation status"
 msgstr "статус модерации"
 
@@ -1922,7 +1985,6 @@ msgid "eyebrow uz"
 msgstr "надзаголовок (uz)"
 
 #: content/models.py:158 orders/models.py:14
-#| msgid "QR code"
 msgid "code"
 msgstr "код"
 
@@ -1976,12 +2038,10 @@ msgid "email"
 msgstr "email"
 
 #: customers/models.py:10
-#| msgid "last name"
 msgid "full name"
 msgstr "полное имя"
 
 #: customers/models.py:14
-#| msgid "Old password"
 msgid "hashed password"
 msgstr "хеш пароля"
 
@@ -1994,12 +2054,10 @@ msgid "avatar updated at"
 msgstr "аватар обновлён"
 
 #: customers/models.py:27
-#| msgid "referral"
 msgid "referral code"
 msgstr "реферальный код"
 
 #: customers/models.py:34
-#| msgid "referral"
 msgid "referred by"
 msgstr "кем приглашён"
 
@@ -2008,23 +2066,19 @@ msgid "customers"
 msgstr "клиенты"
 
 #: customers/models.py:57
-#| msgid "referral"
 msgid "referrer"
 msgstr "пригласивший"
 
 #: customers/models.py:65
-#| msgid "referral"
 msgid "referred"
 msgstr "приглашённый"
 
 #: customers/models.py:67
-#| msgid "referral"
 msgid "referred email"
 msgstr "email приглашённого"
 
 #: customers/models.py:68 orders/models.py:58 orders/models.py:139
 #: orders/models.py:168
-#| msgid "Status"
 msgid "status"
 msgstr "статус"
 
@@ -2049,7 +2103,6 @@ msgid "The provider's own immutable id for this user."
 msgstr "Неизменяемый идентификатор этого пользователя у провайдера."
 
 #: customers/models.py:106
-#| msgid "Provider id"
 msgid "provider uid"
 msgstr "идентификатор у провайдера"
 
@@ -2058,7 +2111,6 @@ msgid "Address as the provider reported it, for support only."
 msgstr "Адрес в том виде, как его сообщил провайдер; только для поддержки."
 
 #: customers/models.py:113
-#| msgid "last name"
 msgid "last login at"
 msgstr "последний вход"
 
@@ -2100,26 +2152,23 @@ msgid "State"
 msgstr "Состояние"
 
 #: orders/models.py:17
-#| msgid "content type"
 msgid "discount type"
 msgstr "тип скидки"
 
 #: orders/models.py:19
-#| msgid "Discount"
 msgid "discount value"
 msgstr "размер скидки"
 
 #: orders/models.py:28
 msgid ""
-"Smallest order this code applies to. Leave at 0 for no minimum — but a "
-"fixed-amount discount larger than your cheapest plan makes that plan free."
+"Smallest order this code applies to. Leave at 0 for no minimum — but a fixed-"
+"amount discount larger than your cheapest plan makes that plan free."
 msgstr ""
-"Минимальный заказ, к которому применяется код. Оставьте 0, чтобы минимума не"
-" было, — но фиксированная скидка больше самого дешёвого тарифа сделает этот "
+"Минимальный заказ, к которому применяется код. Оставьте 0, чтобы минимума не "
+"было, — но фиксированная скидка больше самого дешёвого тарифа сделает этот "
 "тариф бесплатным."
 
 #: orders/models.py:32
-#| msgid "orders"
 msgid "min order usd"
 msgstr "минимальный заказ, USD"
 
@@ -2128,12 +2177,10 @@ msgid "0 = unlimited"
 msgstr "0 = без ограничений"
 
 #: orders/models.py:34
-#| msgid "Staff users"
 msgid "max uses"
 msgstr "максимум использований"
 
 #: orders/models.py:35
-#| msgid "Hide counts"
 msgid "used count"
 msgstr "использовано раз"
 
@@ -2146,17 +2193,14 @@ msgid "promo codes"
 msgstr "промокоды"
 
 #: orders/models.py:59
-#| msgid "Total"
 msgid "subtotal"
 msgstr "промежуточная сумма"
 
 #: orders/models.py:60
-#| msgid "Discount"
 msgid "discount"
 msgstr "скидка"
 
 #: orders/models.py:61
-#| msgid "Total"
 msgid "total"
 msgstr "итого"
 
@@ -2166,7 +2210,6 @@ msgstr ""
 "Сумма в сумах, зафиксированная при оформлении. Payme проверяется по ней."
 
 #: orders/models.py:76
-#| msgid "Amount"
 msgid "amount uzs"
 msgstr "сумма, сум"
 
@@ -2183,17 +2226,14 @@ msgid "paid at"
 msgstr "оплачено"
 
 #: orders/models.py:89
-#| msgid "Payme transaction"
 msgid "provider transaction id"
 msgstr "ID транзакции провайдера"
 
 #: orders/models.py:90
-#| msgid "Provider id"
 msgid "provider order no"
 msgstr "номер заказа у провайдера"
 
 #: orders/models.py:91 orders/models.py:137
-#| msgid "superuser status"
 msgid "provider status"
 msgstr "статус у провайдера"
 
@@ -2207,7 +2247,6 @@ msgid "orders"
 msgstr "заказы"
 
 #: orders/models.py:106
-#| msgid "new price"
 msgid "unit price"
 msgstr "цена за единицу"
 
@@ -2236,7 +2275,6 @@ msgid "provider esim tran no"
 msgstr "номер eSIM-транзакции провайдера"
 
 #: orders/models.py:138
-#| msgid "Provider id"
 msgid "provider qr url"
 msgstr "ссылка на QR провайдера"
 
@@ -2245,12 +2283,10 @@ msgid "data total mb"
 msgstr "всего трафика, МБ"
 
 #: orders/models.py:141
-#| msgid "Data used"
 msgid "data used mb"
 msgstr "использовано трафика, МБ"
 
 #: orders/models.py:143
-#| msgid "active"
 msgid "activated at"
 msgstr "активировано"
 
@@ -2267,12 +2303,10 @@ msgid "method"
 msgstr "способ"
 
 #: orders/models.py:167
-#| msgid "Amount"
 msgid "amount"
 msgstr "сумма"
 
 #: orders/models.py:169
-#| msgid "Provider id"
 msgid "provider ref"
 msgstr "референс провайдера"
 
@@ -2285,7 +2319,6 @@ msgid "payments"
 msgstr "платежи"
 
 #: orders/models.py:206
-#| msgid "Payme transaction"
 msgid "transaction id"
 msgstr "ID транзакции"
 
@@ -2298,12 +2331,10 @@ msgid "The account value Payme sent."
 msgstr "Значение account, присланное Payme."
 
 #: orders/models.py:210
-#| msgid "country"
 msgid "account"
 msgstr "аккаунт"
 
 #: orders/models.py:211
-#| msgid "State"
 msgid "state"
 msgstr "состояние"
 
@@ -2316,7 +2347,6 @@ msgid "reason"
 msgstr "причина"
 
 #: orders/models.py:215
-#| msgid "Date/time"
 msgid "create time"
 msgstr "время создания в Payme"
 
@@ -2325,7 +2355,6 @@ msgid "perform time"
 msgstr "время выполнения в Payme"
 
 #: orders/models.py:217
-#| msgid "Cancelled"
 msgid "cancel time"
 msgstr "время отмены в Payme"
 
@@ -2339,9 +2368,12 @@ msgstr "Транзакции Payme"
 
 #: templates/admin/catalog/import_prices.html:7
 msgid ""
-"Setting up one destination by hand means creating eleven objects — a country,\n"
-"    four tariffs and their supplier offers. Upload the wholesaler's price export\n"
-"    instead: the preview shows exactly what would change before anything is written."
+"Setting up one destination by hand means creating eleven objects — a "
+"country,\n"
+"    four tariffs and their supplier offers. Upload the wholesaler's price "
+"export\n"
+"    instead: the preview shows exactly what would change before anything is "
+"written."
 msgstr ""
 "Настроить одно направление вручную — это создать одиннадцать объектов: "
 "страну, четыре тарифа и их предложения поставщиков. Вместо этого загрузите "
@@ -2418,8 +2450,7 @@ msgstr "Тариф"
 msgid "What happens"
 msgstr "Что произойдёт"
 
-#: templates/admin/catalog/import_prices.html:43
-#: templates/admin/index.html:153
+#: templates/admin/catalog/import_prices.html:43 templates/admin/index.html:153
 msgid "Supplier cost"
 msgstr "Себестоимость"
 
@@ -2442,17 +2473,19 @@ msgstr "изменение цены"
 #: templates/admin/catalog/import_prices.html:67
 msgid ""
 "To write these, submit again with <b>“Preview only”</b> unchecked.\n"
-"          Applying moves supplier costs, and retail prices follow through the\n"
+"          Applying moves supplier costs, and retail prices follow through "
+"the\n"
 "          pricing rules."
 msgstr ""
-"Чтобы записать это, отправьте снова, сняв отметку <b>«Только "
-"предпросмотр»</b>. Применение меняет себестоимость, а розничные цены следуют"
-" за ней через правила ценообразования."
+"Чтобы записать это, отправьте снова, сняв отметку <b>«Только предпросмотр»</"
+"b>. Применение меняет себестоимость, а розничные цены следуют за ней через "
+"правила ценообразования."
 
 #: templates/admin/catalog/import_prices.html:73
 msgid ""
 "Nothing in this file matches a destination in the catalogue. Check that\n"
-"          the <code>location</code> column holds ISO codes such as TR or AE, and\n"
+"          the <code>location</code> column holds ISO codes such as TR or AE, "
+"and\n"
 "          that those destinations exist."
 msgstr ""
 "Ничто в этом файле не совпало с направлением из каталога. Проверьте, что в "
@@ -2486,8 +2519,8 @@ msgid ""
 "Orders with no line items have no traceable supplier cost, so they are left "
 "out of the margin rather than counted as pure profit."
 msgstr ""
-"У заказа без позиций нет отслеживаемой себестоимости, поэтому он исключён из"
-" маржи, а не зачтён как чистая прибыль."
+"У заказа без позиций нет отслеживаемой себестоимости, поэтому он исключён из "
+"маржи, а не зачтён как чистая прибыль."
 
 #: templates/admin/index.html:75
 #, python-format
@@ -2550,8 +2583,8 @@ msgid ""
 "Orders with no line items carry no traceable cost, so they are left out of "
 "the ratio rather than counted as pure profit."
 msgstr ""
-"У заказа без позиций нет отслеживаемой себестоимости, поэтому он исключён из"
-" расчёта, а не зачтён как чистая прибыль."
+"У заказа без позиций нет отслеживаемой себестоимости, поэтому он исключён из "
+"расчёта, а не зачтён как чистая прибыль."
 
 #: templates/admin/index.html:156
 msgid "Excluded — no cost data"
@@ -2619,14 +2652,14 @@ msgstr[0] ""
 "У %(n)s активного тарифа нет себестоимости, поэтому он исключён из расчёта "
 "маржи."
 msgstr[1] ""
-"У %(n)s активных тарифов нет себестоимости, поэтому они исключены из расчёта"
-" маржи."
+"У %(n)s активных тарифов нет себестоимости, поэтому они исключены из расчёта "
+"маржи."
 msgstr[2] ""
-"У %(n)s активных тарифов нет себестоимости, поэтому они исключены из расчёта"
-" маржи."
+"У %(n)s активных тарифов нет себестоимости, поэтому они исключены из расчёта "
+"маржи."
 msgstr[3] ""
-"У %(n)s активных тарифов нет себестоимости, поэтому они исключены из расчёта"
-" маржи."
+"У %(n)s активных тарифов нет себестоимости, поэтому они исключены из расчёта "
+"маржи."
 
 #: templates/admin/index.html:265
 msgid "Run <code>manage.py backfill_costs</code> or set a cost."

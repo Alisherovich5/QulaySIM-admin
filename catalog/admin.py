@@ -1,7 +1,7 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django import forms
 from django.db import models
-from django.db.models import Count, Min
+from django.db.models import Count, Max, Min
 from django.utils.html import format_html, format_html_join
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
@@ -12,8 +12,9 @@ from django.utils.translation import gettext_lazy as _
 
 @admin.register(Region)
 class RegionAdmin(ModelAdmin):
-    list_display = ("name", "slug", "country_count", "sort_order")
-    search_fields = ("name",)
+    list_display = ("name", "name_uz", "name_ru", "slug", "country_count", "sort_order")
+    # Staff type the name they see on the site, which is the translated one.
+    search_fields = ("name", "name_uz", "name_ru")
     prepopulated_fields = {"slug": ("name",)}
     ordering = ("sort_order", "name")
 
@@ -25,29 +26,125 @@ class RegionAdmin(ModelAdmin):
         return obj._country_count
 
 
+class PromotionFilter(admin.SimpleListFilter):
+    """Is this destination on the landing page — and can it carry a card?
+
+    A plain `is_popular` yes/no answers the first half. The third choice answers
+    the half nobody thinks to ask: promoted destinations with nothing to sell,
+    which are exactly the ones rendering as empty cards right now.
+    """
+
+    title = _("Landing page")
+    parameter_name = "promoted"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("yes", _("Promoted")),
+            ("no", _("Not promoted")),
+            ("empty", _("Promoted with no plans")),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == "yes":
+            return queryset.filter(is_popular=True)
+        if value == "no":
+            return queryset.filter(is_popular=False)
+        if value == "empty":
+            # Reuses the count CountryAdmin.get_queryset already annotates, so
+            # the answer costs no extra query.
+            return queryset.filter(is_popular=True, _active_plan_count=0)
+        return queryset
+
+
 @admin.register(Country)
 class CountryAdmin(ModelAdmin):
-    list_display = ("flag", "name", "iso2", "region", "is_popular", "is_active", "from_price")
+    """Destinations, and the handful promoted on the landing page.
+
+    The promoted set is managed from this list rather than from nine change
+    pages: whether a destination is promoted, where it sits in the row, and
+    whether it has anything to sell are one decision, and it can only be taken
+    with all three side by side.
+    """
+
+    list_display = (
+        "flag",
+        "name",
+        "iso2",
+        "region",
+        "promotion",
+        "is_popular",
+        "sort_order",
+        "plan_count",
+        "is_active",
+        "from_price",
+    )
     list_display_links = ("flag", "name")
-    list_filter = ("region", "is_popular", "is_active")
-    search_fields = ("name", "iso2")
+    list_filter = (PromotionFilter, "region", "is_active")
+    search_fields = ("name", "name_uz", "name_ru", "iso2")
     prepopulated_fields = {"slug": ("name",)}
-    list_editable = ("is_popular", "is_active")
+    # sort_order is the order the storefront renders the promoted row in, so it
+    # is edited here: reshuffling one destination used to mean opening as many
+    # change pages as there are countries between its old and new place.
+    list_editable = ("is_popular", "sort_order", "is_active")
     autocomplete_fields = ("region",)
-    ordering = ("sort_order", "name")
+    # Promoted first, then in site order. Everything else shares sort_order 0,
+    # so ordering by sort_order alone buried the nine that matter at the bottom
+    # of the first page.
+    ordering = ("-is_popular", "sort_order", "name")
     list_select_related = ("region",)
+    actions = ("promote", "demote")
 
     def get_queryset(self, request):
         # Annotate instead of hitting `starting_price` per row: the property
         # issues one query each, so a 100-row page cost 100 extra queries.
-        return (
+        queryset = (
             super()
             .get_queryset(request)
             .annotate(
                 _starting_price=Min(
                     "plans__price_usd", filter=models.Q(plans__is_active=True)
-                )
+                ),
+                # Second aggregate over the same join, so still no extra query:
+                # a promoted country with no active plans is an empty card on
+                # the site, and this list is the only place to notice it.
+                _active_plan_count=Count(
+                    "plans", filter=models.Q(plans__is_active=True), distinct=True
+                ),
             )
+        )
+        # Landing-page position, as an annotation rather than a dict on `self`:
+        # a ModelAdmin is instantiated once at registration and shared across
+        # threads, so per-request state on it races. It also removes the extra
+        # query this used to run on every autocomplete keystroke, since Country
+        # is an autocomplete target on both PlanAdmin and PricingRuleAdmin.
+        #
+        # is_active is part of the filter because the storefront only ever lists
+        # active countries: deactivating a promoted one used to leave every
+        # country after it labelled one place too high.
+        promoted = Country.objects.filter(is_popular=True, is_active=True)
+        earlier = promoted.filter(
+            models.Q(sort_order__lt=models.OuterRef("sort_order"))
+            | models.Q(
+                sort_order=models.OuterRef("sort_order"),
+                name__lt=models.OuterRef("name"),
+            )
+        )
+        return queryset.annotate(
+            _landing_position=models.Subquery(
+                earlier.order_by()
+                .values(dummy=models.Value(1))
+                .annotate(n=Count("pk"))
+                .values("n"),
+                output_field=models.IntegerField(),
+            ),
+            _landing_total=models.Subquery(
+                promoted.order_by()
+                .values(dummy=models.Value(1))
+                .annotate(n=Count("pk"))
+                .values("n"),
+                output_field=models.IntegerField(),
+            ),
         )
 
     @display(description="")
@@ -58,10 +155,147 @@ class CountryAdmin(ModelAdmin):
             obj.iso2,
         )
 
+    @display(description=_("On the site"), ordering="sort_order")
+    def promotion(self, obj):
+        if not obj.is_popular:
+            return format_html('<span style="color:var(--qs-ink-mute);">—</span>')
+        if not obj.is_active:
+            # Promoted but hidden: the storefront never lists it, so it has no
+            # position. Saying so is more use than a number that is not real.
+            return format_html(
+                '<span style="color:var(--qs-bad-text);font-weight:600;">{}</span>',
+                _("not shown — inactive"),
+            )
+        return format_html(
+            '<span style="color:var(--qs-blue-text);font-weight:700;">★ {}</span>'
+            '<span style="color:var(--qs-ink-mute);font-size:11px;"> / {}</span>',
+            (obj._landing_position or 0) + 1,
+            obj._landing_total or 1,
+        )
+
+    @display(description=_("Active plans"), ordering="_active_plan_count")
+    def plan_count(self, obj):
+        count = obj._active_plan_count
+        if count:
+            return count
+        # Named for what a customer would see, not for the number, because that
+        # is what makes it obvious this one must not stay promoted.
+        label = (
+            _("empty card on the site")
+            if obj.is_popular and obj.is_active
+            else _("no active plans")
+        )
+        return format_html(
+            '<span style="color:var(--qs-bad-text);font-weight:600;">{}</span>', label
+        )
+
     @display(description=_("From"), ordering="_starting_price")
     def from_price(self, obj):
         price = obj._starting_price
         return f"${price}" if price is not None else "—"
+
+    def save_model(self, request, obj, form, change):
+        """Promotion from the changelist checkbox lands at the end of the row.
+
+        The promote action already did this, but ticking `is_popular` in the
+        list is the more obvious path and it saved the row as typed — leaving
+        sort_order at 0, which sorts ahead of every promoted country and makes
+        the new destination the *first* card on the landing page. Same rule,
+        whichever way it was promoted.
+        """
+        if obj.is_popular and obj.sort_order == 0:
+            last = Country.objects.filter(is_popular=True).exclude(pk=obj.pk).aggregate(
+                Max("sort_order")
+            )["sort_order__max"]
+            obj.sort_order = (last or 0) + 1
+        super().save_model(request, obj, form, change)
+
+    # --- Landing-page promotion --------------------------------------------
+
+    @admin.action(description=_("Promote to the landing page"), permissions=["change"])
+    def promote(self, request, queryset):
+        added = [country for country in queryset if not country.is_popular]
+        last = (
+            Country.objects.filter(is_popular=True).aggregate(Max("sort_order"))[
+                "sort_order__max"
+            ]
+            or 0
+        )
+        for country in added:
+            country.is_popular = True
+            if country.sort_order == 0:
+                # Land at the end of the row instead of tying with every other
+                # unpromoted country at 0, which would leave the new position
+                # up to the alphabet.
+                last += 1
+                country.sort_order = last
+            # Saved one at a time rather than queryset.update(): post_save is
+            # what clears the storefront cache, and a bulk update fires none, so
+            # the site would keep serving the old row until the TTL ran out.
+            country.save(update_fields=["is_popular", "sort_order"])
+
+        if added:
+            self.message_user(
+                request,
+                _("{count} destination(s) added to the landing page.").format(
+                    count=len(added)
+                ),
+            )
+        # Reporting the untouched ones too, so a selection that changed nothing
+        # says so instead of looking like the action did not run.
+        already = queryset.count() - len(added)
+        if already:
+            self.message_user(
+                request,
+                _("{count} were already promoted and were left where they are.").format(
+                    count=already
+                ),
+            )
+        self._warn_about_empty_cards(request, added)
+
+    @admin.action(description=_("Remove from the landing page"), permissions=["change"])
+    def demote(self, request, queryset):
+        removed = 0
+        for country in queryset.filter(is_popular=True):
+            country.is_popular = False
+            # sort_order is deliberately kept: it is the place the destination
+            # returns to when it is promoted again, and zeroing it here would
+            # quietly send it to the front of the row next time.
+            country.save(update_fields=["is_popular"])
+            removed += 1
+        self.message_user(
+            request,
+            _("{count} destination(s) removed from the landing page.").format(
+                count=removed
+            ),
+        )
+
+    def _warn_about_empty_cards(self, request, countries):
+        """Name the destinations that will render as a card with no price.
+
+        Promotion is not refused — promoting a destination before loading its
+        plans is a normal order of work — but it must not happen quietly.
+        """
+        if not countries:
+            return
+        # One query for the whole selection; asking each country would be the
+        # per-row queries the changelist annotation exists to avoid.
+        stocked = set(
+            Plan.objects.filter(country__in=countries, is_active=True).values_list(
+                "country_id", flat=True
+            )
+        )
+        empty = [country.name for country in countries if country.pk not in stocked]
+        if not empty:
+            return
+        self.message_user(
+            request,
+            _(
+                "No active plans yet: {names}. They will show as empty cards on "
+                "the site until a plan is added."
+            ).format(names=", ".join(empty)),
+            level=messages.WARNING,
+        )
 
 
 class SupplierOfferInline(TabularInline):
@@ -112,7 +346,14 @@ class PlanAdmin(ModelAdmin):
         "is_active",
         "is_unlimited",
     )
-    search_fields = ("title", "country__name", "region__name", "provider_package_code")
+    search_fields = (
+        "title",
+        "country__name",
+        "country__name_uz",
+        "country__name_ru",
+        "region__name",
+        "provider_package_code",
+    )
     list_editable = ("is_popular", "is_active")
     autocomplete_fields = ("country", "region")
     ordering = ("sort_order", "price_usd")
@@ -439,7 +680,7 @@ class PricingRuleAdmin(ModelAdmin):
     list_filter = ("scope", "is_active", "rounding")
     list_editable = ("is_active",)
     autocomplete_fields = ("country",)
-    search_fields = ("provider", "country__name", "note")
+    search_fields = ("provider", "country__name", "country__name_uz", "country__name_ru", "note")
     actions = ("apply_to_catalogue",)
     fieldsets = (
         (

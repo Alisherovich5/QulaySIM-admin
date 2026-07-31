@@ -16,8 +16,15 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# Must match app/core/cache.py in the API.
-CATALOGUE_PATTERNS = ("qs:regions*", "qs:countries*", "qs:country*")
+# Must match invalidate_catalog() in the API's app/services/catalog.py.
+# popular_plans belongs here because those payloads embed the country name, so a
+# renamed or retranslated country leaves them stale otherwise.
+CATALOGUE_PATTERNS = (
+    "qs:regions*",
+    "qs:countries*",
+    "qs:country*",
+    "qs:popular_plans*",
+)
 CONTENT_PATTERNS = ("qs:landing*",)
 
 

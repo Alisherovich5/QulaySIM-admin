@@ -1,11 +1,12 @@
 # QulaySIM admin interface.
 # Uzbek and Russian for our own strings, plus the admin strings
 # django-unfold and Django leave untranslated — see config/i18n_extra.py.
+#: config/tests_i18n.py:234
 msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 03:09+0500\n"
+"POT-Creation-Date: 2026-08-01 04:41+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -15,92 +16,161 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: catalog/admin.py:23 config/settings.py:325
+#: catalog/admin.py:24 config/settings.py:325
 msgid "Countries"
 msgstr "Davlatlar"
 
-#: catalog/admin.py:61 config/i18n_extra.py:49
+#: catalog/admin.py:37
+msgid "Landing page"
+msgstr "Bosh sahifa"
+
+#: catalog/admin.py:42
+msgid "Promoted"
+msgstr "Ko‘rsatilmoqda"
+
+#: catalog/admin.py:43
+msgid "Not promoted"
+msgstr "Ko‘rsatilmaydi"
+
+#: catalog/admin.py:44
+msgid "Promoted with no plans"
+msgstr "Ko‘rsatiladi, lekin tarifi yo‘q"
+
+#: catalog/admin.py:158
+msgid "On the site"
+msgstr "Saytdagi o‘rni"
+
+#: catalog/admin.py:167
+msgid "not shown — inactive"
+msgstr "ko‘rsatilmaydi — faol emas"
+
+#: catalog/admin.py:176
+msgid "Active plans"
+msgstr "Faol tariflar"
+
+#: catalog/admin.py:184
+msgid "empty card on the site"
+msgstr "saytda bo‘sh karta"
+
+#: catalog/admin.py:186
+msgid "no active plans"
+msgstr "faol tarif yo‘q"
+
+#: catalog/admin.py:192 config/i18n_extra.py:49
 msgid "From"
 msgstr "Dan"
 
-#: catalog/admin.py:122 catalog/admin.py:532
+#: catalog/admin.py:215
+msgid "Promote to the landing page"
+msgstr "Bosh sahifada ko‘rsatish"
+
+#: catalog/admin.py:240
+#, python-brace-format
+msgid "{count} destination(s) added to the landing page."
+msgstr "{count} ta yo‘nalish bosh sahifaga qo‘shildi."
+
+#: catalog/admin.py:250
+#, python-brace-format
+msgid "{count} were already promoted and were left where they are."
+msgstr ""
+"{count} tasi allaqachon ko‘rsatilayotgan edi va o‘z o‘rnida qoldirildi."
+
+#: catalog/admin.py:256
+msgid "Remove from the landing page"
+msgstr "Bosh sahifadan olib tashlash"
+
+#: catalog/admin.py:268
+#, python-brace-format
+msgid "{count} destination(s) removed from the landing page."
+msgstr "{count} ta yo‘nalish bosh sahifadan olib tashlandi."
+
+#: catalog/admin.py:294
+#, python-brace-format
+msgid ""
+"No active plans yet: {names}. They will show as empty cards on the site "
+"until a plan is added."
+msgstr ""
+"Hali faol tarifi yo‘q: {names}. Tarif qo‘shilmaguncha ular saytda bo‘sh "
+"karta bo‘lib turadi."
+
+#: catalog/admin.py:363 catalog/admin.py:773
 msgid "Plan"
 msgstr "Tarif"
 
-#: catalog/admin.py:124
+#: catalog/admin.py:365
 msgid "Data & validity"
 msgstr "Trafik va muddat"
 
-#: catalog/admin.py:138
+#: catalog/admin.py:379
 msgid "Supplier sourcing"
 msgstr "Ta’minot manbasi"
 
-#: catalog/admin.py:142
+#: catalog/admin.py:383
 msgid ""
-"Add each supplier's wholesale price under 'Supplier offers' at the bottom of"
-" this page. On save the cheapest available one sets the cost, the price, and"
-" where the order is placed; the rest become fallbacks used when the winner "
-"is out of stock."
+"Add each supplier's wholesale price under 'Supplier offers' at the bottom of "
+"this page. On save the cheapest available one sets the cost, the price, and "
+"where the order is placed; the rest become fallbacks used when the winner is "
+"out of stock."
 msgstr ""
 "Har bir ta’minotchining ulgurji narxini shu sahifaning pastidagi "
 "«Ta’minotchi takliflari» bo‘limiga kiriting. Saqlanganda mavjudlari ichidan "
 "eng arzoni tannarxni, narxni va buyurtma qayerga berilishini belgilaydi; "
 "qolganlari g‘olib tugaganda ishlatiladigan zaxiraga aylanadi."
 
-#: catalog/admin.py:150
+#: catalog/admin.py:391
 msgid "Pricing"
 msgstr "Narxlash"
 
-#: catalog/admin.py:161
+#: catalog/admin.py:402
 msgid ""
 "Enter the supplier cost and the price is calculated on save. Leave the "
 "markup empty to inherit a pricing rule; fill it in to override every rule "
-"for this plan alone. Tick 'price locked' to type a price by hand and stop it"
-" being recalculated. Use the note for anything the number cannot say on its "
+"for this plan alone. Tick 'price locked' to type a price by hand and stop it "
+"being recalculated. Use the note for anything the number cannot say on its "
 "own, such as '+ deposit' — it is shown to customers beside the price."
 msgstr ""
 "Ta’minotchi tannarxini kiriting — narx saqlanganda hisoblanadi. Ustamani "
 "bo‘sh qoldirsangiz narxlash qoidasi qo‘llanadi; to‘ldirsangiz faqat shu "
 "tarif uchun barcha qoidalar ustidan o‘tadi. Narxni qo‘lda yozib, qayta "
-"hisoblanishini to‘xtatish uchun «narx qulflangan» ni belgilang. Sonning o‘zi"
-" ayta olmaydigan narsa uchun izohdan foydalaning, masalan «+ depozit» — u "
+"hisoblanishini to‘xtatish uchun «narx qulflangan» ni belgilang. Sonning o‘zi "
+"ayta olmaydigan narsa uchun izohdan foydalaning, masalan «+ depozit» — u "
 "mijozga narx yonida ko‘rsatiladi."
 
-#: catalog/admin.py:170
+#: catalog/admin.py:411
 msgid "Visibility"
 msgstr "Ko‘rinishi"
 
-#: catalog/admin.py:270
+#: catalog/admin.py:511
 msgid "Target"
 msgstr "Qo‘llanadi"
 
-#: catalog/admin.py:274
+#: catalog/admin.py:515
 msgid "Sourced from"
 msgstr "Manba"
 
-#: catalog/admin.py:284
+#: catalog/admin.py:525
 msgid "manual"
 msgstr "qo‘lda"
 
-#: catalog/admin.py:294 catalog/admin.py:555
+#: catalog/admin.py:535 catalog/admin.py:796
 msgid "only source"
 msgstr "yagona manba"
 
-#: catalog/admin.py:302
+#: catalog/admin.py:543
 msgid "vs"
 msgstr "vs"
 
-#: catalog/admin.py:306
+#: catalog/admin.py:547
 msgid "Supplier comparison"
 msgstr "Ta’minotchilarni solishtirish"
 
-#: catalog/admin.py:309
+#: catalog/admin.py:550
 msgid "Save the plan, then add supplier prices below to compare them."
 msgstr ""
 "Tarifni saqlang, so‘ng solishtirish uchun pastda ta’minotchi narxlarini "
 "qo‘shing."
 
-#: catalog/admin.py:315
+#: catalog/admin.py:556
 #, python-brace-format
 msgid ""
 "No supplier offers yet, so the cost above is used as typed and orders route "
@@ -112,47 +182,47 @@ msgstr ""
 "yo‘naltiriladi. Arzonrog‘i avtomatik tanlanishi uchun pastda ikkita taklif "
 "qo‘shing."
 
-#: catalog/admin.py:327 catalog/admin.py:549
+#: catalog/admin.py:568 catalog/admin.py:790
 msgid "unavailable"
 msgstr "mavjud emas"
 
-#: catalog/admin.py:343
+#: catalog/admin.py:584
 msgid "ordered from here"
 msgstr "shu yerdan buyurtma qilinadi"
 
-#: catalog/admin.py:352 catalog/admin.py:570
+#: catalog/admin.py:593 catalog/admin.py:811
 msgid "fallback"
 msgstr "zaxira"
 
-#: catalog/admin.py:362
+#: catalog/admin.py:603
 msgid "Data"
 msgstr "Trafik"
 
-#: catalog/admin.py:366 catalog/admin.py:539 templates/admin/index.html:95
+#: catalog/admin.py:607 catalog/admin.py:780 templates/admin/index.html:95
 msgid "Cost"
 msgstr "Tannarx"
 
-#: catalog/admin.py:370
+#: catalog/admin.py:611
 msgid "Price"
 msgstr "Narx"
 
-#: catalog/admin.py:385
+#: catalog/admin.py:626
 msgid "Margin"
 msgstr "Marja"
 
-#: catalog/admin.py:400
+#: catalog/admin.py:641
 msgid "Calculated margin"
 msgstr "Hisoblangan marja"
 
-#: catalog/admin.py:419
+#: catalog/admin.py:660
 msgid "Recalculate prices from cost and rules"
 msgstr "Narxlarni tannarx va qoidalar bo‘yicha qayta hisoblash"
 
-#: catalog/admin.py:446 catalog/admin.py:459
+#: catalog/admin.py:687 catalog/admin.py:700
 msgid "Applies to"
 msgstr "Qo‘llanadi"
 
-#: catalog/admin.py:450
+#: catalog/admin.py:691
 msgid ""
 "Pick one. 'Everything' is the house default; a supplier or destination rule "
 "overrides it for the plans it covers."
@@ -160,49 +230,49 @@ msgstr ""
 "Bittasini tanlang. «Hammasi» — asosiy qoida; ta’minotchi yoki yo‘nalish "
 "qoidasi o‘zi qamragan tariflar uchun uning ustidan o‘tadi."
 
-#: catalog/admin.py:455 catalog/admin.py:463
+#: catalog/admin.py:696 catalog/admin.py:704
 msgid "Markup"
 msgstr "Ustama"
 
-#: catalog/admin.py:456
+#: catalog/admin.py:697
 msgid "Admin"
 msgstr "Boshqaruv"
 
-#: catalog/admin.py:483
+#: catalog/admin.py:724
 msgid "Plans covered"
 msgstr "Qamrab olingan tariflar"
 
-#: catalog/admin.py:491
+#: catalog/admin.py:732
 msgid "Recalculate every affected plan now"
 msgstr "Ta’sirlangan barcha tariflarni hozir qayta hisoblash"
 
-#: catalog/admin.py:543
+#: catalog/admin.py:784
 msgid "Verdict"
 msgstr "Xulosa"
 
-#: catalog/admin.py:548
+#: catalog/admin.py:789
 msgid "out"
 msgstr "chiqarilgan"
 
-#: catalog/admin.py:562
+#: catalog/admin.py:803
 msgid "cheapest"
 msgstr "eng arzon"
 
-#: catalog/admin.py:565
+#: catalog/admin.py:806
 #, python-brace-format
 msgid "saves ${amount}"
 msgstr "${amount} tejaydi"
 
-#: catalog/admin.py:571
+#: catalog/admin.py:812
 #, python-brace-format
 msgid "+${amount} vs {provider}"
 msgstr "+${amount}, {provider} ga nisbatan"
 
-#: catalog/admin.py:577
+#: catalog/admin.py:818
 msgid "Mark available (put back in the running)"
 msgstr "Mavjud deb belgilash (tanlovga qaytarish)"
 
-#: catalog/admin.py:589
+#: catalog/admin.py:830
 msgid "Mark unavailable (take out of the running)"
 msgstr "Mavjud emas deb belgilash (tanlovdan chiqarish)"
 
@@ -227,8 +297,8 @@ msgid ""
 "Needs the columns package_code, location, data_gb, days, cost_usd. The "
 "export from the supplier's portal already has them."
 msgstr ""
-"package_code, location, data_gb, days, cost_usd ustunlari kerak. Ta’minotchi"
-" portalidan yuklab olingan faylda ular allaqachon bor."
+"package_code, location, data_gb, days, cost_usd ustunlari kerak. Ta’minotchi "
+"portalidan yuklab olingan faylda ular allaqachon bor."
 
 #: catalog/forms.py:29
 msgid "Preview only — do not write anything"
@@ -255,99 +325,111 @@ msgstr ""
 "Butun faylni qo‘llash uchun bo‘sh qoldiring. Yo‘nalish tanlash — qolgan "
 "hammasining narxini o‘zgartirmasdan bittasini sozlash usuli."
 
-#: catalog/models.py:6 catalog/models.py:21 config/i18n_extra.py:224
+#: catalog/models.py:7 catalog/models.py:37 config/i18n_extra.py:224
 #: content/models.py:99 content/models.py:130
 msgid "name"
 msgstr "nom"
 
-#: catalog/models.py:7 catalog/models.py:22
+#: catalog/models.py:11 catalog/models.py:41
+msgid "name ru"
+msgstr "nomi (ru)"
+
+#: catalog/models.py:12 catalog/models.py:42
+msgid "Russian name. Leave blank to show the English one."
+msgstr "Ruscha nomi. Bo‘sh qoldirilsa inglizchasi ko‘rsatiladi."
+
+#: catalog/models.py:17 catalog/models.py:47
+msgid "name uz"
+msgstr "nomi (uz)"
+
+#: catalog/models.py:18 catalog/models.py:48
+msgid "Uzbek name. Leave blank to show the English one."
+msgstr "O‘zbekcha nomi. Bo‘sh qoldirilsa inglizchasi ko‘rsatiladi."
+
+#: catalog/models.py:20 catalog/models.py:50
 msgid "slug"
 msgstr "slug"
 
-#: catalog/models.py:8 catalog/models.py:30 catalog/models.py:134
+#: catalog/models.py:21 catalog/models.py:58 catalog/models.py:162
 #: content/models.py:20 content/models.py:42 content/models.py:69
 #: content/models.py:114 content/models.py:131
-#| msgid "order"
 msgid "sort order"
 msgstr "tartib raqami"
 
-#: catalog/models.py:12 catalog/models.py:26 catalog/models.py:65
+#: catalog/models.py:25 catalog/models.py:54 catalog/models.py:93
 msgid "region"
 msgstr "hudud"
 
-#: catalog/models.py:13
+#: catalog/models.py:26
 msgid "regions"
 msgstr "hududlar"
 
-#: catalog/models.py:23
+#: catalog/models.py:51
 msgid "ISO 3166-1 alpha-2 code, e.g. UZ"
 msgstr "ISO 3166-1 alpha-2 kodi, masalan UZ"
 
-#: catalog/models.py:23
+#: catalog/models.py:51
 msgid "iso2"
 msgstr "ISO2 kodi"
 
-#: catalog/models.py:28 catalog/models.py:132
+#: catalog/models.py:56 catalog/models.py:160
 msgid "is popular"
 msgstr "mashhur"
 
-#: catalog/models.py:29 catalog/models.py:133 catalog/models.py:393
+#: catalog/models.py:57 catalog/models.py:161 catalog/models.py:421
 #: content/models.py:21 content/models.py:41 content/models.py:70
 #: content/models.py:115 content/models.py:132 content/models.py:184
 #: customers/models.py:15 orders/models.py:37
-#| msgid "active"
 msgid "is active"
 msgstr "faol"
 
-#: catalog/models.py:34 catalog/models.py:61 catalog/models.py:376
+#: catalog/models.py:62 catalog/models.py:89 catalog/models.py:404
 msgid "country"
 msgstr "davlat"
 
-#: catalog/models.py:35 catalog/models.py:37
+#: catalog/models.py:63 catalog/models.py:65
 msgid "countries"
 msgstr "davlatlar"
 
-#: catalog/models.py:58 catalog/models.py:362
+#: catalog/models.py:86 catalog/models.py:390
 msgid "scope"
 msgstr "qamrov"
 
-#: catalog/models.py:67 content/models.py:36 content/models.py:63
+#: catalog/models.py:95 content/models.py:36 content/models.py:63
 #: content/models.py:149
 msgid "title"
 msgstr "sarlavha"
 
-#: catalog/models.py:68
+#: catalog/models.py:96
 msgid "Ignored when unlimited"
 msgstr "Cheksiz bo‘lsa hisobga olinmaydi"
 
-#: catalog/models.py:68
+#: catalog/models.py:96
 msgid "data amount mb"
 msgstr "trafik, MB"
 
-#: catalog/models.py:69
-#| msgid "0 = unlimited"
+#: catalog/models.py:97
 msgid "is unlimited"
 msgstr "cheksiz"
 
-#: catalog/models.py:70 orders/models.py:142
+#: catalog/models.py:98 orders/models.py:142
 msgid "validity days"
 msgstr "amal qilish muddati, kun"
 
-#: catalog/models.py:82
+#: catalog/models.py:110
 msgid ""
 "Supplier cost. Set automatically from the cheapest supplier offer, if any."
 msgstr "Ta’minotchi tannarxi. Taklif bo‘lsa, eng arzonidan avtomatik olinadi."
 
-#: catalog/models.py:83 catalog/models.py:295
+#: catalog/models.py:111 catalog/models.py:323
 msgid "cost usd"
 msgstr "tannarx, USD"
 
-#: catalog/models.py:87
-#| msgid "pricing rules"
+#: catalog/models.py:115
 msgid "price usd"
 msgstr "narx, USD"
 
-#: catalog/models.py:96
+#: catalog/models.py:124
 msgid ""
 "Optional text shown beside the price, e.g. '+ deposit'. The number itself "
 "stays in the price field."
@@ -355,138 +437,129 @@ msgstr ""
 "Narx yonida ko‘rsatiladigan qo‘shimcha matn, masalan «+ depozit». Sonning "
 "o‘zi narx maydonida qoladi."
 
-#: catalog/models.py:99
-#| msgid "price change"
+#: catalog/models.py:127
 msgid "price note"
 msgstr "narx izohi"
 
-#: catalog/models.py:106
+#: catalog/models.py:134
 msgid ""
 "Overrides every pricing rule for this plan only. Leave empty to inherit."
 msgstr ""
 "Faqat shu tarif uchun barcha narxlash qoidalari ustidan o‘tadi. Qoidani "
 "qo‘llash uchun bo‘sh qoldiring."
 
-#: catalog/models.py:107 catalog/models.py:380
+#: catalog/models.py:135 catalog/models.py:408
 msgid "markup percent"
 msgstr "ustama, %"
 
-#: catalog/models.py:111
+#: catalog/models.py:139
 msgid "Keep the price exactly as typed; never recalculate it from cost."
 msgstr ""
 "Narx qanday yozilgan bo‘lsa shundayligicha qoladi; tannarxdan qayta "
 "hisoblanmaydi."
 
-#: catalog/models.py:112
-#| msgid "price change"
+#: catalog/models.py:140
 msgid "price locked"
 msgstr "narx qulflangan"
 
-#: catalog/models.py:115
-#| msgid "content type"
+#: catalog/models.py:143
 msgid "network type"
 msgstr "tarmoq turi"
 
-#: catalog/models.py:116
-#| msgid "supplier cost"
+#: catalog/models.py:144
 msgid "supports hotspot"
 msgstr "hotspot qo‘llab-quvvatlanadi"
 
-#: catalog/models.py:123
+#: catalog/models.py:151
 msgid "Winning supplier. Managed by the offers below when there are any."
 msgstr "G‘olib ta’minotchi. Takliflar bo‘lsa, pastdagi takliflar boshqaradi."
 
-#: catalog/models.py:124 catalog/models.py:288 catalog/models.py:367
+#: catalog/models.py:152 catalog/models.py:316 catalog/models.py:395
 #: customers/models.py:103 orders/models.py:88 orders/models.py:135
-#| msgid "Provider id"
 msgid "provider"
 msgstr "provayder"
 
-#: catalog/models.py:129
+#: catalog/models.py:157
 msgid "Supplier package slug/code, e.g. JP_1_7 for eSIM Access."
 msgstr "Ta’minotchi paketining kodi, masalan eSIM Access uchun JP_1_7."
 
-#: catalog/models.py:130
+#: catalog/models.py:158
 msgid "provider package code"
 msgstr "provayder paket kodi"
 
-#: catalog/models.py:138 catalog/models.py:287 orders/models.py:105
+#: catalog/models.py:166 catalog/models.py:315 orders/models.py:105
 #: orders/models.py:125
 msgid "plan"
 msgstr "tarif"
 
-#: catalog/models.py:139
+#: catalog/models.py:167
 msgid "plans"
 msgstr "tariflar"
 
-#: catalog/models.py:290
+#: catalog/models.py:318
 msgid "This supplier's own code for the package, e.g. TR_5_30."
 msgstr "Shu ta’minotchining paket uchun o‘z kodi, masalan TR_5_30."
 
-#: catalog/models.py:291
+#: catalog/models.py:319
 msgid "package code"
 msgstr "paket kodi"
 
-#: catalog/models.py:294
+#: catalog/models.py:322
 msgid "Wholesale price this supplier charges us."
 msgstr "Shu ta’minotchi bizdan oladigan ulgurji narx."
 
-#: catalog/models.py:299
-msgid ""
-"Uncheck to take a supplier out of the running without losing its price."
+#: catalog/models.py:327
+msgid "Uncheck to take a supplier out of the running without losing its price."
 msgstr ""
 "Narxini yo‘qotmasdan ta’minotchini tanlovdan chiqarish uchun belgini olib "
 "tashlang."
 
-#: catalog/models.py:300
-#| msgid "unavailable"
+#: catalog/models.py:328
 msgid "is available"
 msgstr "mavjud"
 
-#: catalog/models.py:303
+#: catalog/models.py:331
 msgid "Why it is out — e.g. 'out of stock', 'no balance'."
 msgstr "Nima uchun chiqarilgan — masalan «tugagan», «balans yo‘q»."
 
-#: catalog/models.py:304
-#| msgid "unavailable"
+#: catalog/models.py:332
 msgid "unavailable reason"
 msgstr "mavjud emasligi sababi"
 
-#: catalog/models.py:307
+#: catalog/models.py:335
 msgid "When a price sync last confirmed this offer."
 msgstr "Narx sinxronizatsiyasi bu taklifni oxirgi marta qachon tasdiqlagani."
 
-#: catalog/models.py:308
-#| msgid "last name"
+#: catalog/models.py:336
 msgid "last synced at"
 msgstr "oxirgi sinxronizatsiya"
 
-#: catalog/models.py:310 catalog/models.py:395 content/models.py:185
+#: catalog/models.py:338 catalog/models.py:423 content/models.py:185
 #: orders/models.py:219
 msgid "updated at"
 msgstr "yangilangan vaqti"
 
-#: catalog/models.py:314
+#: catalog/models.py:342
 msgid "supplier offer"
 msgstr "ta’minotchi taklifi"
 
-#: catalog/models.py:315
+#: catalog/models.py:343
 msgid "supplier offers"
 msgstr "ta’minotchi takliflari"
 
-#: catalog/models.py:366
+#: catalog/models.py:394
 msgid "Required when the scope is 'One supplier', e.g. esimaccess."
 msgstr "Qamrov «Bitta ta’minotchi» bo‘lganda majburiy, masalan esimaccess."
 
-#: catalog/models.py:375
+#: catalog/models.py:403
 msgid "Required when the scope is 'One destination'."
 msgstr "Qamrov «Bitta yo‘nalish» bo‘lganda majburiy."
 
-#: catalog/models.py:379
+#: catalog/models.py:407
 msgid "Added on top of supplier cost."
 msgstr "Ta’minotchi tannarxi ustiga qo‘shiladi."
 
-#: catalog/models.py:386
+#: catalog/models.py:414
 msgid ""
 "Profit floor. A percentage on a cheap plan can be pennies; this prevents "
 "that."
@@ -494,24 +567,23 @@ msgstr ""
 "Foydaning eng past chegarasi. Arzon tarifdagi foiz tiyin-chaqa bo‘lib "
 "qolishi mumkin; bu shuning oldini oladi."
 
-#: catalog/models.py:387
+#: catalog/models.py:415
 msgid "min margin usd"
 msgstr "eng kam marja, USD"
 
-#: catalog/models.py:391
-#| msgid "Pending"
+#: catalog/models.py:419
 msgid "rounding"
 msgstr "yaxlitlash"
 
-#: catalog/models.py:394
+#: catalog/models.py:422
 msgid "note"
 msgstr "izoh"
 
-#: catalog/models.py:399
+#: catalog/models.py:427
 msgid "pricing rule"
 msgstr "narxlash qoidasi"
 
-#: catalog/models.py:400
+#: catalog/models.py:428
 msgid "pricing rules"
 msgstr "narxlash qoidalari"
 
@@ -709,8 +781,8 @@ msgstr "Quyidagi xatoni tuzating."
 
 #: config/i18n_extra.py:68
 msgid ""
-"Please enter your old password, for security’s sake, and then enter your new"
-" password twice so we can verify you typed it in correctly."
+"Please enter your old password, for security’s sake, and then enter your new "
+"password twice so we can verify you typed it in correctly."
 msgstr ""
 "Xavfsizlik uchun avval eski parolingizni kiriting, so‘ng yangi parolni ikki "
 "marta yozing — to‘g‘ri kiritganingizni tekshirish uchun."
@@ -825,8 +897,8 @@ msgstr "Bu element o‘chiriladi."
 
 #: config/i18n_extra.py:96
 msgid ""
-"This object doesn’t have a change history. It probably wasn’t added via this"
-" admin site."
+"This object doesn’t have a change history. It probably wasn’t added via this "
+"admin site."
 msgstr ""
 "Bu obyektning o‘zgarish tarixi yo‘q. Ehtimol u boshqaruv panelidan "
 "qo‘shilmagan."
@@ -989,14 +1061,14 @@ msgid ""
 "Deleting %(class_name)s %(instance)s would require deleting the following "
 "protected related objects: %(related_objects)s"
 msgstr ""
-"%(class_name)s %(instance)s ni o‘chirish uchun quyidagi himoyalangan bog‘liq"
-" obyektlarni ham o‘chirish kerak bo‘ladi: %(related_objects)s"
+"%(class_name)s %(instance)s ni o‘chirish uchun quyidagi himoyalangan bog‘liq "
+"obyektlarni ham o‘chirish kerak bo‘ladi: %(related_objects)s"
 
 #: config/i18n_extra.py:134
 #, python-format
 msgid ""
-"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the"
-" following protected related objects:"
+"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the "
+"following protected related objects:"
 msgstr ""
 "%(object_name)s '%(escaped_object)s' ni o‘chirish uchun quyidagi "
 "himoyalangan bog‘liq obyektlarni ham o‘chirish kerak bo‘ladi:"
@@ -1067,8 +1139,8 @@ msgid ""
 "Enter a valid username. This value may contain only English letters, "
 "numbers, and @/./+/-/_ characters."
 msgstr ""
-"To‘g‘ri foydalanuvchi nomini kiriting. Faqat lotin harflari, raqamlar va "
-"@/./+/-/_ belgilari ishlatilishi mumkin."
+"To‘g‘ri foydalanuvchi nomini kiriting. Faqat lotin harflari, raqamlar va @/./"
+"+/-/_ belgilari ishlatilishi mumkin."
 
 #: config/i18n_extra.py:144
 msgid ""
@@ -1088,8 +1160,8 @@ msgstr "Menyu bandlarini filtrlash"
 
 #: config/i18n_extra.py:147
 msgid ""
-"First, enter a username and password. Then, you’ll be able to edit more user"
-" options."
+"First, enter a username and password. Then, you’ll be able to edit more user "
+"options."
 msgstr ""
 "Avval foydalanuvchi nomi va parolni kiriting. Keyin qolgan sozlamalarni "
 "tahrirlash mumkin bo‘ladi."
@@ -1248,9 +1320,9 @@ msgstr "Asosiy qismga o‘tish"
 
 #: config/i18n_extra.py:180
 msgid ""
-"Something’s wrong with your database installation. Make sure the appropriate"
-" database tables have been created, and make sure the database is readable "
-"by the appropriate user."
+"Something’s wrong with your database installation. Make sure the appropriate "
+"database tables have been created, and make sure the database is readable by "
+"the appropriate user."
 msgstr ""
 "Ma’lumotlar bazasi sozlamasida muammo bor. Kerakli jadvallar yaratilganini "
 "va bazani mos foydalanuvchi o‘qiy olishini tekshiring."
@@ -1309,8 +1381,7 @@ msgstr ""
 
 #: config/i18n_extra.py:190
 #, python-brace-format
-msgid ""
-"The {name} “{obj}” was added successfully. You may edit it again below."
+msgid "The {name} “{obj}” was added successfully. You may edit it again below."
 msgstr ""
 "{name} “{obj}” muvaffaqiyatli qo‘shildi. Pastda uni yana tahrirlashingiz "
 "mumkin."
@@ -1329,8 +1400,8 @@ msgstr ""
 msgid ""
 "The {name} “{obj}” was changed successfully. You may edit it again below."
 msgstr ""
-"{name} “{obj}” muvaffaqiyatli o‘zgartirildi. Pastda uni yana tahrirlashingiz"
-" mumkin."
+"{name} “{obj}” muvaffaqiyatli o‘zgartirildi. Pastda uni yana tahrirlashingiz "
+"mumkin."
 
 #: config/i18n_extra.py:193
 msgid ""
@@ -1374,14 +1445,14 @@ msgid ""
 "We’ve emailed you instructions for setting your password, if an account "
 "exists with the email you entered. You should receive them shortly."
 msgstr ""
-"Kiritgan manzilda hisob mavjud bo‘lsa, parol o‘rnatish bo‘yicha ko‘rsatmalar"
-" emailingizga yuborildi. Tez orada yetib boradi."
+"Kiritgan manzilda hisob mavjud bo‘lsa, parol o‘rnatish bo‘yicha ko‘rsatmalar "
+"emailingizga yuborildi. Tez orada yetib boradi."
 
 #: config/i18n_extra.py:202
 #, python-format
 msgid ""
-"You are authenticated as %(username)s, but are not authorized to access this"
-" page. Would you like to login to a different account?"
+"You are authenticated as %(username)s, but are not authorized to access this "
+"page. Would you like to login to a different account?"
 msgstr ""
 "Siz %(username)s sifatida kirgansiz, lekin bu sahifaga ruxsatingiz yo‘q. "
 "Boshqa hisob bilan kirishni xohlaysizmi?"
@@ -1410,8 +1481,7 @@ msgstr "Parolingiz faqat raqamlardan iborat bo‘lmasligi kerak."
 #: config/i18n_extra.py:207
 msgid "Your password can’t be too similar to your other personal information."
 msgstr ""
-"Parolingiz boshqa shaxsiy ma’lumotlaringizga juda o‘xshash bo‘lmasligi "
-"kerak."
+"Parolingiz boshqa shaxsiy ma’lumotlaringizga juda o‘xshash bo‘lmasligi kerak."
 
 #: config/i18n_extra.py:208
 msgid "Your password has been set.  You may go ahead and log in now."
@@ -1533,7 +1603,7 @@ msgstr "versiya"
 msgid "work factor"
 msgstr "ish koeffitsienti"
 
-#: config/i18n_extra.py:243 config/tests_i18n.py:111
+#: config/i18n_extra.py:243 config/tests_i18n.py:174
 #, python-format
 msgid "Add %(name)s"
 msgstr "%(name)s qo‘shish"
@@ -1683,8 +1753,8 @@ msgid ""
 "when nothing is linked."
 msgstr ""
 "Bu reklama qilayotgan promokodni tanlang. Chegirma shu koddan olinadi, "
-"shuning uchun chiziq va to‘lov sahifasi doim mos keladi. Oddiy «kod» maydoni"
-" faqat hech narsa bog‘lanmaganda ishlatiladi."
+"shuning uchun chiziq va to‘lov sahifasi doim mos keladi. Oddiy «kod» maydoni "
+"faqat hech narsa bog‘lanmaganda ishlatiladi."
 
 #: content/admin.py:113
 msgid "Bar text (short)"
@@ -1755,11 +1825,10 @@ msgid ""
 "Bar: <b>{shown}</b> · code <b>{code}</b> — the same discount checkout "
 "applies."
 msgstr ""
-"Chiziq: <b>{shown}</b> · kod <b>{code}</b> — to‘lovda ham xuddi shu chegirma"
-" qo‘llanadi."
+"Chiziq: <b>{shown}</b> · kod <b>{code}</b> — to‘lovda ham xuddi shu chegirma "
+"qo‘llanadi."
 
 #: content/models.py:13
-#| msgid "Destination"
 msgid "question"
 msgstr "savol"
 
@@ -1804,7 +1873,6 @@ msgid "cta text"
 msgstr "tugma matni"
 
 #: content/models.py:40 content/models.py:183
-#| msgid "not linked"
 msgid "cta link"
 msgstr "tugma havolasi"
 
@@ -1867,12 +1935,10 @@ msgid "English (base), e.g. 'Tashkent → Tokyo'."
 msgstr "Ingliz tili (asos), masalan «Tashkent → Tokyo»."
 
 #: content/models.py:100
-#| msgid "Action"
 msgid "location"
 msgstr "joylashuv"
 
 #: content/models.py:102
-#| msgid "Select action to run"
 msgid "location ru"
 msgstr "joylashuv (ru)"
 
@@ -1881,12 +1947,10 @@ msgid "location uz"
 msgstr "joylashuv (uz)"
 
 #: content/models.py:106
-#| msgid "iterations"
 msgid "rating"
 msgstr "baho"
 
 #: content/models.py:111
-#| msgid "Orders by status"
 msgid "moderation status"
 msgstr "moderatsiya holati"
 
@@ -1929,7 +1993,6 @@ msgid "eyebrow uz"
 msgstr "yuqori yozuv (uz)"
 
 #: content/models.py:158 orders/models.py:14
-#| msgid "QR code"
 msgid "code"
 msgstr "kod"
 
@@ -1983,12 +2046,10 @@ msgid "email"
 msgstr "email"
 
 #: customers/models.py:10
-#| msgid "last name"
 msgid "full name"
 msgstr "to‘liq ism"
 
 #: customers/models.py:14
-#| msgid "Old password"
 msgid "hashed password"
 msgstr "xeshlangan parol"
 
@@ -2001,12 +2062,10 @@ msgid "avatar updated at"
 msgstr "avatar yangilangan vaqti"
 
 #: customers/models.py:27
-#| msgid "referral"
 msgid "referral code"
 msgstr "referal kod"
 
 #: customers/models.py:34
-#| msgid "referral"
 msgid "referred by"
 msgstr "kim taklif qilgan"
 
@@ -2015,23 +2074,19 @@ msgid "customers"
 msgstr "mijozlar"
 
 #: customers/models.py:57
-#| msgid "referral"
 msgid "referrer"
 msgstr "taklif qiluvchi"
 
 #: customers/models.py:65
-#| msgid "referral"
 msgid "referred"
 msgstr "taklif qilingan"
 
 #: customers/models.py:67
-#| msgid "referral"
 msgid "referred email"
 msgstr "taklif qilingan email"
 
 #: customers/models.py:68 orders/models.py:58 orders/models.py:139
 #: orders/models.py:168
-#| msgid "Status"
 msgid "status"
 msgstr "holat"
 
@@ -2056,7 +2111,6 @@ msgid "The provider's own immutable id for this user."
 msgstr "Provayderning shu foydalanuvchi uchun o‘zgarmas identifikatori."
 
 #: customers/models.py:106
-#| msgid "Provider id"
 msgid "provider uid"
 msgstr "provayderdagi identifikator"
 
@@ -2065,7 +2119,6 @@ msgid "Address as the provider reported it, for support only."
 msgstr "Provayder xabar qilgan manzil, faqat qo‘llab-quvvatlash uchun."
 
 #: customers/models.py:113
-#| msgid "last name"
 msgid "last login at"
 msgstr "oxirgi kirish"
 
@@ -2107,26 +2160,23 @@ msgid "State"
 msgstr "Holat"
 
 #: orders/models.py:17
-#| msgid "content type"
 msgid "discount type"
 msgstr "chegirma turi"
 
 #: orders/models.py:19
-#| msgid "Discount"
 msgid "discount value"
 msgstr "chegirma qiymati"
 
 #: orders/models.py:28
 msgid ""
-"Smallest order this code applies to. Leave at 0 for no minimum — but a "
-"fixed-amount discount larger than your cheapest plan makes that plan free."
+"Smallest order this code applies to. Leave at 0 for no minimum — but a fixed-"
+"amount discount larger than your cheapest plan makes that plan free."
 msgstr ""
-"Bu kod qo‘llanadigan eng kichik buyurtma. Chek bo‘lmasligi uchun 0 qoldiring"
-" — lekin eng arzon tarifingizdan katta qat’iy chegirma o‘sha tarifni "
-"butunlay bepul qilib qo‘yadi."
+"Bu kod qo‘llanadigan eng kichik buyurtma. Chek bo‘lmasligi uchun 0 qoldiring "
+"— lekin eng arzon tarifingizdan katta qat’iy chegirma o‘sha tarifni butunlay "
+"bepul qilib qo‘yadi."
 
 #: orders/models.py:32
-#| msgid "orders"
 msgid "min order usd"
 msgstr "eng kam buyurtma, USD"
 
@@ -2135,12 +2185,10 @@ msgid "0 = unlimited"
 msgstr "0 = cheksiz"
 
 #: orders/models.py:34
-#| msgid "Staff users"
 msgid "max uses"
 msgstr "eng ko‘p ishlatish soni"
 
 #: orders/models.py:35
-#| msgid "Hide counts"
 msgid "used count"
 msgstr "ishlatilgan soni"
 
@@ -2153,17 +2201,14 @@ msgid "promo codes"
 msgstr "promokodlar"
 
 #: orders/models.py:59
-#| msgid "Total"
 msgid "subtotal"
 msgstr "oraliq summa"
 
 #: orders/models.py:60
-#| msgid "Discount"
 msgid "discount"
 msgstr "chegirma"
 
 #: orders/models.py:61
-#| msgid "Total"
 msgid "total"
 msgstr "jami"
 
@@ -2174,7 +2219,6 @@ msgstr ""
 "tekshiriladi."
 
 #: orders/models.py:76
-#| msgid "Amount"
 msgid "amount uzs"
 msgstr "summa, so‘m"
 
@@ -2191,17 +2235,14 @@ msgid "paid at"
 msgstr "to‘langan vaqti"
 
 #: orders/models.py:89
-#| msgid "Payme transaction"
 msgid "provider transaction id"
 msgstr "provayder tranzaksiya identifikatori"
 
 #: orders/models.py:90
-#| msgid "Provider id"
 msgid "provider order no"
 msgstr "provayderdagi buyurtma raqami"
 
 #: orders/models.py:91 orders/models.py:137
-#| msgid "superuser status"
 msgid "provider status"
 msgstr "provayderdagi holat"
 
@@ -2215,7 +2256,6 @@ msgid "orders"
 msgstr "buyurtmalar"
 
 #: orders/models.py:106
-#| msgid "new price"
 msgid "unit price"
 msgstr "dona narxi"
 
@@ -2244,7 +2284,6 @@ msgid "provider esim tran no"
 msgstr "provayder eSIM tranzaksiya raqami"
 
 #: orders/models.py:138
-#| msgid "Provider id"
 msgid "provider qr url"
 msgstr "provayder QR havolasi"
 
@@ -2253,12 +2292,10 @@ msgid "data total mb"
 msgstr "jami trafik, MB"
 
 #: orders/models.py:141
-#| msgid "Data used"
 msgid "data used mb"
 msgstr "sarflangan trafik, MB"
 
 #: orders/models.py:143
-#| msgid "active"
 msgid "activated at"
 msgstr "faollashtirilgan vaqti"
 
@@ -2275,12 +2312,10 @@ msgid "method"
 msgstr "usul"
 
 #: orders/models.py:167
-#| msgid "Amount"
 msgid "amount"
 msgstr "summa"
 
 #: orders/models.py:169
-#| msgid "Provider id"
 msgid "provider ref"
 msgstr "provayder ma’lumotnomasi"
 
@@ -2293,7 +2328,6 @@ msgid "payments"
 msgstr "to‘lovlar"
 
 #: orders/models.py:206
-#| msgid "Payme transaction"
 msgid "transaction id"
 msgstr "tranzaksiya identifikatori"
 
@@ -2306,12 +2340,10 @@ msgid "The account value Payme sent."
 msgstr "Payme yuborgan hisob qiymati."
 
 #: orders/models.py:210
-#| msgid "country"
 msgid "account"
 msgstr "hisob"
 
 #: orders/models.py:211
-#| msgid "State"
 msgid "state"
 msgstr "holati"
 
@@ -2324,7 +2356,6 @@ msgid "reason"
 msgstr "sabab"
 
 #: orders/models.py:215
-#| msgid "Date/time"
 msgid "create time"
 msgstr "Payme yaratgan vaqti"
 
@@ -2333,7 +2364,6 @@ msgid "perform time"
 msgstr "Payme bajargan vaqti"
 
 #: orders/models.py:217
-#| msgid "Cancelled"
 msgid "cancel time"
 msgstr "Payme bekor qilgan vaqti"
 
@@ -2347,9 +2377,12 @@ msgstr "Payme tranzaksiyalari"
 
 #: templates/admin/catalog/import_prices.html:7
 msgid ""
-"Setting up one destination by hand means creating eleven objects — a country,\n"
-"    four tariffs and their supplier offers. Upload the wholesaler's price export\n"
-"    instead: the preview shows exactly what would change before anything is written."
+"Setting up one destination by hand means creating eleven objects — a "
+"country,\n"
+"    four tariffs and their supplier offers. Upload the wholesaler's price "
+"export\n"
+"    instead: the preview shows exactly what would change before anything is "
+"written."
 msgstr ""
 "Bitta yo‘nalishni qo‘lda sozlash o‘n bitta obyekt yaratishni bildiradi — "
 "davlat, to‘rt tarif va ularning ta’minotchi takliflari. Buning o‘rniga "
@@ -2411,8 +2444,7 @@ msgstr "Tarif"
 msgid "What happens"
 msgstr "Nima bo‘ladi"
 
-#: templates/admin/catalog/import_prices.html:43
-#: templates/admin/index.html:153
+#: templates/admin/catalog/import_prices.html:43 templates/admin/index.html:153
 msgid "Supplier cost"
 msgstr "Ta’minotchi tannarxi"
 
@@ -2435,7 +2467,8 @@ msgstr "narx o‘zgarishi"
 #: templates/admin/catalog/import_prices.html:67
 msgid ""
 "To write these, submit again with <b>“Preview only”</b> unchecked.\n"
-"          Applying moves supplier costs, and retail prices follow through the\n"
+"          Applying moves supplier costs, and retail prices follow through "
+"the\n"
 "          pricing rules."
 msgstr ""
 "Bularni yozish uchun <b>«Faqat ko‘rib chiqish»</b> belgisini olib tashlab, "
@@ -2445,12 +2478,13 @@ msgstr ""
 #: templates/admin/catalog/import_prices.html:73
 msgid ""
 "Nothing in this file matches a destination in the catalogue. Check that\n"
-"          the <code>location</code> column holds ISO codes such as TR or AE, and\n"
+"          the <code>location</code> column holds ISO codes such as TR or AE, "
+"and\n"
 "          that those destinations exist."
 msgstr ""
-"Bu fayldagi hech narsa katalogdagi yo‘nalishga mos kelmadi. "
-"<code>location</code> ustunida TR yoki AE kabi ISO kodlar turganini va o‘sha"
-" yo‘nalishlar mavjudligini tekshiring."
+"Bu fayldagi hech narsa katalogdagi yo‘nalishga mos kelmadi. <code>location</"
+"code> ustunida TR yoki AE kabi ISO kodlar turganini va o‘sha yo‘nalishlar "
+"mavjudligini tekshiring."
 
 #: templates/admin/index.html:10
 msgid "Live overview of QulaySIM sales, customers and eSIM activity."
@@ -2542,8 +2576,8 @@ msgid ""
 "Orders with no line items carry no traceable cost, so they are left out of "
 "the ratio rather than counted as pure profit."
 msgstr ""
-"Qatorlari yo‘q buyurtmaning tannarxi kuzatilmaydi, shuning uchun u sof foyda"
-" deb hisoblanmasdan nisbatdan chiqarildi."
+"Qatorlari yo‘q buyurtmaning tannarxi kuzatilmaydi, shuning uchun u sof foyda "
+"deb hisoblanmasdan nisbatdan chiqarildi."
 
 #: templates/admin/index.html:156
 msgid "Excluded — no cost data"

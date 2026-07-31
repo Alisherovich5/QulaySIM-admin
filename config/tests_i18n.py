@@ -29,21 +29,41 @@ def _catalogue(language: str) -> Path:
 
 
 def _entries(language: str):
-    """Yield (msgid, msgstrs) from a .po without depending on polib at runtime."""
+    """Yield (block, msgid, msgstrs) from a .po without needing polib at runtime.
+
+    A long entry is written as `msgid ""` followed by quoted continuation lines,
+    so the msgid has to be reassembled — reading only the first line reports
+    every long string as missing.
+    """
     import re
+
+    QUOTED = re.compile(r'^"((?:[^"\\]|\\.)*)"$')
+
+    def unescape(text: str) -> str:
+        return text.replace('\\"', '"').replace("\\n", "\n").replace("\\\\", "\\")
 
     text = _catalogue(language).read_text()
     # Blocks are separated by a blank line; the header block has an empty msgid.
     for block in text.split("\n\n"):
-        ids = re.findall(r'^msgid "((?:[^"\\]|\\.)*)"', block, flags=re.M)
-        if not ids:
-            continue
-        cont = re.findall(r'^"((?:[^"\\]|\\.)*)"$', block, flags=re.M)
-        msgid = ids[0]
-        if not msgid and not cont:
+        lines = block.split("\n")
+        field, parts = None, {"msgid": [], "msgstr": []}
+        for line in lines:
+            if line.startswith("msgid_plural "):
+                field = None
+            elif line.startswith("msgid "):
+                field = "msgid"
+                parts["msgid"].append(line[len("msgid ") :].strip('"'))
+            elif line.startswith("msgstr"):
+                field = "msgstr"
+                parts["msgstr"].append(line.split(" ", 1)[1].strip('"'))
+            elif field and QUOTED.match(line):
+                parts[field].append(QUOTED.match(line).group(1))
+            elif not line.startswith('"'):
+                field = None
+        msgid = unescape("".join(parts["msgid"]))
+        if not msgid:
             continue  # the metadata header
-        strs = re.findall(r'^msgstr(?:\[\d+\])? "((?:[^"\\]|\\.)*)"', block, flags=re.M)
-        yield block, msgid, strs
+        yield block, msgid, [unescape(s) for s in parts["msgstr"]]
 
 
 class CatalogueCompletenessTests(TestCase):
@@ -61,6 +81,42 @@ class CatalogueCompletenessTests(TestCase):
                         untranslated.append(msgid or block.splitlines()[0])
                 self.assertEqual(
                     untranslated, [], f"{language}: {len(untranslated)} untranslated"
+                )
+
+    def test_every_translatable_literal_reaches_the_catalogue(self):
+        """A string wrapped in _() but never extracted renders in English.
+
+        The completeness test above only looks at entries that are already in
+        the .po, so it cannot see a msgid that makemessages was never run for —
+        which is exactly what happened when the promoted-destinations columns
+        were added a commit after the translation pass.
+        """
+        import re
+
+        root = Path(settings.BASE_DIR)
+        sources = [
+            path
+            for pattern in ("*/admin.py", "*/models.py", "*/forms.py", "config/*.py")
+            for path in root.glob(pattern)
+            if ".venv" not in str(path) and path.name != "tests_i18n.py"
+        ]
+        # Single-line, single-string _("...") calls. Multi-line and interpolated
+        # ones are left to makemessages; this is a floor, not a parser.
+        literal = re.compile(r'\b_\(\s*"((?:[^"\\]|\\.)+)"\s*\)')
+        wanted = {
+            m.group(1)
+            for path in sources
+            for m in literal.finditer(path.read_text())
+        }
+        for language in LOCALES:
+            with self.subTest(language=language):
+                have = {msgid for _b, msgid, _s in _entries(language)}
+                missing = sorted(wanted - have)
+                self.assertEqual(
+                    missing,
+                    [],
+                    f"{language}: wrapped in _() but not in the catalogue — "
+                    f"run makemessages: {missing}",
                 )
 
     def test_no_fuzzy_entries(self):

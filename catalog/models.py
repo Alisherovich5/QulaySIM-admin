@@ -3,7 +3,20 @@ from django.utils.translation import gettext_lazy as _
 
 
 class Region(models.Model):
+    # English is the base; _ru/_uz are optional and fall back to the base.
     name = models.CharField(max_length=80, unique=True, verbose_name=_("name"))
+    name_ru = models.CharField(
+        max_length=80,
+        blank=True,
+        verbose_name=_("name ru"),
+        help_text=_("Russian name. Leave blank to show the English one."),
+    )
+    name_uz = models.CharField(
+        max_length=80,
+        blank=True,
+        verbose_name=_("name uz"),
+        help_text=_("Uzbek name. Leave blank to show the English one."),
+    )
     slug = models.SlugField(max_length=80, unique=True, verbose_name=_("slug"))
     sort_order = models.PositiveIntegerField(default=0, verbose_name=_("sort order"))
 
@@ -18,7 +31,22 @@ class Region(models.Model):
 
 
 class Country(models.Model):
+    # English is the base; _ru/_uz are optional and fall back to the base.
+    # The slug is deliberately not translated: it is the URL the storefront
+    # links to, and it must stay the same whichever language is showing.
     name = models.CharField(max_length=120, unique=True, verbose_name=_("name"))
+    name_ru = models.CharField(
+        max_length=120,
+        blank=True,
+        verbose_name=_("name ru"),
+        help_text=_("Russian name. Leave blank to show the English one."),
+    )
+    name_uz = models.CharField(
+        max_length=120,
+        blank=True,
+        verbose_name=_("name uz"),
+        help_text=_("Uzbek name. Leave blank to show the English one."),
+    )
     slug = models.SlugField(max_length=120, unique=True, verbose_name=_("slug"))
     iso2 = models.CharField(max_length=2, help_text=_("ISO 3166-1 alpha-2 code, e.g. UZ"), verbose_name=_("iso2"))
     region = models.ForeignKey(

@@ -593,6 +593,337 @@ class PlanAdminRenderTests(TestCase):
         self.assertContains(response, "fallback")
 
 
+@override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(LANGUAGE_CODE="en")
+class PopularDestinationAdminTests(TestCase):
+    """Choosing, ordering and dropping the destinations the landing page shows.
+
+    All three happen from the country list, so all three are asserted through
+    the changelist rather than against the model: an action that works but is
+    not reachable from the page is not a workflow anybody can use.
+    """
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+        from django.urls import reverse
+
+        self.turkey = self._country("Turkey", "TR", popular=True, order=1)
+        self.japan = self._country("Japan", "JP", popular=True, order=2)
+        # Promoted with nothing to sell — the empty card the site would render.
+        self.oman = self._country("Oman", "OM", popular=True, order=3, plans=False)
+        self.qatar = self._country("Qatar", "QA")
+
+        User.objects.create_superuser("dest-admin", "d@example.com", "pw-for-tests-only")
+        self.client.force_login(User.objects.get(username="dest-admin"))
+        self.url = reverse("admin:catalog_country_changelist")
+
+    def _country(self, name, iso2, *, popular=False, order=0, plans=True):
+        country = Country.objects.create(
+            name=name,
+            slug=name.lower(),
+            iso2=iso2,
+            is_popular=popular,
+            sort_order=order,
+        )
+        if plans:
+            Plan.objects.create(
+                country=country,
+                title=f"{name} 3GB",
+                validity_days=15,
+                price_usd=Decimal("9.00"),
+                price_locked=True,
+            )
+        return country
+
+    def _act(self, action, *countries, follow=True):
+        return self.client.post(
+            self.url,
+            {
+                "action": action,
+                "_selected_action": [str(c.pk) for c in countries],
+                "index": 0,
+            },
+            follow=follow,
+        )
+
+    def _messages(self, response):
+        return [str(message) for message in response.context["messages"]]
+
+    # --- promoting and demoting --------------------------------------------
+
+    def test_promote_puts_a_destination_on_the_landing_page(self):
+        self._act("promote", self.qatar)
+        self.qatar.refresh_from_db()
+        self.assertTrue(self.qatar.is_popular)
+
+    def test_a_newly_promoted_destination_lands_at_the_end_of_the_row(self):
+        self._act("promote", self.qatar)
+        self.qatar.refresh_from_db()
+        # Three were already promoted, so this one is fourth rather than tying
+        # with every unpromoted country at 0.
+        self.assertEqual(self.qatar.sort_order, 4)
+
+    def test_promoting_does_not_move_one_that_is_already_there(self):
+        self._act("promote", self.turkey, self.qatar)
+        self.turkey.refresh_from_db()
+        self.assertEqual(self.turkey.sort_order, 1, "an existing place must survive")
+
+    def test_promoting_one_that_is_already_there_says_so(self):
+        response = self._act("promote", self.turkey)
+        # Otherwise a selection that changed nothing looks like a failed action.
+        self.assertTrue(
+            any("already promoted" in message for message in self._messages(response))
+        )
+
+    def test_promote_warns_when_there_is_nothing_to_sell(self):
+        laos = self._country("Laos", "LA", plans=False)
+        response = self._act("promote", laos)
+        self.assertTrue(
+            any("Laos" in message for message in self._messages(response)),
+            "promoting an empty destination must say so",
+        )
+
+    def test_promote_says_nothing_about_destinations_that_have_plans(self):
+        response = self._act("promote", self.qatar)
+        self.assertFalse(
+            any("empty cards" in message for message in self._messages(response))
+        )
+
+    def test_demote_takes_it_off_the_landing_page(self):
+        self._act("demote", self.japan)
+        self.japan.refresh_from_db()
+        self.assertFalse(self.japan.is_popular)
+
+    def test_demote_keeps_the_place_it_had(self):
+        self._act("demote", self.japan)
+        self.japan.refresh_from_db()
+        # Promoting it again should put it back where it was, not at the front.
+        self.assertEqual(self.japan.sort_order, 2)
+
+    def test_the_actions_clear_the_storefront_cache(self):
+        """Regression guard: a queryset.update() would fire no post_save, so the
+        site would keep showing the old row for the whole cache TTL."""
+        from unittest.mock import patch
+
+        for action, country in (("promote", self.qatar), ("demote", self.japan)):
+            with self.subTest(action=action):
+                with patch("catalog.signals.invalidate_catalogue") as invalidate:
+                    self._act(action, country)
+                self.assertTrue(invalidate.called)
+
+    # --- reading the list ---------------------------------------------------
+
+    def test_the_changelist_shows_the_promoted_order(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        self.assertIn("★ 1", body)
+        self.assertIn("★ 3", body)
+        self.assertIn("/ 3", body)
+
+    def test_the_order_shown_is_the_order_the_site_uses(self):
+        # Japan was promoted second but sits last on the site once its sort
+        # order moves, and the number in the list has to follow the site.
+        self.japan.sort_order = 9
+        self.japan.save()
+
+        response = self.client.get(self.url)
+        changelist = response.context["cl"]
+        shown = {
+            country.name: str(changelist.model_admin.promotion(country))
+            for country in changelist.result_list
+        }
+        self.assertIn("★ 1", shown["Turkey"])
+        self.assertIn("★ 2", shown["Oman"])
+        self.assertIn("★ 3", shown["Japan"])
+        self.assertIn("—", shown["Qatar"])
+
+    def test_promoted_destinations_come_first(self):
+        response = self.client.get(self.url)
+        names = [country.name for country in response.context["cl"].result_list]
+        self.assertEqual(names[:3], ["Turkey", "Japan", "Oman"])
+        self.assertEqual(names[3], "Qatar")
+
+    def test_a_promoted_destination_with_no_plans_is_called_out(self):
+        response = self.client.get(self.url)
+        self.assertContains(response, "empty card on the site")
+
+    def test_an_unpromoted_destination_with_no_plans_is_only_noted(self):
+        self.oman.is_popular = False
+        self.oman.save()
+        response = self.client.get(self.url)
+        # Nothing is broken until it is promoted, so the wording is quieter.
+        self.assertContains(response, "no active plans")
+        self.assertNotContains(response, "empty card on the site")
+
+    def test_the_filter_shows_just_the_promoted_ones(self):
+        response = self.client.get(self.url + "?promoted=yes")
+        names = {c.name for c in response.context["cl"].result_list}
+        self.assertEqual(names, {"Turkey", "Japan", "Oman"})
+
+    def test_the_filter_finds_the_promoted_ones_with_nothing_to_sell(self):
+        response = self.client.get(self.url + "?promoted=empty")
+        names = [c.name for c in response.context["cl"].result_list]
+        self.assertEqual(names, ["Oman"])
+
+    def test_an_inactive_plan_does_not_count_as_something_to_sell(self):
+        Plan.objects.filter(country=self.turkey).update(is_active=False)
+        response = self.client.get(self.url + "?promoted=empty")
+        names = {c.name for c in response.context["cl"].result_list}
+        self.assertEqual(names, {"Oman", "Turkey"})
+
+    def test_the_changelist_does_not_query_per_row(self):
+        from django.contrib.admin.sites import site
+        from django.test import RequestFactory
+
+        for index in range(12):
+            self._country(f"Country {index}", "ZZ", popular=index < 6, order=index)
+
+        model_admin = site._registry[Country]
+        countries = list(model_admin.get_queryset(RequestFactory().get("/")))
+        with self.assertNumQueries(0):
+            # Both counts and both positions come from get_queryset, so drawing
+            # the rows touches no database.
+            for country in countries:
+                model_admin.promotion(country)
+                model_admin.plan_count(country)
+                model_admin.from_price(country)
+
+    # --- reordering from the list ------------------------------------------
+
+    def test_sort_order_can_be_changed_without_leaving_the_list(self):
+        response = self.client.get(self.url)
+        rows = list(response.context["cl"].result_list)
+        data = {
+            "form-TOTAL_FORMS": str(len(rows)),
+            "form-INITIAL_FORMS": str(len(rows)),
+            "_save": "",
+        }
+        for index, country in enumerate(rows):
+            data[f"form-{index}-id"] = str(country.pk)
+            data[f"form-{index}-sort_order"] = (
+                "7" if country.pk == self.japan.pk else str(country.sort_order)
+            )
+            if country.is_popular:
+                data[f"form-{index}-is_popular"] = "on"
+            if country.is_active:
+                data[f"form-{index}-is_active"] = "on"
+
+        response = self.client.post(self.url, data, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.japan.refresh_from_db()
+        self.assertEqual(self.japan.sort_order, 7)
+
+    def test_promotion_can_be_toggled_from_the_same_row(self):
+        response = self.client.get(self.url)
+        rows = list(response.context["cl"].result_list)
+        data = {
+            "form-TOTAL_FORMS": str(len(rows)),
+            "form-INITIAL_FORMS": str(len(rows)),
+            "_save": "",
+        }
+        for index, country in enumerate(rows):
+            data[f"form-{index}-id"] = str(country.pk)
+            data[f"form-{index}-sort_order"] = str(country.sort_order)
+            # Turkey's box is cleared and Qatar's is ticked in one save.
+            promoted = country.pk == self.qatar.pk or (
+                country.is_popular and country.pk != self.turkey.pk
+            )
+            if promoted:
+                data[f"form-{index}-is_popular"] = "on"
+            if country.is_active:
+                data[f"form-{index}-is_active"] = "on"
+
+        self.client.post(self.url, data, follow=True)
+        self.turkey.refresh_from_db()
+        self.qatar.refresh_from_db()
+        self.assertFalse(self.turkey.is_popular)
+        self.assertTrue(self.qatar.is_popular)
+        # Ticking the box is the obvious way to promote, so it has to follow the
+        # same rule as the action: land at the end of the row, not at
+        # sort_order 0, which would sort ahead of everything and make the new
+        # destination the first card on the landing page.
+        self.assertGreater(self.qatar.sort_order, 0)
+        self.assertGreaterEqual(
+            self.qatar.sort_order,
+            max(self.japan.sort_order, self.oman.sort_order),
+        )
+
+    def test_a_destination_can_be_found_by_its_translated_name(self):
+        """Staff work in Uzbek and search for the name they see on the site."""
+        self.turkey.name_uz = "Turkiya"
+        self.turkey.name_ru = "Турция"
+        self.turkey.save(update_fields=["name_uz", "name_ru"])
+
+        for query in ("Turkiya", "Турция", "Turkey"):
+            with self.subTest(query=query):
+                response = self.client.get(self.url, {"q": query})
+                found = [c.pk for c in response.context["cl"].result_list]
+                self.assertIn(self.turkey.pk, found)
+                self.assertNotIn(self.japan.pk, found)
+
+    def test_an_inactive_promoted_country_is_not_given_a_position(self):
+        """The storefront lists active countries only, so a hidden one has no
+        place in the row — and numbering it pushed every country after it one
+        position too high."""
+        self.japan.is_active = False
+        self.japan.save(update_fields=["is_active"])
+
+        response = self.client.get(self.url)
+        html = response.content.decode()
+        self.assertIn("not shown — inactive", html)
+        # Two active promoted countries remain, so the totals must say two.
+        self.assertIn("/ 2", html)
+        self.assertNotIn("/ 3", html)
+
+    def test_position_survives_a_deactivated_country_in_the_middle(self):
+        self.japan.is_active = False
+        self.japan.save(update_fields=["is_active"])
+
+        response = self.client.get(self.url)
+        rows = {c.pk: c for c in response.context["cl"].result_list}
+        # Turkey is first, and Oman moves up to second now that Japan is hidden
+        # rather than staying third behind a country nobody can see.
+        self.assertEqual(rows[self.turkey.pk]._landing_position, 0)
+        self.assertEqual(rows[self.oman.pk]._landing_position, 1)
+
+    def test_the_position_costs_the_same_however_many_rows(self):
+        """The position used to be a dict rebuilt on every queryset; as an
+        annotation it has to stay a fixed cost rather than one query per row.
+
+        The absolute number is not the point and would be brittle — that it does
+        not move when the row count quadruples is."""
+        from django.test.utils import CaptureQueriesContext
+        from django.db import connection
+
+        def count_queries():
+            with CaptureQueriesContext(connection) as captured:
+                list(self.client.get(self.url).context["cl"].result_list)
+            return len(captured)
+
+        with_four = count_queries()
+        # iso2 is two characters, so the filler codes are AA, AB, AC ...
+        for index in range(12):
+            self._country(
+                f"Filler {index}",
+                f"A{chr(ord('A') + index)}",
+                popular=True,
+                order=index + 10,
+            )
+        self.assertEqual(count_queries(), with_four)
+
+    def test_the_position_is_not_kept_on_the_admin_instance(self):
+        """A ModelAdmin is built once at registration and shared across threads,
+        so per-request state on it races between concurrent requests."""
+        from django.contrib import admin as django_admin
+
+        model_admin = django_admin.site._registry[Country]
+        self.assertFalse(
+            hasattr(model_admin, "_promoted_positions"),
+            "landing positions must be an annotation, not instance state",
+        )
+
+
 class RenderedLinkPathTests(TestCase):
     """No rendered admin page may contain a link hardcoded to /admin/.
 
