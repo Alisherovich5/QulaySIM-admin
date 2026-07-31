@@ -13,6 +13,15 @@ class Customer(models.Model):
     hashed_password = models.CharField(max_length=255, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    # The avatar lives in the database rather than a media volume: at this size
+    # it is a few kilobytes, and keeping it here means the nightly pg_dump
+    # already backs it up, with no volume to mount, no extra route to serve and
+    # no cross-origin image for the storefront's CSP to allow.
+    #
+    # Always re-encoded WebP written by the API, never the bytes the customer
+    # uploaded — that is what strips EXIF and anything hidden in the original.
+    avatar_webp = models.BinaryField(null=True, blank=True, editable=False)
+    avatar_updated_at = models.DateTimeField(null=True, blank=True, editable=False)
     # Referral program
     referral_code = models.CharField(max_length=12, unique=True, null=True, blank=True)
     referred_by = models.ForeignKey(
