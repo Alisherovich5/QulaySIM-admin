@@ -46,7 +46,7 @@ class ESIMInline(TabularInline):
 
 @admin.register(PromoCode)
 class PromoCodeAdmin(ModelAdmin):
-    list_display = ("code", "discount_type", "discount_value", "usage", "is_active", "valid_until")
+    list_display = ("code", "discount_type", "discount_value", "min_order_usd", "usage", "is_active", "valid_until")
     list_filter = ("discount_type", "is_active")
     search_fields = ("code",)
     ordering = ("-created_at",)

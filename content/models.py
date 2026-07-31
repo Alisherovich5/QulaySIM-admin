@@ -140,7 +140,30 @@ class PromoBanner(models.Model):
     eyebrow_uz = models.CharField(max_length=80, blank=True)
     title_uz = models.CharField(max_length=160, blank=True)
     text_uz = models.TextField(blank=True)
+    # Free-text fallback, kept for banners created before the link existed.
     code = models.CharField(max_length=40, default="WELCOME10")
+    # The discount the banner advertises is read from the code that actually
+    # applies it, so the two cannot disagree. Advertising 20% while checkout
+    # takes 10% off is the kind of mistake a second copy of the number invites.
+    promo_code = models.ForeignKey(
+        "orders.PromoCode",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="banners",
+        help_text=(
+            "Link the promo code this banner advertises. Its discount — percent "
+            "or fixed amount — is what the site shows, so there is one number to "
+            "change, not two."
+        ),
+    )
+    # Shown in the thin bar above the navigation, where there is no room for the
+    # full sentence. Left blank, the site falls back to its built-in wording.
+    strip_text = models.CharField(
+        max_length=60, blank=True, help_text="Short bar text, English. e.g. '20$ chegirma'"
+    )
+    strip_text_ru = models.CharField(max_length=60, blank=True)
+    strip_text_uz = models.CharField(max_length=60, blank=True)
     cta_link = models.CharField(max_length=255, default="/destinations")
     is_active = models.BooleanField(default=True)
     updated_at = models.DateTimeField(auto_now=True)

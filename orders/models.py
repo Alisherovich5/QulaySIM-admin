@@ -15,6 +15,19 @@ class PromoCode(models.Model):
         max_length=10, choices=DiscountType.choices, default=DiscountType.PERCENT
     )
     discount_value = models.DecimalField(max_digits=8, decimal_places=2)
+    # A fixed discount without a floor is a free-plan coupon: $20 off a $1.99
+    # tariff is $0.00, and the discount is capped at the cart so nothing warns
+    # you. This is what makes a fixed amount usable at all.
+    min_order_usd = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0,
+        help_text=(
+            "Smallest order this code applies to. Leave at 0 for no minimum — but "
+            "a fixed-amount discount larger than your cheapest plan makes that "
+            "plan free."
+        ),
+    )
     max_uses = models.PositiveIntegerField(default=0, help_text="0 = unlimited")
     used_count = models.PositiveIntegerField(default=0)
     valid_until = models.DateTimeField(null=True, blank=True)
