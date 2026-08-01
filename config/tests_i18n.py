@@ -256,9 +256,8 @@ class LanguageSwitchingTests(TestCase):
     def test_set_language_is_routed_under_the_admin_prefix(self):
         """Unfold's switcher posts here.
 
-        It has to live under ADMIN_URL_PATH: in production the storefront
-        answers every path except that prefix, so a root-level /i18n/ was
-        served the SPA's index.html and the switcher POSTed into a 405.
+        Kept under ADMIN_URL_PATH so it is covered by whatever protects the rest
+        of the admin, rather than being a public endpoint of its own.
         """
         url = reverse("set_language")
         self.assertEqual(url, f"/{settings.ADMIN_URL_PATH}/i18n/setlang/")

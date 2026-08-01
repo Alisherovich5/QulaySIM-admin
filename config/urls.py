@@ -25,10 +25,11 @@ urlpatterns = [
     # Backs the language switcher in the header. Without this the switcher
     # renders and posts into a 404, so the language never changes.
     #
-    # Mounted *under* the admin prefix, not at the site root: in production the
-    # storefront answers everything except this prefix, so a root-level /i18n/
-    # was served the SPA's index.html and a POST to it came back 405. Only
-    # ADMIN_URL_PATH reaches Django.
+    # Under the admin prefix rather than at the site root, so it sits behind
+    # whatever protects the rest of the admin. The admin is served from its own
+    # hostname today, where either would work; this way it does not become a
+    # publicly reachable endpoint if it is ever mounted on the main host, where
+    # only this prefix is proxied to Django.
     #
     # `set_language` only accepts a redirect target on this host, and only a
     # code from LANGUAGES, so it is not an open redirect.
