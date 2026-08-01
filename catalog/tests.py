@@ -470,10 +470,19 @@ class SidebarNavigationTests(TestCase):
         import config.urls
         from django.urls import clear_url_caches
 
-        with override_settings(ADMIN_URL_PATH="secret-panel"):
+        def rebuild():
+            from django.urls import set_urlconf
+
             importlib.reload(config.urls)
             clear_url_caches()
-            try:
+            set_urlconf(None)
+
+        # The restore sits OUTSIDE the override: rebuilding inside it re-read
+        # the renamed path and left every later test resolving against
+        # /secret-panel/.
+        try:
+            with override_settings(ADMIN_URL_PATH="secret-panel"):
+                rebuild()
                 links = [
                     str(item["link"])
                     for group in settings.UNFOLD["SIDEBAR"]["navigation"]
@@ -485,10 +494,8 @@ class SidebarNavigationTests(TestCase):
                         link.startswith("/secret-panel/"),
                         f"{link} did not follow the renamed admin path",
                     )
-            finally:
-                # Leave the URLconf as the rest of the suite expects it.
-                importlib.reload(config.urls)
-                clear_url_caches()
+        finally:
+            rebuild()
 
     @override_settings(SECURE_SSL_REDIRECT=False)
     def test_every_sidebar_link_is_a_real_view(self):
@@ -934,7 +941,6 @@ class RenderedLinkPathTests(TestCase):
     /admin/ then stands out.
     """
 
-    @override_settings(SECURE_SSL_REDIRECT=False, ADMIN_URL_PATH="secret-panel")
     def test_no_page_links_to_the_old_admin_path(self):
         import importlib
 
@@ -942,29 +948,48 @@ class RenderedLinkPathTests(TestCase):
         from django.contrib.auth.models import User
         from django.urls import clear_url_caches
 
-        importlib.reload(config.urls)
-        clear_url_caches()
-        try:
-            User.objects.create_superuser("link-admin", "l@example.com", "pw-for-tests-only")
-            self.client.force_login(User.objects.get(username="link-admin"))
+        def rebuild():
+            from django.urls import set_urlconf
 
-            pages = ["/secret-panel/"] + [
-                str(item["link"])
-                for group in settings.UNFOLD["SIDEBAR"]["navigation"]
-                for item in group["items"]
-            ]
-            for page in pages:
-                with self.subTest(page=page):
-                    response = self.client.get(page)
-                    self.assertEqual(response.status_code, 200)
-                    body = response.content.decode()
-                    self.assertNotIn(
-                        'href="/admin/',
-                        body,
-                        f"{page} still links to the pre-rename admin path",
-                    )
-        finally:
             importlib.reload(config.urls)
+            clear_url_caches()
+            # clear_url_caches() empties the resolver cache but not the
+            # thread-local the test client leaves behind, so reverse() kept
+            # resolving against the renamed URLconf in later tests.
+            set_urlconf(None)
+
+        # The override is a context manager rather than a decorator so the
+        # restoring rebuild happens with ADMIN_URL_PATH back to its real value.
+        # As a decorator, the rebuild in `finally` still saw "secret-panel" and
+        # left the URLconf — and reverse() — pointing at it for every test that
+        # ran afterwards.
+        try:
+            with override_settings(
+                SECURE_SSL_REDIRECT=False, ADMIN_URL_PATH="secret-panel"
+            ):
+                rebuild()
+                User.objects.create_superuser(
+                    "link-admin", "l@example.com", "pw-for-tests-only"
+                )
+                self.client.force_login(User.objects.get(username="link-admin"))
+
+                pages = ["/secret-panel/"] + [
+                    str(item["link"])
+                    for group in settings.UNFOLD["SIDEBAR"]["navigation"]
+                    for item in group["items"]
+                ]
+                for page in pages:
+                    with self.subTest(page=page):
+                        response = self.client.get(page)
+                        self.assertEqual(response.status_code, 200)
+                        body = response.content.decode()
+                        self.assertNotIn(
+                            'href="/admin/',
+                            body,
+                            f"{page} still links to the pre-rename admin path",
+                        )
+        finally:
+            rebuild()
             clear_url_caches()
 
 

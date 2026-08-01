@@ -24,8 +24,14 @@ urlpatterns = [
     ),
     # Backs the language switcher in the header. Without this the switcher
     # renders and posts into a 404, so the language never changes.
-    # `set_language` only accepts a redirect target on this host, and only
-    # accepts a code from LANGUAGES, so it is not an open redirect.
-    path("i18n/", include("django.conf.urls.i18n")),
+    #
+    # Mounted *under* the admin prefix, not at the site root: in production the
+    # storefront answers everything except this prefix, so a root-level /i18n/
+    # was served the SPA's index.html and a POST to it came back 405. Only
+    # ADMIN_URL_PATH reaches Django.
+    #
+    # `set_language` only accepts a redirect target on this host, and only a
+    # code from LANGUAGES, so it is not an open redirect.
+    path(f"{settings.ADMIN_URL_PATH}/i18n/", include("django.conf.urls.i18n")),
     path(f"{settings.ADMIN_URL_PATH}/", admin.site.urls),
 ]
