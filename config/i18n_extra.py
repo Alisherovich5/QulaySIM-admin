@@ -244,4 +244,7 @@ THIRD_PARTY_STRINGS = (
     _("Successfully deleted %(count)d %(items)s."),
     _("The %(name)s “%(obj)s” was deleted successfully."),
     _("Changed “%(object)s” — %(changes)s"),
+
+    # Passed as _() inside an {% include %}, which the template sweep missed.
+    _("Welcome back to"),
 )

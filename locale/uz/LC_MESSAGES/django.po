@@ -1,12 +1,11 @@
 # QulaySIM admin interface.
 # Uzbek and Russian for our own strings, plus the admin strings
 # django-unfold and Django leave untranslated — see config/i18n_extra.py.
-#: config/tests_i18n.py:234
 msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 04:41+0500\n"
+"POT-Creation-Date: 2026-08-01 10:56+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -107,10 +106,10 @@ msgstr "Ta’minot manbasi"
 
 #: catalog/admin.py:383
 msgid ""
-"Add each supplier's wholesale price under 'Supplier offers' at the bottom of "
-"this page. On save the cheapest available one sets the cost, the price, and "
-"where the order is placed; the rest become fallbacks used when the winner is "
-"out of stock."
+"Add each supplier's wholesale price under 'Supplier offers' at the bottom of"
+" this page. On save the cheapest available one sets the cost, the price, and"
+" where the order is placed; the rest become fallbacks used when the winner "
+"is out of stock."
 msgstr ""
 "Har bir ta’minotchining ulgurji narxini shu sahifaning pastidagi "
 "«Ta’minotchi takliflari» bo‘limiga kiriting. Saqlanganda mavjudlari ichidan "
@@ -125,15 +124,15 @@ msgstr "Narxlash"
 msgid ""
 "Enter the supplier cost and the price is calculated on save. Leave the "
 "markup empty to inherit a pricing rule; fill it in to override every rule "
-"for this plan alone. Tick 'price locked' to type a price by hand and stop it "
-"being recalculated. Use the note for anything the number cannot say on its "
+"for this plan alone. Tick 'price locked' to type a price by hand and stop it"
+" being recalculated. Use the note for anything the number cannot say on its "
 "own, such as '+ deposit' — it is shown to customers beside the price."
 msgstr ""
 "Ta’minotchi tannarxini kiriting — narx saqlanganda hisoblanadi. Ustamani "
 "bo‘sh qoldirsangiz narxlash qoidasi qo‘llanadi; to‘ldirsangiz faqat shu "
 "tarif uchun barcha qoidalar ustidan o‘tadi. Narxni qo‘lda yozib, qayta "
-"hisoblanishini to‘xtatish uchun «narx qulflangan» ni belgilang. Sonning o‘zi "
-"ayta olmaydigan narsa uchun izohdan foydalaning, masalan «+ depozit» — u "
+"hisoblanishini to‘xtatish uchun «narx qulflangan» ni belgilang. Sonning o‘zi"
+" ayta olmaydigan narsa uchun izohdan foydalaning, masalan «+ depozit» — u "
 "mijozga narx yonida ko‘rsatiladi."
 
 #: catalog/admin.py:411
@@ -297,8 +296,8 @@ msgid ""
 "Needs the columns package_code, location, data_gb, days, cost_usd. The "
 "export from the supplier's portal already has them."
 msgstr ""
-"package_code, location, data_gb, days, cost_usd ustunlari kerak. Ta’minotchi "
-"portalidan yuklab olingan faylda ular allaqachon bor."
+"package_code, location, data_gb, days, cost_usd ustunlari kerak. Ta’minotchi"
+" portalidan yuklab olingan faylda ular allaqachon bor."
 
 #: catalog/forms.py:29
 msgid "Preview only — do not write anything"
@@ -509,7 +508,8 @@ msgid "Wholesale price this supplier charges us."
 msgstr "Shu ta’minotchi bizdan oladigan ulgurji narx."
 
 #: catalog/models.py:327
-msgid "Uncheck to take a supplier out of the running without losing its price."
+msgid ""
+"Uncheck to take a supplier out of the running without losing its price."
 msgstr ""
 "Narxini yo‘qotmasdan ta’minotchini tanlovdan chiqarish uchun belgini olib "
 "tashlang."
@@ -781,8 +781,8 @@ msgstr "Quyidagi xatoni tuzating."
 
 #: config/i18n_extra.py:68
 msgid ""
-"Please enter your old password, for security’s sake, and then enter your new "
-"password twice so we can verify you typed it in correctly."
+"Please enter your old password, for security’s sake, and then enter your new"
+" password twice so we can verify you typed it in correctly."
 msgstr ""
 "Xavfsizlik uchun avval eski parolingizni kiriting, so‘ng yangi parolni ikki "
 "marta yozing — to‘g‘ri kiritganingizni tekshirish uchun."
@@ -897,8 +897,8 @@ msgstr "Bu element o‘chiriladi."
 
 #: config/i18n_extra.py:96
 msgid ""
-"This object doesn’t have a change history. It probably wasn’t added via this "
-"admin site."
+"This object doesn’t have a change history. It probably wasn’t added via this"
+" admin site."
 msgstr ""
 "Bu obyektning o‘zgarish tarixi yo‘q. Ehtimol u boshqaruv panelidan "
 "qo‘shilmagan."
@@ -1061,14 +1061,14 @@ msgid ""
 "Deleting %(class_name)s %(instance)s would require deleting the following "
 "protected related objects: %(related_objects)s"
 msgstr ""
-"%(class_name)s %(instance)s ni o‘chirish uchun quyidagi himoyalangan bog‘liq "
-"obyektlarni ham o‘chirish kerak bo‘ladi: %(related_objects)s"
+"%(class_name)s %(instance)s ni o‘chirish uchun quyidagi himoyalangan bog‘liq"
+" obyektlarni ham o‘chirish kerak bo‘ladi: %(related_objects)s"
 
 #: config/i18n_extra.py:134
 #, python-format
 msgid ""
-"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the "
-"following protected related objects:"
+"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the"
+" following protected related objects:"
 msgstr ""
 "%(object_name)s '%(escaped_object)s' ni o‘chirish uchun quyidagi "
 "himoyalangan bog‘liq obyektlarni ham o‘chirish kerak bo‘ladi:"
@@ -1139,8 +1139,8 @@ msgid ""
 "Enter a valid username. This value may contain only English letters, "
 "numbers, and @/./+/-/_ characters."
 msgstr ""
-"To‘g‘ri foydalanuvchi nomini kiriting. Faqat lotin harflari, raqamlar va @/./"
-"+/-/_ belgilari ishlatilishi mumkin."
+"To‘g‘ri foydalanuvchi nomini kiriting. Faqat lotin harflari, raqamlar va "
+"@/./+/-/_ belgilari ishlatilishi mumkin."
 
 #: config/i18n_extra.py:144
 msgid ""
@@ -1160,8 +1160,8 @@ msgstr "Menyu bandlarini filtrlash"
 
 #: config/i18n_extra.py:147
 msgid ""
-"First, enter a username and password. Then, you’ll be able to edit more user "
-"options."
+"First, enter a username and password. Then, you’ll be able to edit more user"
+" options."
 msgstr ""
 "Avval foydalanuvchi nomi va parolni kiriting. Keyin qolgan sozlamalarni "
 "tahrirlash mumkin bo‘ladi."
@@ -1320,9 +1320,9 @@ msgstr "Asosiy qismga o‘tish"
 
 #: config/i18n_extra.py:180
 msgid ""
-"Something’s wrong with your database installation. Make sure the appropriate "
-"database tables have been created, and make sure the database is readable by "
-"the appropriate user."
+"Something’s wrong with your database installation. Make sure the appropriate"
+" database tables have been created, and make sure the database is readable "
+"by the appropriate user."
 msgstr ""
 "Ma’lumotlar bazasi sozlamasida muammo bor. Kerakli jadvallar yaratilganini "
 "va bazani mos foydalanuvchi o‘qiy olishini tekshiring."
@@ -1381,7 +1381,8 @@ msgstr ""
 
 #: config/i18n_extra.py:190
 #, python-brace-format
-msgid "The {name} “{obj}” was added successfully. You may edit it again below."
+msgid ""
+"The {name} “{obj}” was added successfully. You may edit it again below."
 msgstr ""
 "{name} “{obj}” muvaffaqiyatli qo‘shildi. Pastda uni yana tahrirlashingiz "
 "mumkin."
@@ -1400,8 +1401,8 @@ msgstr ""
 msgid ""
 "The {name} “{obj}” was changed successfully. You may edit it again below."
 msgstr ""
-"{name} “{obj}” muvaffaqiyatli o‘zgartirildi. Pastda uni yana tahrirlashingiz "
-"mumkin."
+"{name} “{obj}” muvaffaqiyatli o‘zgartirildi. Pastda uni yana tahrirlashingiz"
+" mumkin."
 
 #: config/i18n_extra.py:193
 msgid ""
@@ -1445,14 +1446,14 @@ msgid ""
 "We’ve emailed you instructions for setting your password, if an account "
 "exists with the email you entered. You should receive them shortly."
 msgstr ""
-"Kiritgan manzilda hisob mavjud bo‘lsa, parol o‘rnatish bo‘yicha ko‘rsatmalar "
-"emailingizga yuborildi. Tez orada yetib boradi."
+"Kiritgan manzilda hisob mavjud bo‘lsa, parol o‘rnatish bo‘yicha ko‘rsatmalar"
+" emailingizga yuborildi. Tez orada yetib boradi."
 
 #: config/i18n_extra.py:202
 #, python-format
 msgid ""
-"You are authenticated as %(username)s, but are not authorized to access this "
-"page. Would you like to login to a different account?"
+"You are authenticated as %(username)s, but are not authorized to access this"
+" page. Would you like to login to a different account?"
 msgstr ""
 "Siz %(username)s sifatida kirgansiz, lekin bu sahifaga ruxsatingiz yo‘q. "
 "Boshqa hisob bilan kirishni xohlaysizmi?"
@@ -1481,7 +1482,8 @@ msgstr "Parolingiz faqat raqamlardan iborat bo‘lmasligi kerak."
 #: config/i18n_extra.py:207
 msgid "Your password can’t be too similar to your other personal information."
 msgstr ""
-"Parolingiz boshqa shaxsiy ma’lumotlaringizga juda o‘xshash bo‘lmasligi kerak."
+"Parolingiz boshqa shaxsiy ma’lumotlaringizga juda o‘xshash bo‘lmasligi "
+"kerak."
 
 #: config/i18n_extra.py:208
 msgid "Your password has been set.  You may go ahead and log in now."
@@ -1623,6 +1625,11 @@ msgstr "%(name)s “%(obj)s” muvaffaqiyatli o‘chirildi."
 msgid "Changed “%(object)s” — %(changes)s"
 msgstr "“%(object)s” o‘zgartirildi — %(changes)s"
 
+#: config/i18n_extra.py:249
+#| msgid "Welcome"
+msgid "Welcome back to"
+msgstr "Xush kelibsiz —"
+
 #: config/settings.py:241
 msgid "QulaySIM Admin"
 msgstr "QulaySIM boshqaruvi"
@@ -1753,8 +1760,8 @@ msgid ""
 "when nothing is linked."
 msgstr ""
 "Bu reklama qilayotgan promokodni tanlang. Chegirma shu koddan olinadi, "
-"shuning uchun chiziq va to‘lov sahifasi doim mos keladi. Oddiy «kod» maydoni "
-"faqat hech narsa bog‘lanmaganda ishlatiladi."
+"shuning uchun chiziq va to‘lov sahifasi doim mos keladi. Oddiy «kod» maydoni"
+" faqat hech narsa bog‘lanmaganda ishlatiladi."
 
 #: content/admin.py:113
 msgid "Bar text (short)"
@@ -1825,8 +1832,8 @@ msgid ""
 "Bar: <b>{shown}</b> · code <b>{code}</b> — the same discount checkout "
 "applies."
 msgstr ""
-"Chiziq: <b>{shown}</b> · kod <b>{code}</b> — to‘lovda ham xuddi shu chegirma "
-"qo‘llanadi."
+"Chiziq: <b>{shown}</b> · kod <b>{code}</b> — to‘lovda ham xuddi shu chegirma"
+" qo‘llanadi."
 
 #: content/models.py:13
 msgid "question"
@@ -2169,12 +2176,12 @@ msgstr "chegirma qiymati"
 
 #: orders/models.py:28
 msgid ""
-"Smallest order this code applies to. Leave at 0 for no minimum — but a fixed-"
-"amount discount larger than your cheapest plan makes that plan free."
+"Smallest order this code applies to. Leave at 0 for no minimum — but a "
+"fixed-amount discount larger than your cheapest plan makes that plan free."
 msgstr ""
-"Bu kod qo‘llanadigan eng kichik buyurtma. Chek bo‘lmasligi uchun 0 qoldiring "
-"— lekin eng arzon tarifingizdan katta qat’iy chegirma o‘sha tarifni butunlay "
-"bepul qilib qo‘yadi."
+"Bu kod qo‘llanadigan eng kichik buyurtma. Chek bo‘lmasligi uchun 0 qoldiring"
+" — lekin eng arzon tarifingizdan katta qat’iy chegirma o‘sha tarifni "
+"butunlay bepul qilib qo‘yadi."
 
 #: orders/models.py:32
 msgid "min order usd"
@@ -2377,12 +2384,9 @@ msgstr "Payme tranzaksiyalari"
 
 #: templates/admin/catalog/import_prices.html:7
 msgid ""
-"Setting up one destination by hand means creating eleven objects — a "
-"country,\n"
-"    four tariffs and their supplier offers. Upload the wholesaler's price "
-"export\n"
-"    instead: the preview shows exactly what would change before anything is "
-"written."
+"Setting up one destination by hand means creating eleven objects — a country,\n"
+"    four tariffs and their supplier offers. Upload the wholesaler's price export\n"
+"    instead: the preview shows exactly what would change before anything is written."
 msgstr ""
 "Bitta yo‘nalishni qo‘lda sozlash o‘n bitta obyekt yaratishni bildiradi — "
 "davlat, to‘rt tarif va ularning ta’minotchi takliflari. Buning o‘rniga "
@@ -2444,7 +2448,8 @@ msgstr "Tarif"
 msgid "What happens"
 msgstr "Nima bo‘ladi"
 
-#: templates/admin/catalog/import_prices.html:43 templates/admin/index.html:153
+#: templates/admin/catalog/import_prices.html:43
+#: templates/admin/index.html:153
 msgid "Supplier cost"
 msgstr "Ta’minotchi tannarxi"
 
@@ -2467,8 +2472,7 @@ msgstr "narx o‘zgarishi"
 #: templates/admin/catalog/import_prices.html:67
 msgid ""
 "To write these, submit again with <b>“Preview only”</b> unchecked.\n"
-"          Applying moves supplier costs, and retail prices follow through "
-"the\n"
+"          Applying moves supplier costs, and retail prices follow through the\n"
 "          pricing rules."
 msgstr ""
 "Bularni yozish uchun <b>«Faqat ko‘rib chiqish»</b> belgisini olib tashlab, "
@@ -2478,13 +2482,12 @@ msgstr ""
 #: templates/admin/catalog/import_prices.html:73
 msgid ""
 "Nothing in this file matches a destination in the catalogue. Check that\n"
-"          the <code>location</code> column holds ISO codes such as TR or AE, "
-"and\n"
+"          the <code>location</code> column holds ISO codes such as TR or AE, and\n"
 "          that those destinations exist."
 msgstr ""
-"Bu fayldagi hech narsa katalogdagi yo‘nalishga mos kelmadi. <code>location</"
-"code> ustunida TR yoki AE kabi ISO kodlar turganini va o‘sha yo‘nalishlar "
-"mavjudligini tekshiring."
+"Bu fayldagi hech narsa katalogdagi yo‘nalishga mos kelmadi. "
+"<code>location</code> ustunida TR yoki AE kabi ISO kodlar turganini va o‘sha"
+" yo‘nalishlar mavjudligini tekshiring."
 
 #: templates/admin/index.html:10
 msgid "Live overview of QulaySIM sales, customers and eSIM activity."
@@ -2576,8 +2579,8 @@ msgid ""
 "Orders with no line items carry no traceable cost, so they are left out of "
 "the ratio rather than counted as pure profit."
 msgstr ""
-"Qatorlari yo‘q buyurtmaning tannarxi kuzatilmaydi, shuning uchun u sof foyda "
-"deb hisoblanmasdan nisbatdan chiqarildi."
+"Qatorlari yo‘q buyurtmaning tannarxi kuzatilmaydi, shuning uchun u sof foyda"
+" deb hisoblanmasdan nisbatdan chiqarildi."
 
 #: templates/admin/index.html:156
 msgid "Excluded — no cost data"

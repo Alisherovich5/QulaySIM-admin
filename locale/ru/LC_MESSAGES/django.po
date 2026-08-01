@@ -1,12 +1,11 @@
 # QulaySIM admin interface.
 # Uzbek and Russian for our own strings, plus the admin strings
 # django-unfold and Django leave untranslated — see config/i18n_extra.py.
-#: config/tests_i18n.py:234
 msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 04:41+0500\n"
+"POT-Creation-Date: 2026-08-01 10:56+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -14,9 +13,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
-"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
-"(n%100>=11 && n%100<=14)? 2 : 3);\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
 
 #: catalog/admin.py:24 config/settings.py:325
 msgid "Countries"
@@ -108,10 +105,10 @@ msgstr "Выбор поставщика"
 
 #: catalog/admin.py:383
 msgid ""
-"Add each supplier's wholesale price under 'Supplier offers' at the bottom of "
-"this page. On save the cheapest available one sets the cost, the price, and "
-"where the order is placed; the rest become fallbacks used when the winner is "
-"out of stock."
+"Add each supplier's wholesale price under 'Supplier offers' at the bottom of"
+" this page. On save the cheapest available one sets the cost, the price, and"
+" where the order is placed; the rest become fallbacks used when the winner "
+"is out of stock."
 msgstr ""
 "Внесите оптовую цену каждого поставщика в раздел «Предложения поставщиков» "
 "внизу страницы. При сохранении самое дешёвое из доступных задаёт "
@@ -126,8 +123,8 @@ msgstr "Ценообразование"
 msgid ""
 "Enter the supplier cost and the price is calculated on save. Leave the "
 "markup empty to inherit a pricing rule; fill it in to override every rule "
-"for this plan alone. Tick 'price locked' to type a price by hand and stop it "
-"being recalculated. Use the note for anything the number cannot say on its "
+"for this plan alone. Tick 'price locked' to type a price by hand and stop it"
+" being recalculated. Use the note for anything the number cannot say on its "
 "own, such as '+ deposit' — it is shown to customers beside the price."
 msgstr ""
 "Введите себестоимость поставщика — цена рассчитается при сохранении. "
@@ -295,8 +292,8 @@ msgid ""
 "Needs the columns package_code, location, data_gb, days, cost_usd. The "
 "export from the supplier's portal already has them."
 msgstr ""
-"Нужны столбцы package_code, location, data_gb, days, cost_usd. В выгрузке из "
-"портала поставщика они уже есть."
+"Нужны столбцы package_code, location, data_gb, days, cost_usd. В выгрузке из"
+" портала поставщика они уже есть."
 
 #: catalog/forms.py:29
 msgid "Preview only — do not write anything"
@@ -443,8 +440,8 @@ msgstr "примечание к цене"
 msgid ""
 "Overrides every pricing rule for this plan only. Leave empty to inherit."
 msgstr ""
-"Переопределяет все правила ценообразования только для этого тарифа. Оставьте "
-"пустым, чтобы применилось правило."
+"Переопределяет все правила ценообразования только для этого тарифа. Оставьте"
+" пустым, чтобы применилось правило."
 
 #: catalog/models.py:135 catalog/models.py:408
 msgid "markup percent"
@@ -505,7 +502,8 @@ msgid "Wholesale price this supplier charges us."
 msgstr "Оптовая цена, которую берёт с нас этот поставщик."
 
 #: catalog/models.py:327
-msgid "Uncheck to take a supplier out of the running without losing its price."
+msgid ""
+"Uncheck to take a supplier out of the running without losing its price."
 msgstr ""
 "Снимите отметку, чтобы убрать поставщика из отбора, не удаляя его цену."
 
@@ -776,11 +774,11 @@ msgstr "Исправьте ошибку ниже."
 
 #: config/i18n_extra.py:68
 msgid ""
-"Please enter your old password, for security’s sake, and then enter your new "
-"password twice so we can verify you typed it in correctly."
+"Please enter your old password, for security’s sake, and then enter your new"
+" password twice so we can verify you typed it in correctly."
 msgstr ""
-"Введите старый пароль — из соображений безопасности, — а затем дважды новый, "
-"чтобы мы могли убедиться, что вы набрали его верно."
+"Введите старый пароль — из соображений безопасности, — а затем дважды новый,"
+" чтобы мы могли убедиться, что вы набрали его верно."
 
 #: config/i18n_extra.py:69
 msgid "Previous"
@@ -892,8 +890,8 @@ msgstr "Этот элемент будет удалён."
 
 #: config/i18n_extra.py:96
 msgid ""
-"This object doesn’t have a change history. It probably wasn’t added via this "
-"admin site."
+"This object doesn’t have a change history. It probably wasn’t added via this"
+" admin site."
 msgstr ""
 "У этого объекта нет истории изменений. Вероятно, он был добавлен не через "
 "эту панель администратора."
@@ -1062,8 +1060,8 @@ msgstr ""
 #: config/i18n_extra.py:134
 #, python-format
 msgid ""
-"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the "
-"following protected related objects:"
+"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the"
+" following protected related objects:"
 msgstr ""
 "Удаление %(object_name)s '%(escaped_object)s' потребует удаления следующих "
 "связанных защищенных объектов:"
@@ -1131,16 +1129,16 @@ msgid ""
 "Enter a valid username. This value may contain only English letters, "
 "numbers, and @/./+/-/_ characters."
 msgstr ""
-"Введите корректное имя пользователя. Допустимы только латинские буквы, цифры "
-"и символы @/./+/-/_ ."
+"Введите корректное имя пользователя. Допустимы только латинские буквы, цифры"
+" и символы @/./+/-/_ ."
 
 #: config/i18n_extra.py:144
 msgid ""
 "Enter a valid username. This value may contain only letters, numbers, and "
 "@/./+/-/_ characters."
 msgstr ""
-"Введите правильное имя пользователя. Оно может содержать только буквы, цифры "
-"и знаки @/./+/-/_."
+"Введите правильное имя пользователя. Оно может содержать только буквы, цифры"
+" и знаки @/./+/-/_."
 
 #: config/i18n_extra.py:145
 msgid "Enter new password"
@@ -1152,8 +1150,8 @@ msgstr "Фильтр элементов навигации"
 
 #: config/i18n_extra.py:147
 msgid ""
-"First, enter a username and password. Then, you’ll be able to edit more user "
-"options."
+"First, enter a username and password. Then, you’ll be able to edit more user"
+" options."
 msgstr ""
 "Сначала введите имя пользователя и пароль. Затем можно будет изменить "
 "остальные настройки."
@@ -1277,8 +1275,8 @@ msgstr "Пожалуйста, перейдите на эту страницу и
 #: config/i18n_extra.py:172
 msgid "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
 msgstr ""
-"Обязательное поле. Не более 150 символов. Только буквы, цифры и символы @/./"
-"+/-/_."
+"Обязательное поле. Не более 150 символов. Только буквы, цифры и символы "
+"@/./+/-/_."
 
 #: config/i18n_extra.py:173
 #, python-format
@@ -1314,9 +1312,9 @@ msgstr "К основному"
 
 #: config/i18n_extra.py:180
 msgid ""
-"Something’s wrong with your database installation. Make sure the appropriate "
-"database tables have been created, and make sure the database is readable by "
-"the appropriate user."
+"Something’s wrong with your database installation. Make sure the appropriate"
+" database tables have been created, and make sure the database is readable "
+"by the appropriate user."
 msgstr ""
 "Ваша база данных неправильно настроена. Убедитесь, что соответствующие "
 "таблицы были созданы, и что соответствующему пользователю разрешен к ним "
@@ -1358,8 +1356,8 @@ msgid ""
 "The password reset link was invalid, possibly because it has already been "
 "used.  Please request a new password reset."
 msgstr ""
-"Неверная ссылка для восстановления пароля. Возможно, ей уже воспользовались. "
-"Пожалуйста, попробуйте восстановить пароль еще раз."
+"Неверная ссылка для восстановления пароля. Возможно, ей уже воспользовались."
+" Пожалуйста, попробуйте восстановить пароль еще раз."
 
 #: config/i18n_extra.py:188
 #, python-brace-format
@@ -1371,12 +1369,15 @@ msgstr "{name} \"{obj}\" был успешно добавлен."
 msgid ""
 "The {name} “{obj}” was added successfully. You may add another {name} below."
 msgstr ""
-"{name} “{obj}“ был успешно добавлен. Вы можете добавить еще один {name} ниже."
+"{name} “{obj}“ был успешно добавлен. Вы можете добавить еще один {name} "
+"ниже."
 
 #: config/i18n_extra.py:190
 #, python-brace-format
-msgid "The {name} “{obj}” was added successfully. You may edit it again below."
-msgstr "{name} «{obj}» успешно добавлен. Ниже его можно отредактировать снова."
+msgid ""
+"The {name} “{obj}” was added successfully. You may edit it again below."
+msgstr ""
+"{name} «{obj}» успешно добавлен. Ниже его можно отредактировать снова."
 
 #: config/i18n_extra.py:191
 #, python-brace-format
@@ -1390,15 +1391,16 @@ msgstr "{name} “{obj}“ был изменен. Вы можете добави
 msgid ""
 "The {name} “{obj}” was changed successfully. You may edit it again below."
 msgstr ""
-"{name} “{obj}“ был изменен успешно. Вы можете отредактировать его снова ниже."
+"{name} “{obj}“ был изменен успешно. Вы можете отредактировать его снова "
+"ниже."
 
 #: config/i18n_extra.py:193
 msgid ""
 "There’s been an error. It’s been reported to the site administrators via "
 "email and should be fixed shortly. Thanks for your patience."
 msgstr ""
-"Произошла ошибка. О ней сообщено администраторам сайта по электронной почте, "
-"ошибка должна быть вскоре исправлена. Благодарим вас за терпение."
+"Произошла ошибка. О ней сообщено администраторам сайта по электронной почте,"
+" ошибка должна быть вскоре исправлена. Благодарим вас за терпение."
 
 #: config/i18n_extra.py:194
 msgid "This password is entirely numeric."
@@ -1441,12 +1443,12 @@ msgstr ""
 #: config/i18n_extra.py:202
 #, python-format
 msgid ""
-"You are authenticated as %(username)s, but are not authorized to access this "
-"page. Would you like to login to a different account?"
+"You are authenticated as %(username)s, but are not authorized to access this"
+" page. Would you like to login to a different account?"
 msgstr ""
 "Вы вошли в систему как %(username)s, однако у вас недостаточно прав для "
-"просмотра данной страницы. Возможно, вы хотели бы войти в систему, используя "
-"другую учётную запись?"
+"просмотра данной страницы. Возможно, вы хотели бы войти в систему, используя"
+" другую учётную запись?"
 
 #: config/i18n_extra.py:203
 msgid "You may edit it again below."
@@ -1614,6 +1616,11 @@ msgstr "%(name)s «%(obj)s» успешно удалён."
 msgid "Changed “%(object)s” — %(changes)s"
 msgstr "«%(object)s» изменён — %(changes)s"
 
+#: config/i18n_extra.py:249
+#| msgid "Welcome"
+msgid "Welcome back to"
+msgstr "С возвращением —"
+
 #: config/settings.py:241
 msgid "QulaySIM Admin"
 msgstr "Панель QulaySIM"
@@ -1744,8 +1751,8 @@ msgid ""
 "when nothing is linked."
 msgstr ""
 "Выберите промокод, который это рекламирует. Скидка берётся из него, поэтому "
-"полоса и оформление заказа всегда совпадают. Простое поле «код» используется "
-"только когда ничего не связано."
+"полоса и оформление заказа всегда совпадают. Простое поле «код» используется"
+" только когда ничего не связано."
 
 #: content/admin.py:113
 msgid "Bar text (short)"
@@ -2161,11 +2168,11 @@ msgstr "размер скидки"
 
 #: orders/models.py:28
 msgid ""
-"Smallest order this code applies to. Leave at 0 for no minimum — but a fixed-"
-"amount discount larger than your cheapest plan makes that plan free."
+"Smallest order this code applies to. Leave at 0 for no minimum — but a "
+"fixed-amount discount larger than your cheapest plan makes that plan free."
 msgstr ""
-"Минимальный заказ, к которому применяется код. Оставьте 0, чтобы минимума не "
-"было, — но фиксированная скидка больше самого дешёвого тарифа сделает этот "
+"Минимальный заказ, к которому применяется код. Оставьте 0, чтобы минимума не"
+" было, — но фиксированная скидка больше самого дешёвого тарифа сделает этот "
 "тариф бесплатным."
 
 #: orders/models.py:32
@@ -2368,12 +2375,9 @@ msgstr "Транзакции Payme"
 
 #: templates/admin/catalog/import_prices.html:7
 msgid ""
-"Setting up one destination by hand means creating eleven objects — a "
-"country,\n"
-"    four tariffs and their supplier offers. Upload the wholesaler's price "
-"export\n"
-"    instead: the preview shows exactly what would change before anything is "
-"written."
+"Setting up one destination by hand means creating eleven objects — a country,\n"
+"    four tariffs and their supplier offers. Upload the wholesaler's price export\n"
+"    instead: the preview shows exactly what would change before anything is written."
 msgstr ""
 "Настроить одно направление вручную — это создать одиннадцать объектов: "
 "страну, четыре тарифа и их предложения поставщиков. Вместо этого загрузите "
@@ -2450,7 +2454,8 @@ msgstr "Тариф"
 msgid "What happens"
 msgstr "Что произойдёт"
 
-#: templates/admin/catalog/import_prices.html:43 templates/admin/index.html:153
+#: templates/admin/catalog/import_prices.html:43
+#: templates/admin/index.html:153
 msgid "Supplier cost"
 msgstr "Себестоимость"
 
@@ -2473,19 +2478,17 @@ msgstr "изменение цены"
 #: templates/admin/catalog/import_prices.html:67
 msgid ""
 "To write these, submit again with <b>“Preview only”</b> unchecked.\n"
-"          Applying moves supplier costs, and retail prices follow through "
-"the\n"
+"          Applying moves supplier costs, and retail prices follow through the\n"
 "          pricing rules."
 msgstr ""
-"Чтобы записать это, отправьте снова, сняв отметку <b>«Только предпросмотр»</"
-"b>. Применение меняет себестоимость, а розничные цены следуют за ней через "
-"правила ценообразования."
+"Чтобы записать это, отправьте снова, сняв отметку <b>«Только "
+"предпросмотр»</b>. Применение меняет себестоимость, а розничные цены следуют"
+" за ней через правила ценообразования."
 
 #: templates/admin/catalog/import_prices.html:73
 msgid ""
 "Nothing in this file matches a destination in the catalogue. Check that\n"
-"          the <code>location</code> column holds ISO codes such as TR or AE, "
-"and\n"
+"          the <code>location</code> column holds ISO codes such as TR or AE, and\n"
 "          that those destinations exist."
 msgstr ""
 "Ничто в этом файле не совпало с направлением из каталога. Проверьте, что в "
@@ -2519,8 +2522,8 @@ msgid ""
 "Orders with no line items have no traceable supplier cost, so they are left "
 "out of the margin rather than counted as pure profit."
 msgstr ""
-"У заказа без позиций нет отслеживаемой себестоимости, поэтому он исключён из "
-"маржи, а не зачтён как чистая прибыль."
+"У заказа без позиций нет отслеживаемой себестоимости, поэтому он исключён из"
+" маржи, а не зачтён как чистая прибыль."
 
 #: templates/admin/index.html:75
 #, python-format
@@ -2583,8 +2586,8 @@ msgid ""
 "Orders with no line items carry no traceable cost, so they are left out of "
 "the ratio rather than counted as pure profit."
 msgstr ""
-"У заказа без позиций нет отслеживаемой себестоимости, поэтому он исключён из "
-"расчёта, а не зачтён как чистая прибыль."
+"У заказа без позиций нет отслеживаемой себестоимости, поэтому он исключён из"
+" расчёта, а не зачтён как чистая прибыль."
 
 #: templates/admin/index.html:156
 msgid "Excluded — no cost data"
@@ -2652,14 +2655,14 @@ msgstr[0] ""
 "У %(n)s активного тарифа нет себестоимости, поэтому он исключён из расчёта "
 "маржи."
 msgstr[1] ""
-"У %(n)s активных тарифов нет себестоимости, поэтому они исключены из расчёта "
-"маржи."
+"У %(n)s активных тарифов нет себестоимости, поэтому они исключены из расчёта"
+" маржи."
 msgstr[2] ""
-"У %(n)s активных тарифов нет себестоимости, поэтому они исключены из расчёта "
-"маржи."
+"У %(n)s активных тарифов нет себестоимости, поэтому они исключены из расчёта"
+" маржи."
 msgstr[3] ""
-"У %(n)s активных тарифов нет себестоимости, поэтому они исключены из расчёта "
-"маржи."
+"У %(n)s активных тарифов нет себестоимости, поэтому они исключены из расчёта"
+" маржи."
 
 #: templates/admin/index.html:265
 msgid "Run <code>manage.py backfill_costs</code> or set a cost."
