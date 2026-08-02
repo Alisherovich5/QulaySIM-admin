@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from django.db.models import Count
 from django.utils.html import format_html
@@ -35,10 +36,22 @@ def _status_badge(value, label):
 
 
 class OrderItemInline(TabularInline):
+    """Read-only, like ESIMInline: the line items are the money.
+
+    Editing them here never recomputed the frozen subtotal/discount/total, so
+    the order's totals stopped matching its items; and a *new* row was a crash,
+    because the readonly unit_price never reached the form and hit the NOT NULL
+    constraint. The API is the only writer of order lines.
+    """
+
     model = OrderItem
     extra = 0
-    autocomplete_fields = ("plan",)
-    readonly_fields = ("unit_price",)
+    fields = ("plan", "unit_price", "quantity")
+    readonly_fields = fields
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 class ESIMInline(TabularInline):
@@ -50,8 +63,26 @@ class ESIMInline(TabularInline):
     show_change_link = True
 
 
+class PromoCodeForm(forms.ModelForm):
+    """Uppercases the code before validation.
+
+    The model's clean() does this too; doing it in the form as well means the
+    admin's uniqueness check and error messages all speak about the value that
+    will be stored, and "sale" vs an existing "SALE" is a form error rather
+    than a surprise at save time.
+    """
+
+    class Meta:
+        model = PromoCode
+        fields = "__all__"
+
+    def clean_code(self):
+        return (self.cleaned_data.get("code") or "").strip().upper()
+
+
 @admin.register(PromoCode)
 class PromoCodeAdmin(ModelAdmin):
+    form = PromoCodeForm
     list_display = ("code", "discount_type", "discount_value", "min_order_usd", "usage", "is_active", "valid_until")
     list_filter = ("discount_type", "is_active")
     search_fields = ("code",)
@@ -69,7 +100,21 @@ class OrderAdmin(ModelAdmin):
     list_filter = ("status", "created_at")
     search_fields = ("id", "customer__email")
     autocomplete_fields = ("customer", "promo_code")
-    readonly_fields = ("created_at", "paid_at", "subtotal", "discount", "total")
+    # status, amount_uzs and exchange_rate are read-only alongside the totals:
+    # flipping an order to "paid" here provisions nothing (fulfilment only runs
+    # off Payme's PerformTransaction), "refunded" refunds nothing at Payme, and
+    # editing the frozen som amount makes Payme reject the checkout link the
+    # customer already holds. The payment provider owns this state.
+    readonly_fields = (
+        "created_at",
+        "paid_at",
+        "subtotal",
+        "discount",
+        "total",
+        "status",
+        "amount_uzs",
+        "exchange_rate",
+    )
     inlines = (OrderItemInline, ESIMInline)
     ordering = ("-created_at",)
     list_filter_submit = True
@@ -151,6 +196,13 @@ class PaymeTransactionAdmin(ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        # Payme replays CheckTransaction/GetStatement against this table; a
+        # deleted row answers "not found" for a transaction Payme knows it
+        # performed, which desynchronises reconciliation. Nothing here is ours
+        # to remove.
         return False
 
     @display(description=_("Amount"))

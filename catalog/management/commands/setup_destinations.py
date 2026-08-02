@@ -132,6 +132,15 @@ class Command(BaseCommand):
 
         self._apply(access, card, regions)
 
+        # The demotion step inside _apply is a queryset.update(), which fires
+        # no post_save — and every signal the saves did fire ran inside the
+        # transaction. Cleared here, after commit, so the storefront cannot
+        # keep serving demoted destinations for the rest of the cache TTL.
+        from config.cache import invalidate_catalogue
+
+        invalidate_catalogue()
+        self.stdout.write("storefront cache cleared.")
+
     def _report(self, countries, plans, offers, promoted, skipped):
         self.stdout.write(f"\ncountries to create: {len(countries)}")
         for row in countries:

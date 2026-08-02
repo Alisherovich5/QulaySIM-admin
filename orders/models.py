@@ -46,6 +46,51 @@ class PromoCode(models.Model):
     def __str__(self):
         return self.code
 
+    def clean(self):
+        """Normalise the code and refuse the shapes that zero out orders.
+
+        The API uppercases what the customer types and compares it to this row
+        verbatim, so a lowercase code here can never match at checkout — the
+        banner advertises it while every attempt says "invalid". Normalising in
+        clean() (before validate_unique) means the admin's uniqueness check
+        runs against the value that will actually be stored.
+        """
+        from django.core.exceptions import ValidationError
+
+        self.code = (self.code or "").strip().upper()
+
+        if self.discount_value is not None:
+            if self.discount_type == self.DiscountType.PERCENT and self.discount_value > 100:
+                raise ValidationError(
+                    {"discount_value": "A percentage discount cannot exceed 100."}
+                )
+            if (
+                self.discount_type == self.DiscountType.FIXED
+                and (self.min_order_usd or 0) <= self.discount_value
+            ):
+                # A $5-off code with no (or an equal) minimum makes every order
+                # at or below $5 free — the cap against the cart total hides
+                # the giveaway instead of refusing it.
+                raise ValidationError(
+                    {
+                        "min_order_usd": (
+                            "A fixed discount needs a minimum order above the "
+                            "discount itself, or it makes cheap plans free."
+                        )
+                    }
+                )
+
+    def save(self, *args, **kwargs):
+        # Also normalised here (not only in clean) so existing lowercase rows
+        # heal on their next programmatic save, not only through the admin form.
+        normalised = (self.code or "").strip().upper()
+        if normalised != self.code:
+            self.code = normalised
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None and "code" not in update_fields:
+                kwargs["update_fields"] = sorted(set(update_fields) | {"code"})
+        super().save(*args, **kwargs)
+
 
 class Order(models.Model):
     class Status(models.TextChoices):
@@ -154,6 +199,20 @@ class ESIM(models.Model):
 
     def __str__(self):
         return f"eSIM {self.iccid}"
+
+    def clean(self):
+        """An active eSIM must carry an expiry.
+
+        The API's clean-up job only expires rows whose expires_at has passed;
+        an admin who flips one to 'active' without a date creates a profile
+        that stays 'active' forever and over-reports on every dashboard.
+        """
+        from django.core.exceptions import ValidationError
+
+        if self.status == self.Status.ACTIVE and self.expires_at is None:
+            raise ValidationError(
+                {"expires_at": "An active eSIM needs an expiry date, or it never expires."}
+            )
 
 
 class Payment(models.Model):

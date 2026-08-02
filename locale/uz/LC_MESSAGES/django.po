@@ -155,6 +155,14 @@ msgstr "qo‘lda"
 msgid "only source"
 msgstr "yagona manba"
 
+#: catalog/admin.py catalog/admin.py
+msgid "not connected"
+msgstr "ulanmagan"
+
+#: catalog/admin.py
+msgid "no connected supplier"
+msgstr "ulangan ta’minotchi yo‘q"
+
 #: catalog/admin.py:543
 msgid "vs"
 msgstr "vs"

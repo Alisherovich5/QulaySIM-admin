@@ -331,6 +331,7 @@ class PlanAdmin(ModelAdmin):
         "validity_days",
         "network_type",
         "sourcing_col",
+        "fulfilment_warning",
         "cost_col",
         "price_badge",
         "margin_col",
@@ -525,7 +526,29 @@ class PlanAdmin(ModelAdmin):
                 _("manual"),
             )
 
-        winner = offers[0]
+        winner = obj.winning_offer
+        if winner is None:
+            # Offers exist but none from a connected supplier: there is nothing
+            # to source from, and the fulfilment column carries the warning.
+            return format_html('<span style="color:var(--qs-bad-text);font-weight:600;">—</span>')
+
+        # By pk, not identity: without a prefetch each ranked_offers call
+        # builds fresh instances, and an identity check would call the winner
+        # a different offer from itself.
+        if winner != offers[0]:
+            # A cheaper offer exists, but its supplier is not connected, so the
+            # dearer connected one is what orders are actually placed with.
+            # Naming the cheaper source keeps the saving visible for the day
+            # its integration lands.
+            return format_html(
+                '<span style="font-weight:600;">{}</span>'
+                '<span style="color:var(--qs-ink-mute);font-size:11px;"> · {} ${} {}</span>',
+                winner.get_provider_display(),
+                offers[0].get_provider_display(),
+                offers[0].cost_usd,
+                _("not connected"),
+            )
+
         saving = obj.sourcing_saving_usd
         if saving is None:
             return format_html(
@@ -544,6 +567,24 @@ class PlanAdmin(ModelAdmin):
             offers[1].get_provider_display(),
         )
 
+    # An empty heading, like the flag column: the badge explains itself and a
+    # header would label the many rows that rightly show nothing.
+    @display(description="")
+    def fulfilment_warning(self, obj):
+        """Red badge for plans on sale that no connected supplier can deliver.
+
+        The sourcing engine refuses to route these (see Plan.winning_offer), so
+        a paid order for one strands the customer. The list is where an
+        operator can actually notice that before a customer does.
+        """
+        if not obj.unfulfillable_only:
+            return ""
+        return format_html(
+            '<span style="display:inline-block;padding:2px 10px;border-radius:999px;'
+            'font-size:11px;font-weight:700;color:var(--qs-bad-text);background:var(--qs-bad-wash);">{}</span>',
+            _("no connected supplier"),
+        )
+
     @display(description=_("Supplier comparison"))
     def sourcing_readout(self, obj):
         if obj.pk is None:
@@ -560,9 +601,11 @@ class PlanAdmin(ModelAdmin):
                 obj.provider,
             )
 
+        from catalog.models import fulfillable_providers
+
         rows = []
-        ranked = obj.ranked_offers
-        winner = ranked[0] if ranked else None
+        usable = fulfillable_providers()
+        winner = obj.winning_offer
         for offer in sorted(offers, key=lambda o: o.cost_usd):
             if not offer.is_available:
                 note = offer.unavailable_reason or _("unavailable")
@@ -572,6 +615,17 @@ class PlanAdmin(ModelAdmin):
                         offer.get_provider_display(),
                         offer.cost_usd,
                         note,
+                    )
+                )
+            elif offer.provider not in usable:
+                # On file for comparison, but fulfilment cannot order there, so
+                # calling it a fallback would promise a route that is not real.
+                rows.append(
+                    format_html(
+                        '<li style="color:var(--qs-ink-mute);">{} — ${} · {}</li>',
+                        offer.get_provider_display(),
+                        offer.cost_usd,
+                        _("not connected"),
                     )
                 )
             elif offer == winner:
@@ -707,6 +761,18 @@ class PricingRuleAdmin(ModelAdmin):
             '<span style="font-weight:700;color:var(--qs-ink);">+{}%</span>', obj.markup_percent
         )
 
+    def delete_queryset(self, request, queryset):
+        """Bulk delete reprices what each rule governed, like a single delete.
+
+        The changelist action deletes through the queryset and skips
+        PricingRule.delete(), so the catalogue would keep the dead rules'
+        prices until every affected plan happened to be saved again.
+        """
+        rules = list(queryset)
+        super().delete_queryset(request, queryset)
+        for rule in rules:
+            rule.apply_to_plans()
+
     def get_queryset(self, request):
         # Counting plans per row would be one query per rule. Tally the whole
         # catalogue once and look the numbers up in memory instead.
@@ -769,6 +835,20 @@ class SupplierOfferAdmin(ModelAdmin):
         # `verdict` compares this offer against its plan's other offers, so the
         # sibling set is prefetched rather than re-queried per row.
         return super().get_queryset(request).prefetch_related("plan__offers")
+
+    def delete_queryset(self, request, queryset):
+        """Bulk delete must re-decide sourcing, exactly like a single delete.
+
+        The changelist action deletes through the queryset, which never calls
+        SupplierOffer.delete() — so removing a winning offer left its plan
+        still routing to the deleted supplier, with the deleted package code
+        and cost. Plans are re-sourced after the rows are gone, handing each
+        one to its surviving runner-up.
+        """
+        plan_ids = list(queryset.values_list("plan_id", flat=True).distinct())
+        super().delete_queryset(request, queryset)
+        for plan in Plan.objects.filter(pk__in=plan_ids):
+            plan.resolve_sourcing(save=True)
 
     @display(description=_("Plan"), ordering="plan__title")
     def plan_col(self, obj):

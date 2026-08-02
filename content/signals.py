@@ -13,6 +13,7 @@ the module, and the flag says so explicitly rather than relying on that.
 
 from __future__ import annotations
 
+from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
@@ -29,7 +30,10 @@ _CACHED_MODELS = (Benefit, Testimonial, Device, FAQ, PromoBanner, PromoCode)
 
 def _clear_content_cache(sender, **kwargs) -> None:
     del sender, kwargs
-    invalidate_content()
+    # on_commit, not inline: the admin saves inside a transaction, and clearing
+    # Redis before COMMIT lets the API re-cache the old content in the gap.
+    # Outside a transaction the callback runs immediately.
+    transaction.on_commit(invalidate_content)
 
 
 for _model in _CACHED_MODELS:

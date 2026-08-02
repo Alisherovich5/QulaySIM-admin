@@ -1,8 +1,10 @@
 from django.contrib import admin
+from django.db import transaction
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin
 from unfold.decorators import display
 
+from config.cache import invalidate_content
 from .models import FAQ, Banner, Benefit, Device, PromoBanner, Testimonial
 from django.utils.translation import gettext_lazy as _
 
@@ -54,11 +56,21 @@ class TestimonialAdmin(ModelAdmin):
 
     @admin.action(description=_("Approve selected reviews"))
     def approve_reviews(self, request, queryset):
-        queryset.update(moderation_status=Testimonial.ModerationStatus.APPROVED, is_active=True)
+        # Moderation status only: forcing is_active here silently re-published
+        # rows an admin had deliberately deactivated. Submissions arrive with
+        # is_active already True, so approval alone is what puts them live.
+        queryset.update(moderation_status=Testimonial.ModerationStatus.APPROVED)
+        # queryset.update() fires no post_save, so the signal that normally
+        # clears the landing cache never sees this — without an explicit
+        # invalidation the site keeps the old review list for the whole TTL.
+        transaction.on_commit(invalidate_content)
 
     @admin.action(description=_("Reject selected reviews"))
     def reject_reviews(self, request, queryset):
         queryset.update(moderation_status=Testimonial.ModerationStatus.REJECTED)
+        # Same reason as approve: a rejected review must leave the site now,
+        # not when the cache TTL happens to run out.
+        transaction.on_commit(invalidate_content)
 
 
 @admin.register(Device)

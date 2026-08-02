@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
@@ -21,5 +22,13 @@ from config.cache import invalidate_catalogue
 @receiver(post_delete, sender=Plan)
 @receiver(post_delete, sender=Country)
 @receiver(post_delete, sender=Region)
+# Deleting a rule now reprices the plans it governed (PricingRule.delete), so
+# the delete has to clear the cache exactly like a save does.
+@receiver(post_delete, sender=PricingRule)
 def _clear_catalogue_cache(sender, **kwargs):
-    invalidate_catalogue()
+    # on_commit, not inline: the admin wraps every save in a transaction, and
+    # clearing Redis *before* COMMIT invites the API to re-cache the old rows
+    # during the gap — after which nothing clears them until the TTL runs out.
+    # Outside a transaction the callback runs immediately, so nothing changes
+    # for plain saves.
+    transaction.on_commit(invalidate_catalogue)

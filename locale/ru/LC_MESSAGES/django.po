@@ -154,6 +154,14 @@ msgstr "вручную"
 msgid "only source"
 msgstr "единственный источник"
 
+#: catalog/admin.py catalog/admin.py
+msgid "not connected"
+msgstr "не подключён"
+
+#: catalog/admin.py
+msgid "no connected supplier"
+msgstr "нет подключённого поставщика"
+
 #: catalog/admin.py:543
 msgid "vs"
 msgstr "против"

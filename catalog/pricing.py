@@ -105,6 +105,12 @@ def calculate_price(plan, rules: list | None = None) -> Decimal | None:
     if min_margin and price - cost < min_margin:
         price = cost + min_margin
 
+    # New markups are validated to be >= 0, but a legacy negative one can
+    # still be on a row. A price of zero or below is never right to *write*,
+    # so it is treated like a missing cost: left for the admin to set by hand.
+    if price <= 0:
+        return None
+
     return _apply_rounding(price, rule.rounding if rule else "none")
 
 

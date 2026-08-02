@@ -140,6 +140,16 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # The admin is not on a guessable path in production.
 ADMIN_URL_PATH = config("ADMIN_URL_PATH", default="admin")
 
+# Suppliers the fulfilment service can actually place orders with. The FastAPI
+# side registers its supplier integrations in app/integrations/suppliers.py;
+# this list must not name anyone missing from that registry. Offers from other
+# suppliers may be recorded for price comparison, but they must never win a
+# plan's sourcing: a plan priced from a supplier we cannot buy from is either
+# sold at a loss (the order falls back to a dearer route) or, with no fallback,
+# paid for and never provisioned. When eSIMCard's API is connected, adding
+# "esimcard" here re-enables it everywhere at once.
+FULFILLABLE_PROVIDERS = config("FULFILLABLE_PROVIDERS", default="esimaccess", cast=Csv())
+
 # ---------------------------------------------------------------------------
 # Brute-force protection (django-axes)
 #

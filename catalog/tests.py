@@ -229,6 +229,103 @@ class RuleChangePropagationTests(TestCase):
         locked.refresh_from_db()
         self.assertEqual(locked.price_usd, Decimal("99.00"))
 
+    def test_deleting_a_rule_reprices_what_it_governed(self):
+        """Deactivating a rule reprices through save(); deleting one used to
+        reprice nothing, so the catalogue kept the dead rule's prices until
+        each plan happened to be saved for some other reason."""
+        PricingRule.objects.create(scope="global", markup_percent=Decimal("20"))
+        japan = Country.objects.create(name="Japan", slug="japan", iso2="JP")
+        japan_rule = PricingRule.objects.create(
+            scope="country", country=japan, markup_percent=Decimal("80")
+        )
+        p = Plan.objects.create(
+            title="J", country=japan, cost_usd=Decimal("10.00"), price_usd=Decimal("0")
+        )
+        self.assertEqual(p.price_usd, Decimal("18.00"))
+
+        japan_rule.delete()
+
+        p.refresh_from_db()
+        self.assertEqual(p.price_usd, Decimal("12.00"), "must fall back to the global rule")
+
+    def test_retargeting_a_rule_reprices_the_old_scope_too(self):
+        """Moving the rule from Japan to Turkey used to reprice Turkey only,
+        leaving Japan's plans priced by a rule that no longer names them."""
+        PricingRule.objects.create(scope="global", markup_percent=Decimal("20"))
+        japan = Country.objects.create(name="Japan", slug="japan", iso2="JP")
+        turkey = Country.objects.create(name="Turkey", slug="turkey", iso2="TR")
+        rule = PricingRule.objects.create(
+            scope="country", country=japan, markup_percent=Decimal("80")
+        )
+        in_japan = Plan.objects.create(
+            title="J", country=japan, cost_usd=Decimal("10.00"), price_usd=Decimal("0")
+        )
+        in_turkey = Plan.objects.create(
+            title="T", country=turkey, cost_usd=Decimal("10.00"), price_usd=Decimal("0")
+        )
+        self.assertEqual(in_japan.price_usd, Decimal("18.00"))
+        self.assertEqual(in_turkey.price_usd, Decimal("12.00"))
+
+        rule.country = turkey
+        rule.save()
+
+        in_japan.refresh_from_db()
+        in_turkey.refresh_from_db()
+        self.assertEqual(in_japan.price_usd, Decimal("12.00"), "the old scope must fall back")
+        self.assertEqual(in_turkey.price_usd, Decimal("18.00"))
+
+    def test_bulk_deleting_rules_from_the_changelist_reprices_too(self):
+        """The changelist action deletes through the queryset, which skips
+        PricingRule.delete() — the admin override has to reprice instead."""
+        from django.contrib.admin.sites import site
+        from django.test import RequestFactory
+
+        PricingRule.objects.create(scope="global", markup_percent=Decimal("20"))
+        japan = Country.objects.create(name="Japan", slug="japan", iso2="JP")
+        japan_rule = PricingRule.objects.create(
+            scope="country", country=japan, markup_percent=Decimal("80")
+        )
+        p = Plan.objects.create(
+            title="J", country=japan, cost_usd=Decimal("10.00"), price_usd=Decimal("0")
+        )
+        self.assertEqual(p.price_usd, Decimal("18.00"))
+
+        model_admin = site._registry[PricingRule]
+        model_admin.delete_queryset(
+            RequestFactory().post("/"), PricingRule.objects.filter(pk=japan_rule.pk)
+        )
+
+        p.refresh_from_db()
+        self.assertEqual(p.price_usd, Decimal("12.00"))
+
+    def test_repricing_clears_the_cache_only_after_the_prices_move(self):
+        """The invalidation must ride on_commit: rule saves used to clear Redis
+        *before* bulk_update wrote the new prices, so the API could re-cache
+        the old ones and keep them for the whole TTL."""
+        from unittest.mock import patch
+
+        rule = PricingRule.objects.create(scope="global", markup_percent=Decimal("20"))
+        p = Plan.objects.create(title="A", cost_usd=Decimal("10.00"), price_usd=Decimal("0"))
+
+        # The signal's own reference is muted so only apply_to_plans' explicit
+        # invalidation — the one that covers the signal-less bulk_update — is
+        # measured, and nothing touches a real Redis.
+        with (
+            patch("config.cache.invalidate_catalogue") as invalidate,
+            patch("catalog.signals.invalidate_catalogue"),
+        ):
+            with self.captureOnCommitCallbacks(execute=False) as callbacks:
+                rule.markup_percent = Decimal("50")
+                rule.save()
+
+            p.refresh_from_db()
+            self.assertEqual(p.price_usd, Decimal("15.00"), "prices move first")
+            self.assertFalse(invalidate.called, "nothing is cleared before commit")
+
+            for callback in callbacks:
+                callback()
+            self.assertTrue(invalidate.called, "commit is what clears the cache")
+
 
 @override_settings(SECURE_SSL_REDIRECT=False)
 class AdminLockoutTests(TestCase):
@@ -287,6 +384,11 @@ class AdminLockoutTests(TestCase):
         self.assertEqual(response.status_code, 302, "an untargeted account should still sign in")
 
 
+# Both suppliers are treated as connected here: these tests pin the *generic*
+# comparison mechanics (cheapest wins, fallback on outage, stable ties), which
+# must hold for any pair of live suppliers. What happens when a supplier is NOT
+# in FULFILLABLE_PROVIDERS is pinned separately in FulfillabilityTests.
+@override_settings(FULFILLABLE_PROVIDERS=["esimaccess", "esimcard"])
 class SupplierComparisonTests(TestCase):
     """The point of holding several supplier prices: the cheapest one wins.
 
@@ -446,9 +548,11 @@ class SupplierComparisonTests(TestCase):
         request = RequestFactory().get("/")
         plans = list(model_admin.get_queryset(request))
         with self.assertNumQueries(0):
-            # Prefetched, so rendering the sourcing column touches no database.
+            # Prefetched, so rendering the sourcing and fulfilment columns
+            # touches no database.
             for plan in plans:
                 model_admin.sourcing_col(plan)
+                model_admin.fulfilment_warning(plan)
 
 
 class SidebarNavigationTests(TestCase):
@@ -546,6 +650,9 @@ class PlanAdminRenderTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "No supplier offers yet")
 
+    # Both suppliers connected, so the readout renders its winner + fallback
+    # shape; the not-connected rendering has its own test below.
+    @override_settings(FULFILLABLE_PROVIDERS=["esimaccess", "esimcard"])
     def test_change_page_shows_the_winner_and_the_fallback(self):
         SupplierOffer.objects.create(
             plan=self.plan, provider="esimaccess", package_code="JP_3_15", cost_usd=Decimal("6.00")
@@ -559,6 +666,24 @@ class PlanAdminRenderTests(TestCase):
         self.assertContains(response, "ordered from here")
         self.assertContains(response, "fallback")
 
+    def test_change_page_marks_an_unconnected_supplier(self):
+        """A cheaper offer from a supplier the API cannot buy from must not be
+        presented as the source or as a usable fallback."""
+        SupplierOffer.objects.create(
+            plan=self.plan, provider="esimaccess", package_code="JP_3_15", cost_usd=Decimal("6.00")
+        )
+        SupplierOffer.objects.create(
+            plan=self.plan, provider="esimcard", package_code="jp-3gb", cost_usd=Decimal("5.25")
+        )
+
+        response = self.client.get(self._change_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "ordered from here")
+        self.assertContains(response, "not connected")
+        # "· fallback" is the comparison row's label; the plain word also
+        # appears in the fieldset's explanatory text, which is fine.
+        self.assertNotContains(response, "· fallback")
+
     def test_change_page_shows_why_an_offer_is_out(self):
         SupplierOffer.objects.create(
             plan=self.plan,
@@ -571,6 +696,9 @@ class PlanAdminRenderTests(TestCase):
         response = self.client.get(self._change_url())
         self.assertContains(response, "no balance")
 
+    # Both suppliers connected: this pins the saving figure the column shows
+    # when the comparison is real. The not-connected shape is pinned below.
+    @override_settings(FULFILLABLE_PROVIDERS=["esimaccess", "esimcard"])
     def test_changelist_renders_the_sourcing_column(self):
         from django.urls import reverse
 
@@ -584,6 +712,23 @@ class PlanAdminRenderTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "eSIMCard")
         self.assertContains(response, "$0.75")
+
+    def test_changelist_names_the_cheaper_unconnected_supplier(self):
+        """The connected winner is the source; the cheaper unconnected offer is
+        named so the saving is visible the day its integration lands."""
+        from django.urls import reverse
+
+        SupplierOffer.objects.create(
+            plan=self.plan, provider="esimaccess", package_code="JP_3_15", cost_usd=Decimal("6.00")
+        )
+        SupplierOffer.objects.create(
+            plan=self.plan, provider="esimcard", package_code="jp-3gb", cost_usd=Decimal("5.25")
+        )
+        response = self.client.get(reverse("admin:catalog_plan_changelist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "eSIM Access")
+        self.assertContains(response, "not connected")
+        self.assertContains(response, "$5.25")
 
     def test_supplier_offer_changelist_renders_verdicts(self):
         from django.urls import reverse
@@ -715,7 +860,10 @@ class PopularDestinationAdminTests(TestCase):
         for action, country in (("promote", self.qatar), ("demote", self.japan)):
             with self.subTest(action=action):
                 with patch("catalog.signals.invalidate_catalogue") as invalidate:
-                    self._act(action, country)
+                    # Invalidation rides transaction.on_commit now; a TestCase
+                    # never commits, so the callbacks run here explicitly.
+                    with self.captureOnCommitCallbacks(execute=True):
+                        self._act(action, country)
                 self.assertTrue(invalidate.called)
 
     # --- reading the list ---------------------------------------------------
@@ -1014,8 +1162,12 @@ class CacheInvalidationTests(TestCase):
     def _cleared_by(self, action):
         from unittest.mock import patch
 
+        # The signal defers to transaction.on_commit so the API cannot re-cache
+        # stale rows between the Redis delete and COMMIT; inside a TestCase
+        # nothing ever commits, so the callbacks are executed explicitly.
         with patch("catalog.signals.invalidate_catalogue") as invalidate:
-            action()
+            with self.captureOnCommitCallbacks(execute=True):
+                action()
             return invalidate.called
 
     def test_creating_an_offer_clears_the_cache(self):
@@ -1384,3 +1536,240 @@ class SupplierImportPageTests(TestCase):
         )
         self.assertEqual(Plan.objects.count(), 0)
         self.assertContains(response, "Export it as CSV")
+
+
+class FulfillabilityTests(TestCase):
+    """Sourcing must never route to a supplier the API cannot order from.
+
+    The backend registers its supplier integrations (only eSIM Access today);
+    a plan priced from anyone else is either sold at a loss — the paid order
+    falls back to the dearer connected route — or, with no connected offer at
+    all, paid for and never provisioned. Offers from unconnected suppliers
+    stay on file for comparison, and FULFILLABLE_PROVIDERS is the switch that
+    brings one into the running when its integration lands.
+    """
+
+    def setUp(self):
+        PricingRule.objects.create(scope=PricingRule.Scope.GLOBAL, markup_percent=Decimal("50"))
+        self.country = Country.objects.create(name="Turkey", slug="turkey", iso2="TR")
+        self.plan = Plan.objects.create(
+            country=self.country,
+            title="Turkey 5GB",
+            data_amount_mb=5120,
+            validity_days=30,
+            cost_usd=Decimal("10.00"),
+            price_usd=Decimal("15.00"),
+        )
+
+    def _offer(self, provider, cost, available=True):
+        return SupplierOffer.objects.create(
+            plan=self.plan,
+            provider=provider,
+            package_code=f"{provider.upper()}-TR-5-30",
+            cost_usd=Decimal(cost),
+            is_available=available,
+        )
+
+    def test_a_cheaper_unconnected_offer_does_not_take_over(self):
+        self._offer("esimaccess", "4.20")
+        self._offer("esimcard", "3.80")
+
+        self.plan.refresh_from_db()
+        # eSIMCard is cheaper, but fulfilment cannot buy there: pricing from it
+        # would sell at $5.70 an eSIM that really costs $4.20 to deliver.
+        self.assertEqual(self.plan.provider, "esimaccess")
+        self.assertEqual(self.plan.cost_usd, Decimal("4.20"))
+        self.assertEqual(self.plan.provider_package_code, "ESIMACCESS-TR-5-30")
+        self.assertEqual(self.plan.price_usd, Decimal("6.30"))
+
+    def test_only_unconnected_offers_leave_the_plan_untouched(self):
+        self._offer("esimcard", "3.80")
+
+        self.plan.refresh_from_db()
+        # Nothing usable to source from, so the hand-entered route survives —
+        # the same rule as a supplier outage — and the plan is flagged instead.
+        self.assertEqual(self.plan.cost_usd, Decimal("10.00"))
+        self.assertEqual(self.plan.provider, "mock")
+        self.assertTrue(self.plan.unfulfillable_only)
+
+    def test_a_plan_without_offers_is_not_flagged(self):
+        self.assertFalse(self.plan.unfulfillable_only)
+
+    def test_a_plan_with_a_connected_offer_is_not_flagged(self):
+        self._offer("esimaccess", "4.20")
+        self._offer("esimcard", "3.80")
+        self.plan.refresh_from_db()
+        self.assertFalse(self.plan.unfulfillable_only)
+
+    def test_connecting_the_supplier_puts_it_back_in_the_running(self):
+        """The documented re-enable path: when eSIMCard's API is wired up,
+        adding it to FULFILLABLE_PROVIDERS lets its offers win again."""
+        self._offer("esimaccess", "4.20")
+        self._offer("esimcard", "3.80")
+
+        with override_settings(FULFILLABLE_PROVIDERS=["esimaccess", "esimcard"]):
+            self.plan.save()
+
+        self.plan.refresh_from_db()
+        self.assertEqual(self.plan.provider, "esimcard")
+        self.assertEqual(self.plan.cost_usd, Decimal("3.80"))
+        self.assertEqual(self.plan.price_usd, Decimal("5.70"))
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(LANGUAGE_CODE="en")
+class FulfilmentBadgeTests(TestCase):
+    """Stranded plans must be visible on the list, not only in API error logs."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        self.country = Country.objects.create(name="Turkey", slug="turkey", iso2="TR")
+        self.stranded = Plan.objects.create(
+            country=self.country,
+            title="Turkey 5GB",
+            data_amount_mb=5120,
+            validity_days=30,
+            price_usd=Decimal("15.00"),
+            price_locked=True,
+        )
+        SupplierOffer.objects.create(
+            plan=self.stranded,
+            provider="esimcard",
+            package_code="tr-5gb",
+            cost_usd=Decimal("3.80"),
+        )
+        self.healthy = Plan.objects.create(
+            country=self.country,
+            title="Turkey 1GB",
+            data_amount_mb=1024,
+            validity_days=7,
+            price_usd=Decimal("5.00"),
+            price_locked=True,
+        )
+        SupplierOffer.objects.create(
+            plan=self.healthy,
+            provider="esimaccess",
+            package_code="TR_1_7",
+            cost_usd=Decimal("2.00"),
+        )
+        User.objects.create_superuser("badge-admin", "b@example.com", "pw-for-tests-only")
+        self.client.force_login(User.objects.get(username="badge-admin"))
+
+    def test_the_changelist_badges_the_stranded_plan(self):
+        from django.urls import reverse
+
+        response = self.client.get(reverse("admin:catalog_plan_changelist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "no connected supplier")
+
+    def test_a_plan_with_a_connected_route_carries_no_badge(self):
+        from django.contrib.admin.sites import site
+
+        model_admin = site._registry[Plan]
+        self.assertEqual(model_admin.fulfilment_warning(self.healthy), "")
+        self.assertIn("no connected supplier", str(model_admin.fulfilment_warning(self.stranded)))
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(LANGUAGE_CODE="en")
+# Both suppliers connected: the handover this pins is the generic one — the
+# bulk action must behave exactly like deleting the offers one at a time.
+@override_settings(FULFILLABLE_PROVIDERS=["esimaccess", "esimcard"])
+class SupplierOfferBulkDeleteTests(TestCase):
+    """The changelist bulk delete skips SupplierOffer.delete(), so the admin
+    override has to re-decide sourcing — without it, plans kept routing to a
+    supplier whose offer had just been deliberately removed."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+        from django.urls import reverse
+
+        PricingRule.objects.create(scope=PricingRule.Scope.GLOBAL, markup_percent=Decimal("50"))
+        self.country = Country.objects.create(name="Turkey", slug="turkey", iso2="TR")
+        self.plan = Plan.objects.create(
+            country=self.country,
+            title="Turkey 5GB",
+            data_amount_mb=5120,
+            validity_days=30,
+            cost_usd=Decimal("10.00"),
+            price_usd=Decimal("15.00"),
+        )
+        self.cheap = SupplierOffer.objects.create(
+            plan=self.plan, provider="esimcard", package_code="tr-5gb", cost_usd=Decimal("3.80")
+        )
+        self.dear = SupplierOffer.objects.create(
+            plan=self.plan, provider="esimaccess", package_code="TR_5_30", cost_usd=Decimal("4.20")
+        )
+        User.objects.create_superuser("offer-admin", "o@example.com", "pw-for-tests-only")
+        self.client.force_login(User.objects.get(username="offer-admin"))
+        self.url = reverse("admin:catalog_supplieroffer_changelist")
+
+    def _bulk_delete(self, *offers):
+        return self.client.post(
+            self.url,
+            {
+                "action": "delete_selected",
+                "_selected_action": [str(offer.pk) for offer in offers],
+                "post": "yes",  # the confirmation page's consent
+            },
+            follow=True,
+        )
+
+    def test_bulk_deleting_the_winner_hands_over_to_the_runner_up(self):
+        self.plan.refresh_from_db()
+        self.assertEqual(self.plan.provider, "esimcard")
+
+        self._bulk_delete(self.cheap)
+
+        self.plan.refresh_from_db()
+        self.assertEqual(self.plan.provider, "esimaccess")
+        self.assertEqual(self.plan.cost_usd, Decimal("4.20"))
+        self.assertEqual(self.plan.provider_package_code, "TR_5_30")
+        # The price follows the new cost — 4.20 + 50%.
+        self.assertEqual(self.plan.price_usd, Decimal("6.30"))
+
+    def test_bulk_deleting_every_offer_keeps_the_last_route(self):
+        self._bulk_delete(self.cheap, self.dear)
+
+        self.plan.refresh_from_db()
+        # Same rule as losing every offer one by one: an empty comparison is
+        # an outage, not a reason to zero the cost.
+        self.assertEqual(self.plan.cost_usd, Decimal("3.80"))
+        self.assertEqual(SupplierOffer.objects.count(), 0)
+
+
+class SetupDestinationsCommandTests(TestCase):
+    """--apply demotes through a queryset.update(), which fires no signal, and
+    every signal its saves do fire runs inside the transaction — so the command
+    has to clear the storefront cache itself, after commit."""
+
+    CSV = "package_code,location,data_gb,days,cost_usd\nTR_1_7,TR,1,7,2.50\n"
+
+    def _run_apply(self):
+        import tempfile
+        from io import StringIO
+        from pathlib import Path as _Path
+
+        from django.core.management import call_command
+
+        with tempfile.TemporaryDirectory() as folder:
+            path = _Path(folder) / "prices.csv"
+            path.write_text(self.CSV)
+            call_command("setup_destinations", esimaccess=path, apply=True, stdout=StringIO())
+
+    def test_apply_clears_the_storefront_cache(self):
+        from unittest.mock import patch
+
+        for slug, name in (("europe", "Europe"), ("asia", "Asia"), ("middle-east", "Middle East")):
+            Region.objects.create(name=name, slug=slug)
+        stale = Country.objects.create(
+            name="Oldland", slug="oldland", iso2="OL", is_popular=True, sort_order=1
+        )
+
+        with patch("config.cache.invalidate_catalogue") as invalidate:
+            self._run_apply()
+
+        stale.refresh_from_db()
+        self.assertFalse(stale.is_popular, "destinations off the list must be demoted")
+        self.assertTrue(invalidate.called, "the demotion must reach the storefront cache")

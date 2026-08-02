@@ -1,5 +1,17 @@
-from django.db import models
+from django.core.validators import MinValueValidator
+from django.db import models, transaction
 from django.utils.translation import gettext_lazy as _
+
+
+def fulfillable_providers() -> frozenset:
+    """Suppliers order fulfilment can actually buy from.
+
+    Read at call time, not import time, so tests and deployments can change
+    FULFILLABLE_PROVIDERS without re-importing this module.
+    """
+    from django.conf import settings
+
+    return frozenset(getattr(settings, "FULFILLABLE_PROVIDERS", ["esimaccess"]))
 
 
 class Region(models.Model):
@@ -131,6 +143,10 @@ class Plan(models.Model):
         decimal_places=2,
         null=True,
         blank=True,
+        # The same floor PricingRule enforces with a check constraint: a
+        # negative override (a typo for a positive one) prices below cost and,
+        # past -100%, writes a negative price that breaks checkout.
+        validators=[MinValueValidator(0)],
         help_text=_("Overrides every pricing rule for this plan only. Leave empty to inherit."),
         verbose_name=_("markup percent"),
     )
@@ -194,10 +210,12 @@ class Plan(models.Model):
 
     @property
     def ranked_offers(self):
-        """Usable supplier offers, cheapest first.
+        """Available supplier offers, cheapest first.
 
-        This ordering *is* the sourcing decision: the head is where the plan is
-        bought, and the tail is the fallback order when the head fails.
+        This is the price comparison, not the sourcing decision on its own:
+        `winning_offer` picks the head of this list *among the suppliers the
+        API can actually order from*, and the fulfillable tail is the fallback
+        order when the head fails.
         """
         return sorted(
             (offer for offer in self.offers.all() if offer.is_available),
@@ -209,8 +227,32 @@ class Plan(models.Model):
 
     @property
     def winning_offer(self):
-        offers = self.ranked_offers
-        return offers[0] if offers else None
+        """Cheapest available offer from a supplier fulfilment can buy from.
+
+        An unfulfillable supplier's offer must never win: its cost would set a
+        retail price the real (dearer) route then eats through, or — with no
+        fulfillable route at all — sell a plan nobody can provision. Offers
+        from suppliers outside FULFILLABLE_PROVIDERS stay on file purely for
+        comparison until their integration is connected.
+        """
+        usable = fulfillable_providers()
+        for offer in self.ranked_offers:
+            if offer.provider in usable:
+                return offer
+        return None
+
+    @property
+    def unfulfillable_only(self):
+        """True when the plan has supplier offers but none we can order from.
+
+        This is the stranded state the changelist badge exists for: the plan
+        is on sale, yet a paid order for it has no route to a real eSIM.
+        """
+        offers = list(self.offers.all())
+        if not offers:
+            return False
+        usable = fulfillable_providers()
+        return all(offer.provider not in usable for offer in offers)
 
     @property
     def sourcing_saving_usd(self):
@@ -461,11 +503,30 @@ class PricingRule(models.Model):
         return f"{target} +{self.markup_percent}%"
 
     def save(self, *args, **kwargs):
+        # Remembered before the write so a retargeted rule can reprice the
+        # plans it *stopped* governing, not only the ones it now covers.
+        previous = PricingRule.objects.filter(pk=self.pk).first() if self.pk else None
         super().save(*args, **kwargs)
         # A rule that does not move any price is a rule the admin cannot trust.
         # Recalculating here makes the change visible immediately instead of
         # waiting for someone to remember the bulk action.
         self.apply_to_plans()
+        if previous is not None and (
+            previous.scope != self.scope
+            or previous.provider != self.provider
+            or previous.country_id != self.country_id
+        ):
+            # Moving the rule from Japan to Turkey used to reprice Turkey only,
+            # leaving Japan's plans priced by a rule that no longer names them.
+            previous.apply_to_plans()
+
+    def delete(self, *args, **kwargs):
+        result = super().delete(*args, **kwargs)
+        # Deactivating a rule reprices through save(); deleting one used to
+        # reprice nothing, so the catalogue kept the dead rule's prices until
+        # each plan happened to be saved for some other reason.
+        self.apply_to_plans()
+        return result
 
     def apply_to_plans(self) -> int:
         """Recalculate every plan this rule could govern; returns how many moved."""
@@ -479,6 +540,13 @@ class PricingRule(models.Model):
         changed = [plan for plan in plans if plan.recalculate_price(rules)]
         if changed:
             Plan.objects.bulk_update(changed, ["price_usd"], batch_size=500)
+            # bulk_update fires no post_save, so the cache signal never sees
+            # these price moves; without this the storefront keeps the old
+            # prices for the whole TTL. on_commit, so the keys are cleared only
+            # once the new prices are actually visible to the API.
+            from config.cache import invalidate_catalogue
+
+            transaction.on_commit(invalidate_catalogue)
         return len(changed)
 
     def clean(self):
