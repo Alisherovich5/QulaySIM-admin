@@ -747,6 +747,93 @@ class PlanAdminRenderTests(TestCase):
 
 @override_settings(SECURE_SSL_REDIRECT=False)
 @override_settings(LANGUAGE_CODE="en")
+class MarginSortingTests(TestCase):
+    """The margin column's header must sort the changelist.
+
+    The displayed figure is a Python property, which Django cannot order by —
+    the column is backed by a price-minus-cost annotation instead, and this
+    pins the two to each other: if someone renames the annotation or the
+    property drifts (say, margin net of a fee), the mismatch shows up here
+    rather than as a column that silently sorts by the wrong number.
+    """
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        country = Country.objects.create(name="Japan", slug="japan", iso2="JP")
+        # Chosen so that ordering by margin, by price and by cost each produce
+        # a DIFFERENT sequence — a column that quietly sorts by the wrong
+        # number cannot pass by coincidence.
+        #   margin: C (0.20) < A (0.50) < B (5.00)
+        #   price:  B (6.00) < C (7.00) < A (9.00)
+        #   cost:   B (1.00) < C (6.80) < A (8.50)
+        for title, cost, price in (
+            ("A", Decimal("8.50"), Decimal("9.00")),
+            ("B", Decimal("1.00"), Decimal("6.00")),
+            ("C", Decimal("6.80"), Decimal("7.00")),
+            ("Manual", None, Decimal("9.99")),            # no cost — margin unknowable
+        ):
+            # price_locked, or Plan.save() reprices the row from the default
+            # markup and silently rewrites this fixture's arithmetic — which is
+            # exactly what it did to the first version of this test.
+            Plan.objects.create(
+                country=country,
+                title=title,
+                data_amount_mb=1024,
+                validity_days=7,
+                cost_usd=cost,
+                price_usd=price,
+                price_locked=True,
+            )
+        User.objects.create_superuser("sort-admin", "s@example.com", "pw-for-tests-only")
+        self.client.force_login(User.objects.get(username="sort-admin"))
+
+    def _changelist(self, query=None):
+        from django.urls import reverse
+
+        response = self.client.get(reverse("admin:catalog_plan_changelist"), query or {})
+        self.assertEqual(response.status_code, 200)
+        return response
+
+    def _margin_sort_href(self):
+        """The href the Margin header actually renders, whatever Django's
+        column-index convention is this release."""
+        import re
+
+        html = self._changelist().content.decode()
+        # Non-greedy across th boundaries would happily borrow the next
+        # column's link; cut the haystack down to this one header cell first.
+        cell = re.search(r'<th[^>]*column-margin_col[^>]*>(.*?)</th>', html, re.S)
+        self.assertIsNotNone(cell, "Margin header cell not rendered")
+        cell = re.search(r'href="\?([^"]+)"', cell.group(1))
+        self.assertIsNotNone(cell, "Margin header has no sort link — the annotation ordering is gone")
+        from urllib.parse import parse_qs
+
+        return {k: v[0] for k, v in parse_qs(cell.group(1)).items()}
+
+    def _titles(self, query):
+        return [p.title for p in self._changelist(query).context["cl"].result_list]
+
+    def test_the_margin_header_orders_by_price_minus_cost(self):
+        # Whichever direction the theme's first click uses, the priced rows
+        # must come out in margin order — CAB ascending or BAC descending —
+        # and the negated parameter must produce the exact reverse.
+        link = self._margin_sort_href()
+        first = [t for t in self._titles(link) if t != "Manual"]
+        self.assertIn(first, (["C", "A", "B"], ["B", "A", "C"]))
+        flipped = {
+            k: (v[1:] if v.startswith("-") else f"-{v}") if k == "o" else v
+            for k, v in link.items()
+        }
+        second = [t for t in self._titles(flipped) if t != "Manual"]
+        self.assertEqual(second, list(reversed(first)))
+
+    def test_a_costless_plan_does_not_break_the_ordering(self):
+        titles = self._titles(self._margin_sort_href())
+        self.assertEqual(len(titles), 4)
+        self.assertIn("Manual", titles)
+
+
 class PopularDestinationAdminTests(TestCase):
     """Choosing, ordering and dropping the destinations the landing page shows.
 

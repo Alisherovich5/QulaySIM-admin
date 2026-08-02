@@ -1,7 +1,7 @@
 from django.contrib import admin, messages
 from django import forms
 from django.db import models
-from django.db.models import Count, Max, Min
+from django.db.models import Count, ExpressionWrapper, F, Max, Min
 from django.utils.html import format_html, format_html_join
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
@@ -417,7 +417,23 @@ class PlanAdmin(ModelAdmin):
         # `ranked_offers` walks the related set, so without this every row on
         # the changelist would fetch its own offers — the same N+1 the country
         # and order lists were already fixed for.
-        return super().get_queryset(request).prefetch_related("offers")
+        #
+        # The margin annotation exists so the column header sorts. The displayed
+        # figure still comes from catalog.pricing via the model properties —
+        # this expression is price minus cost and nothing more, which matches
+        # the property for every plan that has both numbers and sorts NULLs
+        # (no supplier cost) to the bottom rather than crashing the ordering.
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related("offers")
+            .annotate(
+                _margin_usd=ExpressionWrapper(
+                    F("price_usd") - F("cost_usd"),
+                    output_field=models.DecimalField(max_digits=10, decimal_places=2),
+                )
+            )
+        )
 
 
     # --- Supplier price import ---------------------------------------------
@@ -662,7 +678,7 @@ class PlanAdmin(ModelAdmin):
     def cost_col(self, obj):
         return f"${obj.cost_usd}" if obj.cost_usd is not None else "—"
 
-    @display(description=_("Price"))
+    @display(description=_("Price"), ordering="price_usd")
     def price_badge(self, obj):
         lock = " 🔒" if obj.price_locked else ""
         note = (
@@ -677,7 +693,7 @@ class PlanAdmin(ModelAdmin):
             note,
         )
 
-    @display(description=_("Margin"))
+    @display(description=_("Margin"), ordering="_margin_usd")
     def margin_col(self, obj):
         amount = obj.margin_usd
         if amount is None:
