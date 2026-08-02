@@ -834,6 +834,12 @@ class MarginSortingTests(TestCase):
         self.assertIn("Manual", titles)
 
 
+# Restored: these two decorators belong to this class; the margin tests
+# were inserted between them and their owner and inherited them by
+# accident, which un-decorated this class and SSL-redirected all 23 of
+# its requests.
+@override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(LANGUAGE_CODE="en")
 class PopularDestinationAdminTests(TestCase):
     """Choosing, ordering and dropping the destinations the landing page shows.
 
