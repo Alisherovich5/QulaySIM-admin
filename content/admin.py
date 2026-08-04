@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db import transaction
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin
@@ -135,6 +135,28 @@ class PromoBannerAdmin(ModelAdmin):
         (_("Русский"), {"fields": ("eyebrow_ru", "title_ru", "text_ru")}),
         (_("Oʻzbekcha"), {"fields": ("eyebrow_uz", "title_uz", "text_uz")}),
     )
+
+    def save_model(self, request, obj, form, change):
+        """Name the banner the site will actually serve when several are active.
+
+        The API serves the most recently *updated* active banner, and
+        updated_at is auto_now — so fixing a typo on an old banner silently
+        steals the slot from the intended one. Nothing is deactivated here on
+        the admin's behalf; the ambiguity is named instead, with the winner,
+        so the operator can decide.
+        """
+        super().save_model(request, obj, form, change)
+        active = PromoBanner.objects.filter(is_active=True).order_by("-updated_at")
+        count = active.count()
+        if count > 1:
+            serving = active.first()
+            self.message_user(
+                request,
+                _(
+                    "{count} banners are active. The site shows the most recently saved one: “{title}”. Deactivate the rest if that is not the intention."
+                ).format(count=count, title=serving.title),
+                level=messages.WARNING,
+            )
 
     @display(description=_("Code"), ordering="promo_code__code")
     def code_col(self, obj):

@@ -303,3 +303,88 @@ class ESIMExpiryValidationTests(TestCase):
         with self.assertRaises(ValidationError) as caught:
             esim.full_clean()
         self.assertIn("expires_at", caught.exception.message_dict)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(LANGUAGE_CODE="en")
+class DashboardCogsTests(TestCase):
+    """Profit reporting must read the cost captured at the time of sale.
+
+    Joining the plan's *current* cost meant every supplier repricing silently
+    rewrote historical margins. Rows that predate the snapshot fall back to
+    today's cost — and the dashboard has to say that is an estimate.
+    """
+
+    def setUp(self):
+        self.customer = Customer.objects.create(
+            email="d@example.com", full_name="D", hashed_password="x", is_active=True
+        )
+        self.plan = Plan.objects.create(
+            title="Any 3GB",
+            validity_days=15,
+            cost_usd=Decimal("5.00"),
+            price_usd=Decimal("10.00"),
+            price_locked=True,
+        )
+        self.order = Order.objects.create(
+            customer=self.customer,
+            status=Order.Status.PAID,
+            subtotal=Decimal("10.00"),
+            total=Decimal("10.00"),
+            paid_at=timezone.now(),
+        )
+        self.item = OrderItem.objects.create(
+            order=self.order,
+            plan=self.plan,
+            unit_price=Decimal("10.00"),
+            unit_cost=Decimal("2.00"),
+            quantity=1,
+        )
+
+    def _context(self):
+        from config.dashboard import dashboard_callback
+
+        return dashboard_callback(RequestFactory().get("/"), {})
+
+    def test_cogs_reads_the_snapshot_not_todays_cost(self):
+        # The supplier reprices after the sale; history must not move.
+        self.plan.cost_usd = Decimal("7.00")
+        self.plan.save()
+
+        context = self._context()
+        self.assertEqual(context["fs_cost"], Decimal("2.00"))
+        self.assertEqual(context["fs_profit"], Decimal("8.00"))
+        self.assertFalse(context["fs_cost_estimated"])
+
+    def test_rows_without_a_snapshot_fall_back_and_are_flagged(self):
+        OrderItem.objects.create(
+            order=self.order,
+            plan=self.plan,
+            unit_price=Decimal("10.00"),
+            quantity=1,  # pre-snapshot row: unit_cost is NULL
+        )
+        context = self._context()
+        # 2.00 snapshotted + 5.00 estimated at today's plan cost.
+        self.assertEqual(context["fs_cost"], Decimal("7.00"))
+        self.assertTrue(context["fs_cost_estimated"])
+
+    def test_the_page_labels_the_estimate(self):
+        OrderItem.objects.create(
+            order=self.order, plan=self.plan, unit_price=Decimal("10.00"), quantity=1
+        )
+        User.objects.create_superuser("dash-admin", "da@example.com", "pw-for-tests-only")
+        self.client.force_login(User.objects.get(username="dash-admin"))
+
+        from django.urls import reverse
+
+        response = self.client.get(reverse("admin:index"))
+        self.assertContains(response, "estimated at today")
+
+    def test_fully_snapshotted_history_carries_no_estimate_label(self):
+        User.objects.create_superuser("dash-admin2", "d2@example.com", "pw-for-tests-only")
+        self.client.force_login(User.objects.get(username="dash-admin2"))
+
+        from django.urls import reverse
+
+        response = self.client.get(reverse("admin:index"))
+        self.assertNotContains(response, "estimated at today")

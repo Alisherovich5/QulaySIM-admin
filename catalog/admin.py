@@ -10,6 +10,25 @@ from .models import Country, Plan, PricingRule, Region, SupplierOffer
 from django.utils.translation import gettext_lazy as _
 
 
+def _site_name_expression():
+    """The country name the storefront sorts by, for the admin's language.
+
+    Mirrors the API's localised_country_name (app/repositories/catalog.py):
+    COALESCE(NULLIF(name_<lang>, ''), name). Position labels computed against
+    the English name told uz/ru staff a different order from the page they
+    were looking at whenever two promoted countries shared a sort_order.
+    Both sides compare text in the same Postgres collation, so the admin's
+    tiebreak now matches the site's exactly.
+    """
+    from django.db.models.functions import Coalesce, NullIf
+    from django.utils import translation
+
+    language = (translation.get_language() or "en").split("-")[0]
+    if language in ("uz", "ru"):
+        return Coalesce(NullIf(f"name_{language}", models.Value("")), "name")
+    return F("name")
+
+
 @admin.register(Region)
 class RegionAdmin(ModelAdmin):
     list_display = ("name", "name_uz", "name_ru", "slug", "country_count", "sort_order")
@@ -122,12 +141,19 @@ class CountryAdmin(ModelAdmin):
         # is_active is part of the filter because the storefront only ever lists
         # active countries: deactivating a promoted one used to leave every
         # country after it labelled one place too high.
-        promoted = Country.objects.filter(is_popular=True, is_active=True)
+        #
+        # Ties are broken by the same localised name the site sorts by, not by
+        # the English base name — see _site_name_expression.
+        site_name = _site_name_expression()
+        queryset = queryset.annotate(_site_name=site_name)
+        promoted = Country.objects.filter(is_popular=True, is_active=True).annotate(
+            _site_name=site_name
+        )
         earlier = promoted.filter(
             models.Q(sort_order__lt=models.OuterRef("sort_order"))
             | models.Q(
                 sort_order=models.OuterRef("sort_order"),
-                name__lt=models.OuterRef("name"),
+                _site_name__lt=models.OuterRef("_site_name"),
             )
         )
         return queryset.annotate(
@@ -204,35 +230,69 @@ class CountryAdmin(ModelAdmin):
         whichever way it was promoted.
         """
         if obj.is_popular and obj.sort_order == 0:
-            last = Country.objects.filter(is_popular=True).exclude(pk=obj.pk).aggregate(
-                Max("sort_order")
-            )["sort_order__max"]
-            obj.sort_order = (last or 0) + 1
+            # The promoted rows are locked while the next position is computed:
+            # a plain read-max-then-write let two concurrent promotions pick
+            # the same number. (FOR UPDATE cannot ride on an aggregate, so the
+            # values are locked and the max taken in Python.) The admin wraps
+            # this view in a transaction, which the lock requires.
+            taken = list(
+                Country.objects.select_for_update()
+                .filter(is_popular=True)
+                .exclude(pk=obj.pk)
+                .values_list("sort_order", flat=True)
+            )
+            obj.sort_order = max(taken, default=0) + 1
         super().save_model(request, obj, form, change)
+        # A tie cannot be forbidden outright — Postgres cannot defer a partial
+        # unique constraint, and reshuffles legitimately pass through ties —
+        # but a tie that is *saved* must not pass silently: the site falls back
+        # to alphabetical order, which is rarely what the operator meant.
+        if obj.is_popular:
+            clash = (
+                Country.objects.filter(is_popular=True, sort_order=obj.sort_order)
+                .exclude(pk=obj.pk)
+                .first()
+            )
+            if clash is not None:
+                self.message_user(
+                    request,
+                    _(
+                        "“{other}” already holds position {position}. The site breaks the tie by name; give one of them its own number."
+                    ).format(other=clash.name, position=obj.sort_order),
+                    level=messages.WARNING,
+                )
 
     # --- Landing-page promotion --------------------------------------------
 
     @admin.action(description=_("Promote to the landing page"), permissions=["change"])
     def promote(self, request, queryset):
+        from django.db import transaction
+
         added = [country for country in queryset if not country.is_popular]
-        last = (
-            Country.objects.filter(is_popular=True).aggregate(Max("sort_order"))[
-                "sort_order__max"
-            ]
-            or 0
-        )
-        for country in added:
-            country.is_popular = True
-            if country.sort_order == 0:
-                # Land at the end of the row instead of tying with every other
-                # unpromoted country at 0, which would leave the new position
-                # up to the alphabet.
-                last += 1
-                country.sort_order = last
-            # Saved one at a time rather than queryset.update(): post_save is
-            # what clears the storefront cache, and a bulk update fires none, so
-            # the site would keep serving the old row until the TTL ran out.
-            country.save(update_fields=["is_popular", "sort_order"])
+        # One transaction, and the promoted rows locked while the next
+        # positions are computed: actions run outside the changeform's
+        # transaction, and a plain read-max-then-write let two concurrent
+        # promotions land on the same number.
+        with transaction.atomic():
+            taken = list(
+                Country.objects.select_for_update()
+                .filter(is_popular=True)
+                .values_list("sort_order", flat=True)
+            )
+            last = max(taken, default=0)
+            for country in added:
+                country.is_popular = True
+                if country.sort_order == 0:
+                    # Land at the end of the row instead of tying with every
+                    # other unpromoted country at 0, which would leave the new
+                    # position up to the alphabet.
+                    last += 1
+                    country.sort_order = last
+                # Saved one at a time rather than queryset.update(): post_save
+                # is what clears the storefront cache, and a bulk update fires
+                # none, so the site would keep serving the old row until the
+                # TTL ran out.
+                country.save(update_fields=["is_popular", "sort_order"])
 
         if added:
             self.message_user(
@@ -790,26 +850,52 @@ class PricingRuleAdmin(ModelAdmin):
             rule.apply_to_plans()
 
     def get_queryset(self, request):
-        # Counting plans per row would be one query per rule. Tally the whole
-        # catalogue once and look the numbers up in memory instead.
-        qs = super().get_queryset(request).select_related("country")
-        plans = Plan.objects.filter(is_active=True)
-        self._plan_total = plans.count()
-        self._by_provider = dict(
-            plans.values_list("provider").annotate(c=Count("id")).values_list("provider", "c")
+        # Counted inside the queryset, not on `self`: a ModelAdmin is one
+        # shared instance across threads, so per-request tallies stored on it
+        # race — one admin's counts could render on another admin's page.
+        # Subqueries also keep this one query however many rules there are.
+        active = Plan.objects.filter(is_active=True).order_by()
+        total = (
+            active.annotate(_one=models.Value(1))
+            .values("_one")
+            .annotate(n=Count("pk"))
+            .values("n")
         )
-        self._by_country = dict(
-            plans.values_list("country_id").annotate(c=Count("id")).values_list("country_id", "c")
+        by_provider = (
+            active.filter(provider=models.OuterRef("provider"))
+            .values("provider")
+            .annotate(n=Count("pk"))
+            .values("n")
         )
-        return qs
+        by_country = (
+            active.filter(country_id=models.OuterRef("country_id"))
+            .values("country_id")
+            .annotate(n=Count("pk"))
+            .values("n")
+        )
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("country")
+            .annotate(
+                _affected=models.Case(
+                    models.When(
+                        scope=PricingRule.Scope.PROVIDER,
+                        then=models.Subquery(by_provider, output_field=models.IntegerField()),
+                    ),
+                    models.When(
+                        scope=PricingRule.Scope.COUNTRY,
+                        then=models.Subquery(by_country, output_field=models.IntegerField()),
+                    ),
+                    default=models.Subquery(total, output_field=models.IntegerField()),
+                )
+            )
+        )
 
-    @display(description=_("Plans covered"))
+    @display(description=_("Plans covered"), ordering="_affected")
     def affected(self, obj):
-        if obj.scope == PricingRule.Scope.PROVIDER:
-            return self._by_provider.get(obj.provider, 0)
-        if obj.scope == PricingRule.Scope.COUNTRY:
-            return self._by_country.get(obj.country_id, 0)
-        return self._plan_total
+        # NULL when the subquery matched no plans, which reads as 0.
+        return obj._affected or 0
 
     @admin.action(description=_("Recalculate every affected plan now"))
     def apply_to_catalogue(self, request, queryset):

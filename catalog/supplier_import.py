@@ -110,7 +110,7 @@ def plan_changes(prices: ParsedPrices, provider: str, *, iso2: Iterable[str] | N
             continue
 
         offer = existing_plan.offers.filter(provider=provider).first()
-        probe = _price_probe(existing_plan, cost)
+        probe = _price_probe(existing_plan, provider, cost)
         if offer is None:
             changes.append(
                 Change(country.name, label, "new-offer", code, cost,
@@ -127,18 +127,53 @@ def plan_changes(prices: ParsedPrices, provider: str, *, iso2: Iterable[str] | N
     return changes
 
 
-def _price_probe(plan: Plan, cost: Decimal) -> Decimal:
-    """What the retail price would become at this cost, without saving."""
+def _sourcing_after_apply(plan: Plan, provider: str, cost: Decimal):
+    """The (cost, provider) sourcing would settle on once this offer is written.
+
+    The uploaded price is only one entrant: on apply, resolve_sourcing picks
+    the cheapest *available, connected* offer across every supplier, so a
+    preview probing the uploaded cost alone promised price changes that apply
+    then refused to make — a cheaper surviving offer keeps winning, and an
+    upload for an unconnected supplier changes nothing at all.
+
+    Returns None when nothing connected would remain to source from, in which
+    case apply leaves the plan's cost and price exactly as they are.
+    """
+    from catalog.models import fulfillable_providers
+
+    usable = fulfillable_providers()
+    candidates = [
+        (offer.cost_usd, offer.provider)
+        for offer in plan.offers.all()
+        if offer.provider != provider and offer.is_available and offer.provider in usable
+    ]
+    if provider in usable:
+        candidates.append((cost, provider))
+    if not candidates:
+        return None
+    # (cost, provider) — the same stable tie-break ranked_offers uses.
+    return min(candidates)
+
+
+def _price_probe(plan: Plan, provider: str, cost: Decimal) -> Decimal:
+    """What the retail price would become after apply, without saving."""
+    sourcing = _sourcing_after_apply(plan, provider, cost)
+    if sourcing is None:
+        return plan.price_usd
+
+    winning_cost, winning_provider = sourcing
     probe = Plan(
         pk=plan.pk,
         country=plan.country,
         region=plan.region,
         title=plan.title,
-        cost_usd=cost,
+        cost_usd=winning_cost,
         markup_percent=plan.markup_percent,
         price_usd=plan.price_usd,
         price_locked=plan.price_locked,
-        provider=plan.provider,
+        # The provider matters too: a provider-scoped pricing rule prices the
+        # plan by whoever actually wins, not by whoever was uploaded.
+        provider=winning_provider,
     )
     probe.recalculate_price()
     return probe.price_usd

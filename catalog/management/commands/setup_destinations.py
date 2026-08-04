@@ -162,15 +162,20 @@ class Command(BaseCommand):
         wanted_ids: set[int] = set()
 
         for order, (name, _uz, region_slug, iso2) in enumerate(POPULAR, start=1):
-            country, made = Country.objects.get_or_create(
-                name=name,
-                defaults={
-                    "slug": slugify(name),
-                    "iso2": iso2,
-                    "region": regions[region_slug],
-                    "is_active": True,
-                },
-            )
+            # The same case-insensitive match the dry run reports on: an exact
+            # get_or_create next to a "turkey" already in the database would
+            # try to create a second "Turkey" and die on the slug constraint,
+            # rolling the whole apply back after the dry run said "exists".
+            country = Country.objects.filter(name__iexact=name).first()
+            made = country is None
+            if made:
+                country = Country(
+                    name=name,
+                    slug=slugify(name),
+                    iso2=iso2,
+                    region=regions[region_slug],
+                    is_active=True,
+                )
             if not made and not country.region_id:
                 country.region = regions[region_slug]
             country.is_popular = True

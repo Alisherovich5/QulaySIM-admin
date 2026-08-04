@@ -1866,3 +1866,252 @@ class SetupDestinationsCommandTests(TestCase):
         stale.refresh_from_db()
         self.assertFalse(stale.is_popular, "destinations off the list must be demoted")
         self.assertTrue(invalidate.called, "the demotion must reach the storefront cache")
+
+    def test_apply_reuses_a_case_differing_country(self):
+        """The dry run matches case-insensitively; apply used to match exactly,
+        so a "turkey" already in the database made apply create a second
+        "Turkey" and die on the slug constraint, rolling the whole run back."""
+        from unittest.mock import patch
+
+        for slug, name in (("europe", "Europe"), ("asia", "Asia"), ("middle-east", "Middle East")):
+            Region.objects.create(name=name, slug=slug)
+        existing = Country.objects.create(name="turkey", slug="turkey", iso2="TR")
+
+        with patch("config.cache.invalidate_catalogue"):
+            self._run_apply()
+
+        self.assertEqual(
+            Country.objects.filter(name__iexact="turkey").count(),
+            1,
+            "apply must reuse the existing row, not duplicate it",
+        )
+        existing.refresh_from_db()
+        self.assertTrue(existing.is_popular)
+        self.assertEqual(existing.sort_order, 1, "Turkey heads the promoted row")
+
+
+class PricingRuleCoverageColumnTests(TestCase):
+    """The "plans covered" counts must come from the queryset, not from state
+    stashed on the shared ModelAdmin instance — per-request attributes on it
+    race across threads, exactly the bug the country list was already cured of."""
+
+    def setUp(self):
+        from django.contrib.admin.sites import site
+
+        self.japan = Country.objects.create(name="Japan", slug="japan", iso2="JP")
+        self.turkey = Country.objects.create(name="Turkey", slug="turkey", iso2="TR")
+        for index in range(3):
+            Plan.objects.create(
+                title=f"JP {index}", country=self.japan, provider="esimaccess",
+                price_usd=Decimal("9.00"), price_locked=True,
+            )
+        Plan.objects.create(
+            title="TR 0", country=self.turkey, provider="mock",
+            price_usd=Decimal("9.00"), price_locked=True,
+        )
+        Plan.objects.create(
+            title="TR off", country=self.turkey, provider="mock",
+            price_usd=Decimal("9.00"), price_locked=True, is_active=False,
+        )
+        self.global_rule = PricingRule.objects.create(
+            scope="global", markup_percent=Decimal("20")
+        )
+        self.provider_rule = PricingRule.objects.create(
+            scope="provider", provider="esimaccess", markup_percent=Decimal("30")
+        )
+        self.country_rule = PricingRule.objects.create(
+            scope="country", country=self.turkey, markup_percent=Decimal("40")
+        )
+        self.model_admin = site._registry[PricingRule]
+
+    def _affected(self):
+        from django.test import RequestFactory
+
+        rows = self.model_admin.get_queryset(RequestFactory().get("/"))
+        return {rule.pk: self.model_admin.affected(rule) for rule in rows}
+
+    def test_counts_are_annotated_per_scope(self):
+        counts = self._affected()
+        self.assertEqual(counts[self.global_rule.pk], 4, "every active plan")
+        self.assertEqual(counts[self.provider_rule.pk], 3, "only its supplier's")
+        self.assertEqual(counts[self.country_rule.pk], 1, "inactive plans do not count")
+
+    def test_counts_live_on_the_rows_not_on_the_admin_instance(self):
+        self._affected()
+        for stale in ("_plan_total", "_by_provider", "_by_country"):
+            self.assertFalse(
+                hasattr(self.model_admin, stale),
+                f"{stale} kept on the shared admin instance races across requests",
+            )
+
+    def test_the_changelist_costs_one_query_however_many_rules(self):
+        from django.test import RequestFactory
+
+        queryset = self.model_admin.get_queryset(RequestFactory().get("/"))
+        with self.assertNumQueries(1):
+            rows = list(queryset)
+            for rule in rows:
+                self.model_admin.affected(rule)
+
+
+class LandingPositionLocalisationTests(TestCase):
+    """On a sort_order tie the storefront orders by the *localised* name, so
+    the admin's position labels must break the tie the same way — the English
+    name told uz staff a different order from the page they were looking at."""
+
+    def setUp(self):
+        # EN order: Germany < Iceland. UZ order: Islandiya < Olmoniya — inverted.
+        self.germany = Country.objects.create(
+            name="Germany", name_uz="Olmoniya", slug="germany", iso2="DE",
+            is_popular=True, sort_order=5,
+        )
+        self.iceland = Country.objects.create(
+            name="Iceland", name_uz="Islandiya", slug="iceland", iso2="IS",
+            is_popular=True, sort_order=5,
+        )
+
+    def _positions(self, language):
+        from django.contrib.admin.sites import site
+        from django.test import RequestFactory
+        from django.utils import translation
+
+        with translation.override(language):
+            rows = site._registry[Country].get_queryset(RequestFactory().get("/"))
+            return {country.name: country._landing_position or 0 for country in rows}
+
+    def test_english_ties_break_on_the_english_name(self):
+        positions = self._positions("en")
+        self.assertEqual(positions["Germany"], 0)
+        self.assertEqual(positions["Iceland"], 1)
+
+    def test_uzbek_ties_break_on_the_uzbek_name_like_the_site(self):
+        positions = self._positions("uz")
+        self.assertEqual(positions["Iceland"], 0, "Islandiya sorts before Olmoniya")
+        self.assertEqual(positions["Germany"], 1)
+
+    def test_a_blank_translation_falls_back_to_the_english_name(self):
+        Country.objects.filter(pk=self.iceland.pk).update(name_uz="")
+        positions = self._positions("uz")
+        # Iceland (fallback) vs Olmoniya: I < O, so the order happens to hold —
+        # what matters is that the blank column did not sort as ''.
+        self.assertEqual(positions["Iceland"], 0)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(LANGUAGE_CODE="en")
+class SortOrderTieWarningTests(TestCase):
+    """A saved tie cannot be forbidden outright — Postgres cannot defer a
+    partial unique constraint and reshuffles legitimately pass through ties —
+    but it must not pass silently either."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        self.turkey = Country.objects.create(
+            name="Turkey", slug="turkey", iso2="TR", is_popular=True, sort_order=1
+        )
+        self.japan = Country.objects.create(
+            name="Japan", slug="japan", iso2="JP", is_popular=True, sort_order=2
+        )
+        User.objects.create_superuser("tie-admin", "t@example.com", "pw-for-tests-only")
+        self.client.force_login(User.objects.get(username="tie-admin"))
+
+    def _save(self, country, sort_order):
+        from django.urls import reverse
+
+        return self.client.post(
+            reverse("admin:catalog_country_change", args=[country.pk]),
+            {
+                "name": country.name,
+                "name_uz": "",
+                "name_ru": "",
+                "slug": country.slug,
+                "iso2": country.iso2,
+                "region": "",
+                "is_popular": "on",
+                "is_active": "on",
+                "sort_order": str(sort_order),
+                "_save": "Save",
+            },
+            follow=True,
+        )
+
+    def test_saving_a_tie_names_the_country_already_there(self):
+        response = self._save(self.japan, 1)
+        messages = [str(m) for m in response.context["messages"]]
+        self.assertTrue(
+            any("Turkey" in m and "position 1" in m for m in messages),
+            f"expected a tie warning naming Turkey, got: {messages}",
+        )
+        self.japan.refresh_from_db()
+        self.assertEqual(self.japan.sort_order, 1, "the save itself must not be refused")
+
+    def test_a_unique_position_saves_without_a_warning(self):
+        response = self._save(self.japan, 7)
+        messages = [str(m) for m in response.context["messages"]]
+        self.assertFalse(any("already holds position" in m for m in messages))
+
+
+class SupplierImportPreviewAccuracyTests(TestCase):
+    """price_after must be what apply() will actually do, not what the uploaded
+    cost alone implies: sourcing picks the cheapest available *connected* offer
+    across every supplier, so a cheaper survivor keeps winning and an upload
+    for an unconnected supplier changes no price at all."""
+
+    def setUp(self):
+        PricingRule.objects.create(scope=PricingRule.Scope.GLOBAL, markup_percent=Decimal("30"))
+        self.turkey = Country.objects.create(name="Turkey", slug="turkey", iso2="TR")
+        self.plan = Plan.objects.create(
+            country=self.turkey,
+            title="Turkey 3GB",
+            data_amount_mb=3072,
+            validity_days=15,
+            price_usd=Decimal("0"),
+            cost_usd=Decimal("2.00"),
+        )
+        SupplierOffer.objects.create(
+            plan=self.plan, provider="esimaccess", package_code="TR_3_15", cost_usd=Decimal("2.00")
+        )
+        self.plan.refresh_from_db()
+        self.assertEqual(self.plan.price_usd, Decimal("2.60"))
+
+    def _prices(self, provider_cost):
+        from catalog import supplier_import
+
+        return supplier_import.parse(
+            "package_code,location,data_gb,days,cost_usd\n" + provider_cost
+        )
+
+    def test_an_unconnected_upload_previews_no_price_change_and_apply_agrees(self):
+        from catalog import supplier_import
+
+        prices = self._prices("tr-3gb,TR,3,15,1.50\n")
+        changes = supplier_import.plan_changes(prices, "esimcard")
+        (change,) = [c for c in changes if c.kind == "new-offer"]
+        self.assertEqual(change.price_after, Decimal("2.60"), "cheaper but unconnected")
+
+        supplier_import.apply(prices, "esimcard")
+        self.plan.refresh_from_db()
+        self.assertEqual(self.plan.price_usd, change.price_after)
+        self.assertEqual(self.plan.cost_usd, Decimal("2.00"))
+
+    @override_settings(FULFILLABLE_PROVIDERS=["esimaccess", "esimcard"])
+    def test_a_surviving_cheaper_offer_keeps_winning_in_the_preview(self):
+        from catalog import supplier_import
+
+        SupplierOffer.objects.create(
+            plan=self.plan, provider="esimcard", package_code="tr-3gb", cost_usd=Decimal("1.80")
+        )
+        self.plan.refresh_from_db()
+        self.assertEqual(self.plan.price_usd, Decimal("2.34"), "esimcard won on creation")
+
+        # Uploading a dearer eSIM Access price must not forecast from 2.50:
+        # the surviving 1.80 offer keeps the plan exactly where it is.
+        prices = self._prices("TR_3_15,TR,3,15,2.50\n")
+        changes = supplier_import.plan_changes(prices, "esimaccess")
+        (change,) = [c for c in changes if c.kind == "price-change"]
+        self.assertEqual(change.price_after, Decimal("2.34"))
+
+        supplier_import.apply(prices, "esimaccess")
+        self.plan.refresh_from_db()
+        self.assertEqual(self.plan.price_usd, change.price_after)

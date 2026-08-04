@@ -214,3 +214,78 @@ class TestimonialModerationActionTests(TestCase):
         row.refresh_from_db()
         self.assertTrue(row.is_active)
         self.assertEqual(row.moderation_status, Testimonial.ModerationStatus.APPROVED)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(LANGUAGE_CODE="en")
+class PromoBannerSlotWarningTests(TestCase):
+    """The API serves the most recently *updated* active banner, and updated_at
+    is auto_now — so editing an old active banner silently steals the slot.
+    Nothing is deactivated on the admin's behalf; the ambiguity is named, with
+    the winner, so the operator can decide."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        User.objects.create_superuser("banner-admin", "b@example.com", "pw-for-tests-only")
+        self.client.force_login(User.objects.get(username="banner-admin"))
+
+    def _post(self, url, *, title, active=True):
+        data = {
+            "promo_code": "",
+            "code": "WELCOME10",
+            "cta_link": "/destinations",
+            "strip_text": "",
+            "strip_text_ru": "",
+            "strip_text_uz": "",
+            "eyebrow": "Welcome",
+            "title": title,
+            "text": "Use {{code}}",
+            "eyebrow_ru": "",
+            "title_ru": "",
+            "text_ru": "",
+            "eyebrow_uz": "",
+            "title_uz": "",
+            "text_uz": "",
+            "_save": "Save",
+        }
+        if active:
+            data["is_active"] = "on"
+        return self.client.post(url, data, follow=True)
+
+    def test_a_second_active_banner_warns_and_names_the_one_that_serves(self):
+        from django.urls import reverse
+
+        PromoBanner.objects.create(eyebrow="E", title="Summer offer", text="X")
+        response = self._post(reverse("admin:content_promobanner_add"), title="Autumn offer")
+
+        messages = [str(m) for m in response.context["messages"]]
+        warning = [m for m in messages if "banners are active" in m]
+        self.assertTrue(warning, f"expected an ambiguity warning, got: {messages}")
+        # The banner just saved carries the newest updated_at, so it serves.
+        self.assertIn("Autumn offer", warning[0])
+        # Nothing was deactivated on the operator's behalf.
+        self.assertEqual(PromoBanner.objects.filter(is_active=True).count(), 2)
+
+    def test_the_only_active_banner_saves_without_a_warning(self):
+        from django.urls import reverse
+
+        response = self._post(reverse("admin:content_promobanner_add"), title="Solo offer")
+        messages = [str(m) for m in response.context["messages"]]
+        self.assertFalse(any("banners are active" in m for m in messages))
+
+    def test_editing_an_old_banner_names_it_as_the_new_winner(self):
+        from django.urls import reverse
+
+        older = PromoBanner.objects.create(eyebrow="E", title="Old faithful", text="X")
+        PromoBanner.objects.create(eyebrow="E", title="Current campaign", text="X")
+
+        # A typo fix on the older banner — auto_now silently hands it the slot.
+        response = self._post(
+            reverse("admin:content_promobanner_change", args=[older.pk]),
+            title="Old faithful",
+        )
+        messages = [str(m) for m in response.context["messages"]]
+        warning = [m for m in messages if "banners are active" in m]
+        self.assertTrue(warning)
+        self.assertIn("Old faithful", warning[0], "the edited banner now serves")

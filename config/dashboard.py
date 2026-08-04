@@ -33,11 +33,14 @@ def dashboard_callback(request, context):
                 revenue_buckets[day] += total or Decimal("0")
 
     # Cost of goods sold: what we paid suppliers for the eSIMs on paid orders.
+    # unit_cost is the snapshot taken at the time of sale; rows that predate
+    # the snapshot fall back to the plan's *current* cost, which is only an
+    # estimate — fs_cost_estimated below is what lets the page say so.
     cost_rows = (
         OrderItem.objects.filter(
             order__status=Order.Status.PAID, order__paid_at__date__gte=start
         )
-        .values_list("order__paid_at", "quantity", "plan__cost_usd")
+        .values_list("order__paid_at", "quantity", Coalesce("unit_cost", "plan__cost_usd"))
     )
     cost_buckets = {start + timedelta(days=i): Decimal("0") for i in range(14)}
     for paid_at, quantity, unit_cost in cost_rows:
@@ -80,13 +83,22 @@ def dashboard_callback(request, context):
     lifetime_cost = OrderItem.objects.filter(order__status=Order.Status.PAID).aggregate(
         c=Sum(
             ExpressionWrapper(
-                F("quantity") * Coalesce(F("plan__cost_usd"), Decimal("0")),
+                # The cost captured at the time of sale, when there is one;
+                # today's plan cost otherwise (an estimate, flagged below).
+                F("quantity")
+                * Coalesce(F("unit_cost"), F("plan__cost_usd"), Decimal("0")),
                 output_field=DecimalField(max_digits=12, decimal_places=2),
             )
         )
     )["c"] or Decimal("0")
     lifetime_profit = costed_revenue - lifetime_cost
     uncosted_revenue = revenue - costed_revenue
+    # True when any sold item predates the unit_cost snapshot: its share of
+    # the cost figures above is estimated at today's plan cost, and the page
+    # must say so rather than present a rewritten history as fact.
+    cost_estimated = OrderItem.objects.filter(
+        order__status=Order.Status.PAID, unit_cost__isnull=True
+    ).exists()
 
     # Margin spread across the live catalogue.
     priced = Plan.objects.filter(is_active=True, cost_usd__isnull=False)
@@ -217,6 +229,7 @@ def dashboard_callback(request, context):
             "fs_recent_orders": recent_orders,
             # Profitability
             "fs_cost": lifetime_cost,
+            "fs_cost_estimated": cost_estimated,
             "fs_profit": lifetime_profit,
             "fs_margin_percent": (
                 round(lifetime_profit / costed_revenue * 100, 1) if costed_revenue else 0

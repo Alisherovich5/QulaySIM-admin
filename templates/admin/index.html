@@ -94,6 +94,10 @@
         <div><span style="color:var(--qs-ink-soft);">{% trans "Revenue" %}</span> <b style="color:var(--qs-ink);">${{ fs_period_revenue|floatformat:2 }}</b></div>
         <div><span style="color:var(--qs-ink-soft);">{% trans "Cost" %}</span> <b style="color:var(--qs-ink);">${{ fs_period_cost|floatformat:2 }}</b></div>
         <div><span style="color:var(--qs-ink-soft);">{% trans "Profit" %}</span> <b style="color:var(--qs-teal-text);">${{ fs_period_profit|floatformat:2 }}</b></div>
+        {% if fs_cost_estimated %}
+        {# Items sold before the unit-cost snapshot existed carry no cost of their own. #}
+        <div style="font-size:11px;color:var(--qs-ink-mute);align-self:center;">≈ {% trans "estimated at today's cost" %}</div>
+        {% endif %}
       </div>
       <div style="display:flex;align-items:flex-end;gap:6px;height:180px;margin-top:16px;">
         {% for d in fs_chart %}
@@ -150,7 +154,7 @@
       </svg>
       <ul class="qs-legend">
         <li><span class="qs-name">{% trans "Profit" %}</span><span class="qs-val">${{ fs_profit|floatformat:2 }}</span></li>
-        <li><span class="qs-name">{% trans "Supplier cost" %}</span><span class="qs-val">${{ fs_cost|floatformat:2 }}</span></li>
+        <li><span class="qs-name">{% trans "Supplier cost" %}</span><span class="qs-val">${{ fs_cost|floatformat:2 }}{% if fs_cost_estimated %} <span style="font-size:10px;color:var(--qs-ink-mute);" >≈ {% trans "estimated at today's cost" %}</span>{% endif %}</span></li>
         {% if fs_uncosted_revenue %}
         <li title="{% trans 'Orders with no line items carry no traceable cost, so they are left out of the ratio rather than counted as pure profit.' %}">
           <span class="qs-name" style="color:var(--viz-caution-ink);">{% trans "Excluded — no cost data" %}</span>

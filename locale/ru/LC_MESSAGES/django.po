@@ -159,6 +159,18 @@ msgid "not connected"
 msgstr "не подключён"
 
 #: catalog/admin.py
+msgid "“{other}” already holds position {position}. The site breaks the tie by name; give one of them its own number."
+msgstr "«{other}» уже занимает позицию {position}. При совпадении сайт сортирует по названию; дайте одному из них собственный номер."
+
+#: content/admin.py
+msgid "{count} banners are active. The site shows the most recently saved one: “{title}”. Deactivate the rest if that is not the intention."
+msgstr "Активных баннеров: {count}. Сайт показывает сохранённый последним: «{title}». Отключите остальные, если это не входило в планы."
+
+#: templates/admin/index.html
+msgid "estimated at today's cost"
+msgstr "оценка по сегодняшней цене"
+
+#: catalog/admin.py
 msgid "no connected supplier"
 msgstr "нет подключённого поставщика"
 
@@ -2260,6 +2272,14 @@ msgstr "заказ"
 #: orders/models.py:96
 msgid "orders"
 msgstr "заказы"
+
+#: orders/models.py
+msgid "unit cost"
+msgstr "себестоимость за единицу"
+
+#: orders/models.py
+msgid "Supplier cost per unit at the time of sale."
+msgstr "Себестоимость у поставщика за единицу на момент продажи."
 
 #: orders/models.py:106
 msgid "unit price"

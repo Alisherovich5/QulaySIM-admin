@@ -160,6 +160,18 @@ msgid "not connected"
 msgstr "ulanmagan"
 
 #: catalog/admin.py
+msgid "“{other}” already holds position {position}. The site breaks the tie by name; give one of them its own number."
+msgstr "“{other}” allaqachon {position}-o‘rinda turibdi. Sayt tenglikni nom bo‘yicha ajratadi; ulardan biriga alohida raqam bering."
+
+#: content/admin.py
+msgid "{count} banners are active. The site shows the most recently saved one: “{title}”. Deactivate the rest if that is not the intention."
+msgstr "{count} ta banner faol. Saytda eng so‘nggi saqlangani ko‘rsatiladi: “{title}”. Niyat bu bo‘lmasa, qolganlarini o‘chirib qo‘ying."
+
+#: templates/admin/index.html
+msgid "estimated at today's cost"
+msgstr "bugungi narx bo‘yicha taxmin"
+
+#: catalog/admin.py
 msgid "no connected supplier"
 msgstr "ulangan ta’minotchi yo‘q"
 
@@ -2269,6 +2281,14 @@ msgstr "buyurtma"
 #: orders/models.py:96
 msgid "orders"
 msgstr "buyurtmalar"
+
+#: orders/models.py
+msgid "unit cost"
+msgstr "dona tannarxi"
+
+#: orders/models.py
+msgid "Supplier cost per unit at the time of sale."
+msgstr "Sotuv paytidagi bir dona uchun ta’minotchi tannarxi."
 
 #: orders/models.py:106
 msgid "unit price"

@@ -66,7 +66,13 @@ def run():
             Order.objects.filter(pk=order.pk).update(created_at=when)
 
             OrderItem.objects.create(
-                order=order, plan=plan, unit_price=plan.price_usd, quantity=qty
+                order=order,
+                plan=plan,
+                unit_price=plan.price_usd,
+                # Snapshot the cost at "sale" time, as real fulfilment does:
+                # demo margins must not drift when supplier prices move later.
+                unit_cost=plan.cost_usd,
+                quantity=qty,
             )
             Payment.objects.create(
                 order=order,

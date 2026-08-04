@@ -149,6 +149,20 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items", verbose_name=_("order"))
     plan = models.ForeignKey(Plan, on_delete=models.PROTECT, related_name="order_items", verbose_name=_("plan"))
     unit_price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name=_("unit price"))
+    # What the supplier charged at the time of sale. Profit reporting reads
+    # this; without it the dashboard joined the plan's *current* cost, so every
+    # supplier repricing silently rewrote historical margins. Nullable because
+    # rows predate the column — reporting falls back to today's plan cost for
+    # those and says so. The API's fulfilment path is expected to write it for
+    # new orders; nothing in this admin creates order items.
+    unit_cost = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_("Supplier cost per unit at the time of sale."),
+        verbose_name=_("unit cost"),
+    )
     quantity = models.PositiveIntegerField(default=1, verbose_name=_("quantity"))
 
     class Meta:
