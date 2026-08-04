@@ -5,7 +5,7 @@ from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 
-from .models import ESIM, Order, OrderItem, Payment, PaymeTransaction, PromoCode
+from .models import ESIM, AtmosTransaction, Order, OrderItem, Payment, PaymeTransaction, PromoCode
 from django.utils.translation import gettext_lazy as _
 
 # (ink, wash) per status. A wash behind coloured ink reads in both themes;
@@ -224,4 +224,46 @@ class PaymeTransactionAdmin(ModelAdmin):
             ink,
             wash,
             obj.get_state_display(),
+        )
+
+
+@admin.register(AtmosTransaction)
+class AtmosTransactionAdmin(ModelAdmin):
+    """Read-only for the same reason PaymeTransactionAdmin is: the gateway
+    reconciles against these rows, and an edited or deleted one answers its
+    retries and statements with a record it no longer recognises."""
+
+    list_display = ("transaction_id", "order", "amount_display", "status_badge", "created_at")
+    list_filter = ("status", "created_at")
+    search_fields = ("transaction_id", "order__id", "account")
+    ordering = ("-created_at",)
+    list_select_related = ("order",)
+    readonly_fields = tuple(f.name for f in AtmosTransaction._meta.fields)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    @display(description=_("Amount"))
+    def amount_display(self, obj):
+        return f"{obj.amount_uzs:,.2f} so‘m"
+
+    @display(description=_("Status"), ordering="status")
+    def status_badge(self, obj):
+        styles = {
+            AtmosTransaction.Status.CONFIRMED: ("var(--qs-teal-text)", "var(--qs-good-wash)"),
+            AtmosTransaction.Status.REJECTED: ("var(--qs-bad-text)", "var(--qs-bad-wash)"),
+        }
+        ink, wash = styles.get(obj.status, _NEUTRAL_STYLE)
+        return format_html(
+            '<span style="display:inline-block;padding:2px 10px;border-radius:999px;'
+            'font-size:11px;font-weight:700;color:{};background:{};">{}</span>',
+            ink,
+            wash,
+            obj.get_status_display(),
         )

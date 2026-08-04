@@ -2697,3 +2697,12 @@ msgstr "Buyurtma"
 #: templates/admin/index.html:284
 msgid "Total"
 msgstr "Jami"
+
+msgid "ATMOS transaction"
+msgstr "ATMOS tranzaksiyasi"
+
+msgid "ATMOS transactions"
+msgstr "ATMOS tranzaksiyalari"
+
+msgid "The account value ATMOS sent."
+msgstr "ATMOS yuborgan account qiymati."

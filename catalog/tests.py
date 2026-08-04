@@ -2052,6 +2052,47 @@ class SortOrderTieWarningTests(TestCase):
         self.assertFalse(any("already holds position" in m for m in messages))
 
 
+class SyncCommandForecastTests(TestCase):
+    """The console dry-run's forecast must be the same arithmetic the admin
+    preview was fixed to use — apply's real outcome, connected suppliers only,
+    surviving offers included. It was the one probe still pricing the cheapest
+    upload naively."""
+
+    def setUp(self):
+        PricingRule.objects.create(scope=PricingRule.Scope.GLOBAL, markup_percent=Decimal("30"))
+        country = Country.objects.create(name="Turkey", slug="turkey", iso2="TR")
+        self.plan = Plan.objects.create(
+            country=country,
+            title="Turkey 3GB",
+            data_amount_mb=3072,
+            validity_days=15,
+            price_usd=Decimal("0"),
+            cost_usd=Decimal("2.00"),
+        )
+        SupplierOffer.objects.create(
+            plan=self.plan, provider="esimaccess", package_code="TR_3_15", cost_usd=Decimal("2.00")
+        )
+        self.plan.refresh_from_db()
+
+    def test_dry_run_forecast_matches_apply(self):
+        import tempfile
+        from io import StringIO
+        from pathlib import Path as P
+
+        from django.core.management import call_command
+
+        # A cheaper esimcard upload: unconnected, so apply will change nothing —
+        # the naive probe used to promise $1.95 here.
+        with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False) as fh:
+            fh.write("package_code,location,data_gb,days,cost_usd\ntr-3gb,TR,3,15,1.50\n")
+            path = P(fh.name)
+        out = StringIO()
+        call_command("sync_supplier_prices", esimcard=path, stdout=out)
+        report = out.getvalue()
+        self.assertIn("$2.60 = $2.60", report.replace("  ", " "))
+        self.assertNotIn("1.95", report)
+
+
 class SupplierImportPreviewAccuracyTests(TestCase):
     """price_after must be what apply() will actually do, not what the uploaded
     cost alone implies: sourcing picks the cheapest available *connected* offer

@@ -309,3 +309,47 @@ class PaymeTransaction(models.Model):
         from decimal import Decimal
 
         return Decimal(self.amount_tiyin) / 100
+
+
+class AtmosTransaction(models.Model):
+    """An ATMOS transaction against an order.
+
+    ATMOS confirms a payment only after our Callback API answers
+    {"status": 1}, and it may retry the callback — so `transaction_id` (the
+    identifier ATMOS assigns) is unique and the API-side handler is written to
+    be replayable. Unlike Payme there is no provider-driven state machine to
+    mirror: a callback either confirmed the order or was rejected, and that
+    verdict never changes from our side. The FastAPI service maps this table
+    column-for-column; renaming anything here breaks the API's model.
+    """
+
+    class Status(models.TextChoices):
+        CONFIRMED = "confirmed", "Confirmed"
+        REJECTED = "rejected", "Rejected"
+
+    order = models.ForeignKey(
+        Order, on_delete=models.PROTECT, related_name="atmos_transactions",
+        verbose_name=_("order"),
+    )
+    transaction_id = models.CharField(max_length=64, unique=True, verbose_name=_("transaction id"))
+    # ATMOS, like Payme, works in tiyin (1 UZS = 100 tiyin) and sends integers.
+    amount_tiyin = models.BigIntegerField(verbose_name=_("amount tiyin"))
+    account = models.CharField(max_length=64, help_text=_("The account value ATMOS sent."), verbose_name=_("account"))
+    status = models.CharField(max_length=16, choices=Status.choices, verbose_name=_("status"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("updated at"))
+
+    class Meta:
+        db_table = "orders_atmostransaction"
+        verbose_name = _("ATMOS transaction")
+        verbose_name_plural = _("ATMOS transactions")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"ATMOS {self.transaction_id} — order #{self.order_id} ({self.get_status_display()})"
+
+    @property
+    def amount_uzs(self):
+        from decimal import Decimal
+
+        return Decimal(self.amount_tiyin) / 100

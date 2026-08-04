@@ -15,7 +15,15 @@ from django.utils import timezone
 
 from catalog.models import Country, Plan
 from customers.models import Customer
-from orders.models import ESIM, Order, OrderItem, PaymeTransaction, PromoCode
+from django.db import transaction
+from orders.models import (
+    ESIM,
+    AtmosTransaction,
+    Order,
+    OrderItem,
+    PaymeTransaction,
+    PromoCode,
+)
 
 
 class PromoCodeNormalisationTests(TestCase):
@@ -262,6 +270,65 @@ class PaymeTransactionAdminTests(TestCase):
         # Belt and braces: the delete lock must not have loosened the others.
         self.assertFalse(self.model_admin.has_add_permission(self.request))
         self.assertFalse(self.model_admin.has_change_permission(self.request))
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class AtmosTransactionTests(TestCase):
+    """Same posture as Payme: the gateway reconciles against these rows, so the
+    admin may look but never touch, and a replayed callback must collide with
+    the unique transaction_id instead of double-recording a payment."""
+
+    def setUp(self):
+        self.superuser = User.objects.create_superuser(
+            "atmos-admin", "a@example.com", "pw-for-tests-only"
+        )
+        self.request = RequestFactory().get("/")
+        self.request.user = self.superuser
+        self.model_admin = site._registry[AtmosTransaction]
+        customer = Customer.objects.create(
+            email="at@example.com", full_name="A", hashed_password="x", is_active=True
+        )
+        self.order = Order.objects.create(customer=customer)
+
+    def test_round_trip_and_unique_transaction_id(self):
+        AtmosTransaction.objects.create(
+            order=self.order,
+            transaction_id="atmos-1",
+            amount_tiyin=250000,
+            account=str(self.order.pk),
+            status=AtmosTransaction.Status.CONFIRMED,
+        )
+        stored = AtmosTransaction.objects.get(transaction_id="atmos-1")
+        self.assertEqual(stored.order_id, self.order.pk)
+        with self.assertRaises(Exception):
+            with transaction.atomic():
+                AtmosTransaction.objects.create(
+                    order=self.order,
+                    transaction_id="atmos-1",
+                    amount_tiyin=250000,
+                    account=str(self.order.pk),
+                    status=AtmosTransaction.Status.CONFIRMED,
+                )
+
+    def test_admin_is_fully_locked(self):
+        self.assertFalse(self.model_admin.has_add_permission(self.request))
+        self.assertFalse(self.model_admin.has_change_permission(self.request))
+        self.assertFalse(self.model_admin.has_delete_permission(self.request))
+
+    def test_changelist_renders(self):
+        AtmosTransaction.objects.create(
+            order=self.order,
+            transaction_id="atmos-2",
+            amount_tiyin=100000,
+            account=str(self.order.pk),
+            status=AtmosTransaction.Status.REJECTED,
+        )
+        self.client.force_login(self.superuser)
+        from django.urls import reverse
+
+        response = self.client.get(reverse("admin:orders_atmostransaction_changelist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "atmos-2")
 
 
 class ESIMExpiryValidationTests(TestCase):

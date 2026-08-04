@@ -21,6 +21,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from catalog.models import Plan, SupplierOffer
+from catalog.supplier_import import price_probe_for_uploads
 
 
 def _read_csv(path: Path) -> list[dict]:
@@ -165,29 +166,26 @@ class Command(BaseCommand):
         for plan in by_plan.values():
             if shown >= limit:
                 break
-            cheapest = min(
-                (p[3] for p in planned if p[0].pk == plan.pk),
-                default=None,
-            )
-            if cheapest is None:
+            # Every upload this run holds for the plan, keyed by supplier —
+            # the probe weighs them against the plan's surviving connected
+            # offers exactly the way apply will. The old forecast priced the
+            # cheapest upload directly, so it promised drops that apply then
+            # refused (a cheaper surviving offer keeps winning) and priced
+            # from suppliers fulfilment cannot buy from.
+            uploads: dict[str, Decimal] = {}
+            for p_plan, p_provider, _code, p_cost, _prev in planned:
+                if p_plan.pk != plan.pk:
+                    continue
+                if p_provider not in uploads or p_cost < uploads[p_provider]:
+                    uploads[p_provider] = p_cost
+            if not uploads:
                 continue
             before = plan.price_usd
-            probe = Plan(
-                pk=plan.pk,
-                country=plan.country,
-                region=plan.region,
-                title=plan.title,
-                cost_usd=cheapest,
-                markup_percent=plan.markup_percent,
-                price_usd=plan.price_usd,
-                price_locked=plan.price_locked,
-                provider=plan.provider,
-            )
-            probe.recalculate_price()
-            arrow = "→" if probe.price_usd != before else "="
+            after = price_probe_for_uploads(plan, uploads)
+            arrow = "→" if after != before else "="
+            offered = ", ".join(f"{prov} ${cost}" for prov, cost in sorted(uploads.items()))
             self.stdout.write(
-                f"  {plan.title[:34]:<35} ${before} {arrow} ${probe.price_usd}"
-                f"   (cost ${plan.cost_usd} → ${cheapest})"
+                f"  {plan.title[:34]:<35} ${before} {arrow} ${after}   ({offered})"
             )
             shown += 1
         if len(by_plan) > shown:

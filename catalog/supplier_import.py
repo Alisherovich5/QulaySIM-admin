@@ -127,14 +127,18 @@ def plan_changes(prices: ParsedPrices, provider: str, *, iso2: Iterable[str] | N
     return changes
 
 
-def _sourcing_after_apply(plan: Plan, provider: str, cost: Decimal):
-    """The (cost, provider) sourcing would settle on once this offer is written.
+def sourcing_after_uploads(plan: Plan, uploads: dict[str, Decimal]):
+    """The (cost, provider) sourcing would settle on once these offers land.
 
-    The uploaded price is only one entrant: on apply, resolve_sourcing picks
+    The uploaded prices are only entrants: on apply, resolve_sourcing picks
     the cheapest *available, connected* offer across every supplier, so a
     preview probing the uploaded cost alone promised price changes that apply
     then refused to make — a cheaper surviving offer keeps winning, and an
     upload for an unconnected supplier changes nothing at all.
+
+    Takes a mapping rather than one (provider, cost) because
+    sync_supplier_prices can feed both wholesalers to one plan in a single
+    run, and its forecast has to weigh them together, exactly as apply will.
 
     Returns None when nothing connected would remain to source from, in which
     case apply leaves the plan's cost and price exactly as they are.
@@ -145,19 +149,24 @@ def _sourcing_after_apply(plan: Plan, provider: str, cost: Decimal):
     candidates = [
         (offer.cost_usd, offer.provider)
         for offer in plan.offers.all()
-        if offer.provider != provider and offer.is_available and offer.provider in usable
+        if offer.provider not in uploads and offer.is_available and offer.provider in usable
     ]
-    if provider in usable:
-        candidates.append((cost, provider))
+    candidates.extend(
+        (cost, provider) for provider, cost in uploads.items() if provider in usable
+    )
     if not candidates:
         return None
     # (cost, provider) — the same stable tie-break ranked_offers uses.
     return min(candidates)
 
 
-def _price_probe(plan: Plan, provider: str, cost: Decimal) -> Decimal:
+def _sourcing_after_apply(plan: Plan, provider: str, cost: Decimal):
+    return sourcing_after_uploads(plan, {provider: cost})
+
+
+def price_probe_for_uploads(plan: Plan, uploads: dict[str, Decimal]) -> Decimal:
     """What the retail price would become after apply, without saving."""
-    sourcing = _sourcing_after_apply(plan, provider, cost)
+    sourcing = sourcing_after_uploads(plan, uploads)
     if sourcing is None:
         return plan.price_usd
 
@@ -177,6 +186,10 @@ def _price_probe(plan: Plan, provider: str, cost: Decimal) -> Decimal:
     )
     probe.recalculate_price()
     return probe.price_usd
+
+
+def _price_probe(plan: Plan, provider: str, cost: Decimal) -> Decimal:
+    return price_probe_for_uploads(plan, {provider: cost})
 
 
 @transaction.atomic

@@ -2713,3 +2713,12 @@ msgstr "Заказ"
 #: templates/admin/index.html:284
 msgid "Total"
 msgstr "Итого"
+
+msgid "ATMOS transaction"
+msgstr "Транзакция ATMOS"
+
+msgid "ATMOS transactions"
+msgstr "Транзакции ATMOS"
+
+msgid "The account value ATMOS sent."
+msgstr "Значение account, которое прислал ATMOS."
