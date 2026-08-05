@@ -666,6 +666,10 @@ class PlanAdminRenderTests(TestCase):
         self.assertContains(response, "ordered from here")
         self.assertContains(response, "fallback")
 
+    # eSIMCard is a connected supplier now, so "unconnected" has to be stated
+    # rather than assumed: this pins what happens to an offer outside
+    # FULFILLABLE_PROVIDERS, whoever that happens to be.
+    @override_settings(FULFILLABLE_PROVIDERS=["esimaccess"])
     def test_change_page_marks_an_unconnected_supplier(self):
         """A cheaper offer from a supplier the API cannot buy from must not be
         presented as the source or as a usable fallback."""
@@ -713,6 +717,10 @@ class PlanAdminRenderTests(TestCase):
         self.assertContains(response, "eSIMCard")
         self.assertContains(response, "$0.75")
 
+    # eSIMCard is a connected supplier now, so "unconnected" has to be stated
+    # rather than assumed: this pins what happens to an offer outside
+    # FULFILLABLE_PROVIDERS, whoever that happens to be.
+    @override_settings(FULFILLABLE_PROVIDERS=["esimaccess"])
     def test_changelist_names_the_cheaper_unconnected_supplier(self):
         """The connected winner is the source; the cheaper unconnected offer is
         named so the saving is visible the day its integration lands."""
@@ -1634,8 +1642,9 @@ class SupplierImportPageTests(TestCase):
 class FulfillabilityTests(TestCase):
     """Sourcing must never route to a supplier the API cannot order from.
 
-    The backend registers its supplier integrations (only eSIM Access today);
-    a plan priced from anyone else is either sold at a loss — the paid order
+    The backend registers its supplier integrations — eSIM Access and eSIMCard
+    today — and a plan priced from anyone else is either sold at a loss (the
+    paid order
     falls back to the dearer connected route — or, with no connected offer at
     all, paid for and never provisioned. Offers from unconnected suppliers
     stay on file for comparison, and FULFILLABLE_PROVIDERS is the switch that
@@ -1663,6 +1672,10 @@ class FulfillabilityTests(TestCase):
             is_available=available,
         )
 
+    # eSIMCard is a connected supplier now, so "unconnected" has to be stated
+    # rather than assumed: this pins what happens to an offer outside
+    # FULFILLABLE_PROVIDERS, whoever that happens to be.
+    @override_settings(FULFILLABLE_PROVIDERS=["esimaccess"])
     def test_a_cheaper_unconnected_offer_does_not_take_over(self):
         self._offer("esimaccess", "4.20")
         self._offer("esimcard", "3.80")
@@ -1675,6 +1688,10 @@ class FulfillabilityTests(TestCase):
         self.assertEqual(self.plan.provider_package_code, "ESIMACCESS-TR-5-30")
         self.assertEqual(self.plan.price_usd, Decimal("6.30"))
 
+    # eSIMCard is a connected supplier now, so "unconnected" has to be stated
+    # rather than assumed: this pins what happens to an offer outside
+    # FULFILLABLE_PROVIDERS, whoever that happens to be.
+    @override_settings(FULFILLABLE_PROVIDERS=["esimaccess"])
     def test_only_unconnected_offers_leave_the_plan_untouched(self):
         self._offer("esimcard", "3.80")
 
@@ -1749,6 +1766,10 @@ class FulfilmentBadgeTests(TestCase):
         User.objects.create_superuser("badge-admin", "b@example.com", "pw-for-tests-only")
         self.client.force_login(User.objects.get(username="badge-admin"))
 
+    # eSIMCard is a connected supplier now, so "unconnected" has to be stated
+    # rather than assumed: this pins what happens to an offer outside
+    # FULFILLABLE_PROVIDERS, whoever that happens to be.
+    @override_settings(FULFILLABLE_PROVIDERS=["esimaccess"])
     def test_the_changelist_badges_the_stranded_plan(self):
         from django.urls import reverse
 
@@ -1756,6 +1777,10 @@ class FulfilmentBadgeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "no connected supplier")
 
+    # eSIMCard is a connected supplier now, so "unconnected" has to be stated
+    # rather than assumed: this pins what happens to an offer outside
+    # FULFILLABLE_PROVIDERS, whoever that happens to be.
+    @override_settings(FULFILLABLE_PROVIDERS=["esimaccess"])
     def test_a_plan_with_a_connected_route_carries_no_badge(self):
         from django.contrib.admin.sites import site
 
@@ -2074,6 +2099,10 @@ class SyncCommandForecastTests(TestCase):
         )
         self.plan.refresh_from_db()
 
+    # eSIMCard is a connected supplier now, so "unconnected" has to be stated
+    # rather than assumed: this pins what happens to an offer outside
+    # FULFILLABLE_PROVIDERS, whoever that happens to be.
+    @override_settings(FULFILLABLE_PROVIDERS=["esimaccess"])
     def test_dry_run_forecast_matches_apply(self):
         import tempfile
         from io import StringIO
@@ -2123,6 +2152,10 @@ class SupplierImportPreviewAccuracyTests(TestCase):
             "package_code,location,data_gb,days,cost_usd\n" + provider_cost
         )
 
+    # eSIMCard is a connected supplier now, so "unconnected" has to be stated
+    # rather than assumed: this pins what happens to an offer outside
+    # FULFILLABLE_PROVIDERS, whoever that happens to be.
+    @override_settings(FULFILLABLE_PROVIDERS=["esimaccess"])
     def test_an_unconnected_upload_previews_no_price_change_and_apply_agrees(self):
         from catalog import supplier_import
 

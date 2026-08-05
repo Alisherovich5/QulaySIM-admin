@@ -146,9 +146,16 @@ ADMIN_URL_PATH = config("ADMIN_URL_PATH", default="admin")
 # suppliers may be recorded for price comparison, but they must never win a
 # plan's sourcing: a plan priced from a supplier we cannot buy from is either
 # sold at a loss (the order falls back to a dearer route) or, with no fallback,
-# paid for and never provisioned. When eSIMCard's API is connected, adding
-# "esimcard" here re-enables it everywhere at once.
-FULFILLABLE_PROVIDERS = config("FULFILLABLE_PROVIDERS", default="esimaccess", cast=Csv())
+# paid for and never provisioned.
+#
+# eSIMCard joined the list once its ordering code existed (an API client, and the
+# purchase ledger that stops a retry buying a second eSIM from an endpoint with no
+# idempotency key). Listed here means "we have code that can buy from it" and
+# nothing more — the API still needs a token in the backend's environment and a
+# funded wallet, and neither of those is something this setting can know about.
+FULFILLABLE_PROVIDERS = config(
+    "FULFILLABLE_PROVIDERS", default="esimaccess,esimcard", cast=Csv()
+)
 
 # ---------------------------------------------------------------------------
 # Brute-force protection (django-axes)

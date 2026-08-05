@@ -5,7 +5,16 @@ from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 
-from .models import ESIM, AtmosTransaction, Order, OrderItem, Payment, PaymeTransaction, PromoCode
+from .models import (
+    ESIM,
+    AtmosTransaction,
+    Order,
+    OrderItem,
+    Payment,
+    PaymeTransaction,
+    PromoCode,
+    SupplierPurchase,
+)
 from django.utils.translation import gettext_lazy as _
 
 # (ink, wash) per status. A wash behind coloured ink reads in both themes;
@@ -266,4 +275,50 @@ class AtmosTransactionAdmin(ModelAdmin):
             ink,
             wash,
             obj.get_status_display(),
+        )
+
+
+@admin.register(SupplierPurchase)
+class SupplierPurchaseAdmin(ModelAdmin):
+    """The retry ledger. Read-only, and the one place a stuck purchase shows up.
+
+    Editing a row here would defeat the constraint it exists to enforce: setting
+    a claimed row to "done" by hand tells fulfilment an eSIM was delivered that
+    nobody has, and deleting one lets the next retry buy a second copy.
+
+    A row sitting in "Claimed" is the thing worth watching — it means money may
+    have left the account without an eSIM to show for it, and it needs checking
+    against the supplier's own list rather than guessing.
+    """
+
+    list_display = ("created_at", "order", "provider", "line_key", "state_badge", "supplier_ref")
+    list_filter = ("provider", "state", "created_at")
+    search_fields = ("order__id", "supplier_ref", "iccid", "package_code")
+    ordering = ("-created_at",)
+    list_select_related = ("order",)
+    readonly_fields = tuple(f.name for f in SupplierPurchase._meta.fields)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    @display(description=_("State"), ordering="state")
+    def state_badge(self, obj):
+        styles = {
+            SupplierPurchase.State.DONE: ("var(--qs-teal-text)", "var(--qs-good-wash)"),
+            SupplierPurchase.State.CLAIMED: ("var(--qs-accent-text)", "var(--qs-warn-wash)"),
+            SupplierPurchase.State.FAILED: ("var(--qs-bad-text)", "var(--qs-bad-wash)"),
+        }
+        ink, wash = styles.get(obj.state, _NEUTRAL_STYLE)
+        return format_html(
+            '<span style="display:inline-block;padding:2px 10px;border-radius:999px;'
+            'font-size:11px;font-weight:700;color:{};background:{};">{}</span>',
+            ink,
+            wash,
+            obj.get_state_display(),
         )

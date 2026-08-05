@@ -311,6 +311,73 @@ class PaymeTransaction(models.Model):
         return Decimal(self.amount_tiyin) / 100
 
 
+class SupplierPurchase(models.Model):
+    """One unit bought from a wholesaler — the ledger that makes retries safe.
+
+    eSIM Access deduplicates a repeated order by the transaction id we send it,
+    so a retry there is harmless. eSIMCard's purchase endpoint takes nothing but
+    a package id: call it twice and you have bought two eSIMs and paid for both.
+    Since a Celery retry is a normal event, the only place that duplicate can be
+    prevented is here.
+
+    The unique constraint IS the lock. Fulfilment claims a row per unit before
+    it spends money; a second attempt collides instead of buying again, and the
+    row's state says what happened to the first one:
+
+      claimed — money may or may not have been spent. Deliberately NOT retried
+                automatically: guessing wrong costs a real purchase. Reconciled
+                against the supplier's own eSIM list, or escalated.
+      done    — bought, `supplier_ref` names the eSIM. Nothing more to do.
+      failed  — the supplier refused before charging. Safe to route elsewhere.
+    """
+
+    class State(models.TextChoices):
+        CLAIMED = "claimed", _("Claimed — outcome unknown")
+        DONE = "done", _("Bought")
+        FAILED = "failed", _("Refused before charge")
+
+    order = models.ForeignKey(
+        "orders.Order",
+        on_delete=models.PROTECT,
+        related_name="supplier_purchases",
+        verbose_name=_("order"),
+    )
+    provider = models.CharField(max_length=20, verbose_name=_("provider"))
+    # Identifies the unit inside the order: "<plan_id>:<n>" for the nth copy of
+    # that plan. Stable across retries, which is what makes the claim work.
+    line_key = models.CharField(
+        max_length=40,
+        help_text=_("Which unit of the order this row bought."),
+        verbose_name=_("line key"),
+    )
+    package_code = models.CharField(max_length=120, blank=True, verbose_name=_("package code"))
+    state = models.CharField(
+        max_length=10, choices=State.choices, default=State.CLAIMED, verbose_name=_("state")
+    )
+    supplier_ref = models.CharField(
+        max_length=120, blank=True, verbose_name=_("supplier reference")
+    )
+    iccid = models.CharField(max_length=32, blank=True, verbose_name=_("ICCID"))
+    note = models.CharField(max_length=200, blank=True, verbose_name=_("note"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("updated at"))
+
+    class Meta:
+        db_table = "orders_supplierpurchase"
+        verbose_name = _("supplier purchase")
+        verbose_name_plural = _("supplier purchases")
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["order", "provider", "line_key"],
+                name="uniq_supplier_purchase_per_unit",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.provider} · order {self.order_id} · {self.line_key} · {self.state}"
+
+
 class AtmosTransaction(models.Model):
     """An ATMOS transaction against an order.
 
