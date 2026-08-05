@@ -253,10 +253,19 @@ UNFOLD = {
     "SITE_SUBHEADER": _("eSIM commerce control panel"),
     "SITE_SYMBOL": "sim_card",
     # The real wordmark, so the admin and the storefront carry the same brand.
-    # The file fills "Qulay" with currentColor, which follows Unfold's own text
-    # colour and therefore stays legible in both its light and dark themes.
+    #
+    # One file per theme, not currentColor. The trick of filling "Qulay" with
+    # currentColor works for an inlined SVG but not for one referenced from an
+    # <img>: that document cannot see the page's text colour, so the glyphs fell
+    # back to black and disappeared against the dark sidebar. Unfold takes a
+    # {light, dark} pair and swaps them with a CSS class, which also means the
+    # right file is chosen by Unfold's own theme toggle rather than by the
+    # operating system's preference.
     "SITE_ICON": lambda request: static("admin/qulaysim-favicon.svg"),
-    "SITE_LOGO": lambda request: static("admin/qulaysim-logo.svg"),
+    "SITE_LOGO": {
+        "light": lambda request: static("admin/qulaysim-logo.svg"),
+        "dark": lambda request: static("admin/qulaysim-logo-dark.svg"),
+    },
     "SITE_FAVICONS": [
         {
             "rel": "icon",
