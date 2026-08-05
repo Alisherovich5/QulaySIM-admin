@@ -336,6 +336,65 @@ class Plan(models.Model):
         super().save(*args, **kwargs)
 
 
+class CatalogSyncRun(models.Model):
+    """One run of the catalogue sync, so the admin can see it actually happens.
+
+    The catalogue used to be maintained by hand: somebody downloaded a price
+    list, remembered which supplier it belonged to, and clicked apply. Anything
+    that depends on somebody remembering is skipped eventually, and while it was
+    being skipped the site sold 25 destinations out of the 193 the two APIs
+    offered.
+
+    A schedule fixes that, and then creates a new problem: automation nobody can
+    see is indistinguishable from automation that stopped. These rows are the
+    answer — when it last ran, what it changed, and what went wrong. A supplier
+    that quietly started refusing us shows up as a failed run rather than as
+    prices that merely look plausible.
+    """
+
+    class Status(models.TextChoices):
+        RUNNING = "running", _("Running")
+        OK = "ok", _("Finished")
+        FAILED = "failed", _("Failed")
+
+    provider = models.CharField(
+        max_length=40,
+        help_text=_("Which wholesaler, or 'all' when both were synced."),
+        verbose_name=_("provider"),
+    )
+    dry_run = models.BooleanField(
+        default=True,
+        help_text=_("A preview writes nothing."),
+        verbose_name=_("preview only"),
+    )
+    status = models.CharField(
+        max_length=10, choices=Status.choices, default=Status.RUNNING, verbose_name=_("status")
+    )
+    started_at = models.DateTimeField(auto_now_add=True, verbose_name=_("started at"))
+    finished_at = models.DateTimeField(null=True, blank=True, verbose_name=_("finished at"))
+    packages_read = models.PositiveIntegerField(default=0, verbose_name=_("packages read"))
+    countries_created = models.PositiveIntegerField(default=0, verbose_name=_("destinations added"))
+    plans_created = models.PositiveIntegerField(default=0, verbose_name=_("plans added"))
+    offers_written = models.PositiveIntegerField(default=0, verbose_name=_("prices written"))
+    # The command's own output, so a failure can be read without shell access.
+    log = models.TextField(blank=True, verbose_name=_("log"))
+
+    class Meta:
+        db_table = "catalog_catalogsyncrun"
+        verbose_name = _("catalogue sync")
+        verbose_name_plural = _("catalogue syncs")
+        ordering = ["-started_at"]
+
+    def __str__(self):
+        return f"{self.provider} · {self.started_at:%Y-%m-%d %H:%M} · {self.status}"
+
+    @property
+    def duration_seconds(self) -> int | None:
+        if not self.finished_at:
+            return None
+        return int((self.finished_at - self.started_at).total_seconds())
+
+
 class SupplierOffer(models.Model):
     """One supplier's wholesale price for one plan.
 
@@ -352,7 +411,11 @@ class SupplierOffer(models.Model):
     class Provider(models.TextChoices):
         ESIMACCESS = "esimaccess", "eSIM Access"
         ESIMCARD = "esimcard", "eSIMCard"
-        MOCK = "mock", "Mock (no real supplier)"
+        # Kept as a choice because rows still carry it, not because anything is
+        # mocked any more: both wholesalers are connected. The label says what a
+        # row with this value actually means — nothing can be ordered for it, so
+        # checkout refuses it (see the backend's is_fulfillable).
+        MOCK = "mock", _("No supplier — cannot be sold")
 
     plan = models.ForeignKey(Plan, on_delete=models.CASCADE, related_name="offers", verbose_name=_("plan"))
     provider = models.CharField(max_length=20, choices=Provider.choices, verbose_name=_("provider"))

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-06 01:27+0500\n"
+"POT-Creation-Date: 2026-08-06 04:05+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -15,8 +15,14 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-msgid "Countries"
-msgstr "Davlatlar"
+msgid "Destinations"
+msgstr "Yo‘nalishlar soni"
+
+msgid "Regional tariffs"
+msgstr "Hududiy tariflar"
+
+msgid "not sold yet"
+msgstr "hali sotilmaydi"
 
 msgid "Landing page"
 msgstr "Bosh sahifa"
@@ -273,6 +279,15 @@ msgstr "Mavjud deb belgilash (tanlovga qaytarish)"
 msgid "Mark unavailable (take out of the running)"
 msgstr "Mavjud emas deb belgilash (tanlovdan chiqarish)"
 
+msgid "Result"
+msgstr "Natija"
+
+msgid "Preview"
+msgstr "Ko‘rib chiqildi"
+
+msgid "Took"
+msgstr "Davom etdi"
+
 msgid "Catalog"
 msgstr "Katalog"
 
@@ -413,6 +428,57 @@ msgstr "tarif"
 
 msgid "plans"
 msgstr "tariflar"
+
+msgid "Running"
+msgstr "Bajarilmoqda"
+
+msgid "Finished"
+msgstr "Tugadi"
+
+msgid "Failed"
+msgstr "Muvaffaqiyatsiz"
+
+msgid "Which wholesaler, or 'all' when both were synced."
+msgstr "Qaysi ulgurji ta’minotchi; ikkisi ham sinxronlangan bo‘lsa — “all”."
+
+msgid "A preview writes nothing."
+msgstr "Ko‘rib chiqish hech narsa yozmaydi."
+
+msgid "preview only"
+msgstr "faqat ko‘rib chiqish"
+
+msgid "status"
+msgstr "holat"
+
+msgid "started at"
+msgstr "boshlangan vaqti"
+
+msgid "finished at"
+msgstr "tugagan vaqti"
+
+msgid "packages read"
+msgstr "o‘qilgan paketlar"
+
+msgid "destinations added"
+msgstr "qo‘shilgan yo‘nalishlar"
+
+msgid "plans added"
+msgstr "qo‘shilgan tariflar"
+
+msgid "prices written"
+msgstr "yozilgan narxlar"
+
+msgid "log"
+msgstr "jurnal"
+
+msgid "catalogue sync"
+msgstr "katalog sinxronizatsiyasi"
+
+msgid "catalogue syncs"
+msgstr "katalog sinxronizatsiyalari"
+
+msgid "No supplier — cannot be sold"
+msgstr "Ta’minotchi yo‘q — sotilmaydi"
 
 msgid "This supplier's own code for the package, e.g. TR_5_30."
 msgstr "Shu ta’minotchining paket uchun o‘z kodi, masalan TR_5_30."
@@ -1194,14 +1260,17 @@ msgstr "Boshqaruv paneli"
 msgid "Regions"
 msgstr "Hududlar"
 
+msgid "Countries"
+msgstr "Davlatlar"
+
 msgid "Plans"
 msgstr "Tariflar"
 
 msgid "Supplier prices"
 msgstr "Ta’minotchi narxlari"
 
-msgid "Import prices"
-msgstr "Narxlarni import qilish"
+msgid "Sync prices"
+msgstr "Narxlarni sinxronlash"
 
 msgid "Pricing rules"
 msgstr "Narxlash qoidalari"
@@ -1218,8 +1287,11 @@ msgstr "eSIM’lar"
 msgid "Payments"
 msgstr "To‘lovlar"
 
-msgid "Payme"
-msgstr "Payme"
+msgid "Card transactions"
+msgstr "Karta tranzaksiyalari"
+
+msgid "Supplier purchases"
+msgstr "Ulgurji xaridlar"
 
 msgid "Promo codes"
 msgstr "Promokodlar"
@@ -1229,6 +1301,9 @@ msgstr "Odamlar"
 
 msgid "Customers"
 msgstr "Mijozlar"
+
+msgid "Cashback & referrals"
+msgstr "Keshbek va referallar"
 
 msgid "Staff users"
 msgstr "Xodimlar"
@@ -1502,9 +1577,6 @@ msgstr "taklif qilingan"
 msgid "referred email"
 msgstr "taklif qilingan email"
 
-msgid "status"
-msgstr "holat"
-
 msgid "reward code"
 msgstr "mukofot kodi"
 
@@ -1754,11 +1826,59 @@ msgstr "ATMOS tranzaksiyasi"
 msgid "ATMOS transactions"
 msgstr "ATMOS tranzaksiyalari"
 
-msgid ""
-"Setting up one destination by hand means creating eleven objects — a country,\n"
-"    four tariffs and their supplier offers. Upload the wholesaler's price export\n"
-"    instead: the preview shows exactly what would change before anything is written."
-msgstr "Bitta yo‘nalishni qo‘lda sozlash o‘n bitta obyekt yaratishni bildiradi — davlat, to‘rt tarif va ularning ta’minotchi takliflari. Buning o‘rniga ulgurji ta’minotchining narx faylini yuklang: ko‘rib chiqish hech narsa yozilmasdan nima o‘zgarishini aniq ko‘rsatadi."
+msgid "Where prices come from"
+msgstr "Narxlar qayerdan keladi"
+
+msgid "Both wholesalers are read straight from their own APIs, and the catalogue is built from what they actually sell. Nobody types a destination in: the sync creates the countries the suppliers cover, gives each one its tariff ladder, and records every supplier's price for every tariff."
+msgstr "Ikkala ulgurji ta’minotchi ham o‘z API’laridan o‘qiladi va katalog ular haqiqatan sotadigan narsadan quriladi. Yo‘nalishni hech kim qo‘lda kiritmaydi: sinxronizatsiya ta’minotchilar qamrab olgan davlatlarni yaratadi, har biriga tarif pog‘onasini beradi va har bir tarif uchun har bir ta’minotchining narxini yozib qo‘yadi."
+
+msgid "Both suppliers' prices are kept, not just the winner. The cheapest available one becomes the tariff's cost and the route a paid order takes; the dearer one stays on file as the fallback for when the winner is out of stock or its API is down. Customers never see any of this — they see one tariff at one price."
+msgstr "Ikkala ta’minotchining narxi ham saqlanadi, faqat g‘olibi emas. Eng arzon mavjudi tarifning tannarxi va to‘langan buyurtma boradigan yo‘l bo‘ladi; qimmatrog‘i g‘olib zaxirada qolmaganda yoki API’si ishlamaganda ishlatiladigan zaxira sifatida qoladi. Mijozlar bularning hech birini ko‘rmaydi — ular bitta tarifni bitta narxda ko‘radi."
+
+msgid "Supplier costs move retail prices through the pricing rules, so a sync can change what the site charges. That is the point, and it is also why a preview writes nothing and why newly discovered destinations arrive switched off — waiting for someone to look at them before they go on sale."
+msgstr "Ta’minotchi tannarxi narxlash qoidalari orqali chakana narxni harakatga keltiradi, ya’ni sinxronizatsiya sayt oladigan pulni o‘zgartirishi mumkin. Buning maqsadi shu — va shuning uchun ko‘rib chiqish hech narsa yozmaydi va yangi topilgan yo‘nalishlar o‘chirilgan holda keladi: sotuvga chiqishdan oldin kimdir ularga qarab chiqishi kerak."
+
+msgid "Recent syncs"
+msgstr "Oxirgi sinxronizatsiyalar"
+
+msgid "Started"
+msgstr "Boshlangan"
+
+msgid "Supplier"
+msgstr "Ta’minotchi"
+
+msgid "Packages"
+msgstr "Paketlar"
+
+msgid "New destinations"
+msgstr "Yangi yo‘nalishlar"
+
+msgid "New tariffs"
+msgstr "Yangi tariflar"
+
+msgid "Prices"
+msgstr "Narxlar"
+
+msgid "Running…"
+msgstr "Bajarilmoqda…"
+
+msgid "Preview only"
+msgstr "Faqat ko‘rib chiqish"
+
+msgid "Applied"
+msgstr "Qo‘llandi"
+
+msgid "No sync has run yet, so the catalogue is still whatever was last entered by hand."
+msgstr "Hali birorta sinxronizatsiya ishlamadi, ya’ni katalog oxirgi marta qo‘lda kiritilgan holatda."
+
+msgid "The sync runs on its own overnight. Reading eSIMCard alone takes about five minutes — its API answers one page of a hundred packages every four seconds — which is why it is a scheduled job rather than a button that waits."
+msgstr "Sinxronizatsiya kechasi o‘zi ishlaydi. Faqat eSIMCard’ni o‘qish besh daqiqacha oladi — uning API’si yuz paketli bitta sahifani to‘rt sekundda beradi — shuning uchun bu kutib turadigan tugma emas, rejalashtirilgan vazifa."
+
+msgid "Upload a price list by hand"
+msgstr "Narx ro‘yxatini qo‘lda yuklash"
+
+msgid "The fallback, for two situations: a supplier's API is down and a price has to be corrected now, or a wholesaler has sent a quote that is not in their API yet. Everything else should come from the sync above."
+msgstr "Zaxira yo‘l, ikki holat uchun: ta’minotchining API’si ishlamaydi va narxni hozir tuzatish kerak, yoki ulgurji ta’minotchi hali API’sida yo‘q taklifni yuborgan. Qolgan hammasi yuqoridagi sinxronizatsiyadan kelishi kerak."
 
 msgid "Read the file"
 msgstr "Faylni o‘qish"
@@ -1955,3 +2075,15 @@ msgstr "Buyurtma"
 
 msgid "Total"
 msgstr "Jami"
+
+#~ msgid "Import prices"
+#~ msgstr "Narxlarni import qilish"
+
+#~ msgid "Payme"
+#~ msgstr "Payme"
+
+#~ msgid ""
+#~ "Setting up one destination by hand means creating eleven objects — a country,\n"
+#~ "    four tariffs and their supplier offers. Upload the wholesaler's price export\n"
+#~ "    instead: the preview shows exactly what would change before anything is written."
+#~ msgstr "Bitta yo‘nalishni qo‘lda sozlash o‘n bitta obyekt yaratishni bildiradi — davlat, to‘rt tarif va ularning ta’minotchi takliflari. Buning o‘rniga ulgurji ta’minotchining narx faylini yuklang: ko‘rib chiqish hech narsa yozilmasdan nima o‘zgarishini aniq ko‘rsatadi."

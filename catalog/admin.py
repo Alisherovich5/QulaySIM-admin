@@ -8,8 +8,9 @@ from django.utils.html import format_html, format_html_join
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 
-from .models import Country, Plan, PricingRule, Region, SupplierOffer
 from django.utils.translation import gettext_lazy as _
+
+from .models import CatalogSyncRun, Country, Plan, PricingRule, Region, SupplierOffer
 
 
 def _site_name_expression():
@@ -33,18 +34,54 @@ def _site_name_expression():
 
 @admin.register(Region)
 class RegionAdmin(ModelAdmin):
-    list_display = ("name", "name_uz", "name_ru", "slug", "country_count", "sort_order")
+    """Regions group destinations. They are not a chore, and they are not optional.
+
+    Two things depend on them, which is why the page looks empty but is not:
+
+    The site's regional pages. /destinations/region/europe and the "similar
+    destinations" block under every country are built from a country's region.
+    Delete the regions and those pages stop existing — which for search traffic
+    means the hub pages that rank for "Yevropa uchun eSIM" disappear.
+
+    Regional eSIMs, which we do not sell yet. eSIM Access lists 301 packages
+    covering more than one country ("Europe, 30 countries") and eSIMCard has its
+    own; a traveller visiting three countries wants exactly that, and a region is
+    what such a plan attaches to instead of a country. That is why every plan can
+    point at a region and none currently does.
+
+    Nobody has to maintain this list: the catalogue sync creates the region a new
+    destination belongs to, from the mapping in catalog/geo.py.
+    """
+
+    list_display = ("name", "name_uz", "name_ru", "slug", "country_count", "plan_count", "sort_order")
     # Staff type the name they see on the site, which is the translated one.
     search_fields = ("name", "name_uz", "name_ru")
     prepopulated_fields = {"slug": ("name",)}
     ordering = ("sort_order", "name")
 
     def get_queryset(self, request):
-        return super().get_queryset(request).annotate(_country_count=Count("countries"))
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(_country_count=Count("countries", distinct=True))
+            .annotate(_plan_count=Count("plans", distinct=True))
+        )
 
-    @display(description=_("Countries"), ordering="_country_count")
+    @display(description=_("Destinations"), ordering="_country_count")
     def country_count(self, obj):
         return obj._country_count
+
+    @display(description=_("Regional tariffs"), ordering="_plan_count")
+    def plan_count(self, obj):
+        """Multi-country plans attached to this region — none yet, by design.
+
+        Shown so the column is a fact rather than a mystery: it reads zero because
+        the regional eSIM is a product we have not built the ordering for, not
+        because something is broken.
+        """
+        if obj._plan_count:
+            return obj._plan_count
+        return format_html('<span style="color:var(--qs-ink-soft)">{}</span>', _("not sold yet"))
 
 
 class PromotionFilter(admin.SimpleListFilter):
@@ -530,10 +567,16 @@ class PlanAdmin(ModelAdmin):
             messages.error(request, "You do not have permission to change plans.")
             return redirect(reverse("admin:catalog_plan_changelist"))
 
+        from catalog.models import CatalogSyncRun
+
         context = {
             **self.admin_site.each_context(request),
-            "title": "Import supplier prices",
+            "title": "Narxlarni sinxronlash",
             "opts": self.model._meta,
+            # The page's whole point is showing that the scheduled sync happens.
+            # Ten runs is enough to see a pattern and spot a supplier that
+            # started failing without turning the page into a log viewer.
+            "runs": CatalogSyncRun.objects.all()[:10],
         }
 
         if request.method != "POST":
@@ -575,6 +618,16 @@ class PlanAdmin(ModelAdmin):
                 count_new_offers=sum(1 for c in changes if c.kind == "new-offer"),
                 count_price_changes=sum(1 for c in changes if c.kind == "price-change"),
                 count_unchanged=sum(1 for c in changes if c.kind == "unchanged"),
+                # Packages whose size/duration has no rung. Surfaced rather than
+                # discarded: a supplier adding a size customers want used to
+                # vanish here with no trace.
+                off_ladder=[
+                    (f"{gb:g}GB/{days}d", count)
+                    for (gb, days), count in sorted(
+                        prices.off_ladder.items(), key=lambda kv: -kv[1]
+                    )[:10]
+                ],
+                off_ladder_total=sum(prices.off_ladder.values()),
                 previewed=True,
             )
             return render(request, "admin/catalog/import_prices.html", context)
@@ -1218,3 +1271,60 @@ class SupplierOfferAdmin(ModelAdmin):
             offer.save()
             count += 1
         self.message_user(request, f"{count} offer(s) removed; plans handed to their fallback.")
+
+
+@admin.register(CatalogSyncRun)
+class CatalogSyncRunAdmin(ModelAdmin):
+    """The record of every catalogue sync. Read-only — it is a log, not a form.
+
+    Exists so the scheduled sync is visible. A nightly job that silently stopped
+    looks exactly like a nightly job that is working, right up until someone
+    notices the prices are three weeks old, and by then the cheaper supplier has
+    been losing us margin on every order.
+    """
+
+    list_display = (
+        "started_at",
+        "provider",
+        "status_badge",
+        "packages_read",
+        "countries_created",
+        "plans_created",
+        "offers_written",
+        "took",
+    )
+    list_filter = ("status", "dry_run", "provider", "started_at")
+    ordering = ("-started_at",)
+    readonly_fields = tuple(f.name for f in CatalogSyncRun._meta.fields) + ("took",)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    @display(description=_("Result"), ordering="status")
+    def status_badge(self, obj):
+        if obj.status == CatalogSyncRun.Status.FAILED:
+            ink, wash = "var(--qs-bad-text)", "var(--qs-bad-wash)"
+        elif obj.status == CatalogSyncRun.Status.RUNNING:
+            ink, wash = "var(--qs-accent-text)", "var(--qs-warn-wash)"
+        elif obj.dry_run:
+            ink, wash = "var(--qs-ink-soft)", "var(--qs-neutral-wash)"
+        else:
+            ink, wash = "var(--qs-teal-text)", "var(--qs-good-wash)"
+        label = _("Preview") if obj.dry_run and obj.status == CatalogSyncRun.Status.OK else obj.get_status_display()
+        return format_html(
+            '<span style="display:inline-block;padding:2px 10px;border-radius:999px;'
+            'font-size:11px;font-weight:700;color:{};background:{};">{}</span>',
+            ink,
+            wash,
+            label,
+        )
+
+    @display(description=_("Took"))
+    def took(self, obj):
+        seconds = obj.duration_seconds
+        if seconds is None:
+            return "—"
+        return f"{seconds // 60}m {seconds % 60}s" if seconds >= 60 else f"{seconds}s"

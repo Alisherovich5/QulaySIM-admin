@@ -158,6 +158,27 @@ FULFILLABLE_PROVIDERS = config(
 )
 
 # ---------------------------------------------------------------------------
+# Wholesaler API credentials, read by `manage.py sync_catalog`.
+#
+# The catalogue is supposed to come from these, not from a CSV somebody
+# remembers to download: a hand-maintained catalogue drifts the moment the
+# person maintaining it is busy, and the destinations that never got typed in
+# were simply not for sale.
+#
+# Same variable names as the backend uses, so one .env file serves both and
+# there is no second copy of a credential to get out of step.
+# ---------------------------------------------------------------------------
+ESIMACCESS_BASE_URL = config("ESIMACCESS_BASE_URL", default="https://api.esimaccess.com")
+ESIMACCESS_ACCESS_CODE = config("ESIMACCESS_ACCESS_CODE", default="")
+ESIMACCESS_SECRET_KEY = config("ESIMACCESS_SECRET_KEY", default="")
+
+# NOT esimcard.com — that host answers every API path with HTTP 410.
+ESIMCARD_BASE_URL = config(
+    "ESIMCARD_BASE_URL", default="https://portal.esimcard.com/api/developer/reseller"
+)
+ESIMCARD_API_TOKEN = config("ESIMCARD_API_TOKEN", default="")
+
+# ---------------------------------------------------------------------------
 # Brute-force protection (django-axes)
 #
 # Without this the admin login accepts unlimited attempts, which leaves a strong
@@ -356,7 +377,7 @@ UNFOLD = {
                         "link": reverse_lazy("admin:catalog_supplieroffer_changelist"),
                     },
                     {
-                        "title": _("Import prices"),
+                        "title": _("Sync prices"),
                         "icon": "upload_file",
                         "link": reverse_lazy("admin:catalog_plan_import_prices"),
                     },
@@ -379,7 +400,16 @@ UNFOLD = {
                     },
                     {"title": _("eSIMs"), "icon": "qr_code_2", "link": reverse_lazy("admin:orders_esim_changelist")},
                     {"title": _("Payments"), "icon": "payments", "link": reverse_lazy("admin:orders_payment_changelist")},
-                    {"title": _("Payme"), "icon": "account_balance", "link": reverse_lazy("admin:orders_paymetransaction_changelist")},
+                    {
+                        "title": _("Card transactions"),
+                        "icon": "credit_card",
+                        "link": reverse_lazy("admin:orders_atmostransaction_changelist"),
+                    },
+                    {
+                        "title": _("Supplier purchases"),
+                        "icon": "shopping_cart_checkout",
+                        "link": reverse_lazy("admin:orders_supplierpurchase_changelist"),
+                    },
                     {"title": _("Promo codes"), "icon": "sell", "link": reverse_lazy("admin:orders_promocode_changelist")},
                 ],
             },
@@ -388,6 +418,11 @@ UNFOLD = {
                 "separator": True,
                 "items": [
                     {"title": _("Customers"), "icon": "group", "link": reverse_lazy("admin:customers_customer_changelist")},
+                    {
+                        "title": _("Cashback & referrals"),
+                        "icon": "redeem",
+                        "link": reverse_lazy("admin:customers_referral_changelist"),
+                    },
                     {"title": _("Staff users"), "icon": "shield_person", "link": reverse_lazy("admin:auth_user_changelist")},
                     {
                         "title": _("Social logins"),

@@ -20,9 +20,46 @@ from django.db import transaction
 
 from catalog.models import Country, Plan, SupplierOffer
 
-# The tariff ladder a destination gets when one is generated for it, matching
-# what every hand-built destination already offers.
-LADDER = [(1024, 7, "4G"), (3072, 15, "5G"), (5120, 30, "5G"), (10240, 30, "5G")]
+# The tariff ladder a destination gets when one is generated for it.
+#
+# Not invented: every rung is a shape both wholesalers actually stock in almost
+# every country, measured against the live eSIM Access catalogue (2 908 packages,
+# 193 countries). The count after each rung is how many countries offer it.
+#
+# The ladder exists because the suppliers between them list 24 different shapes,
+# including 1-day packages and a 0.49 GB oddity, and putting all of them on a
+# destination page gives a customer a wall of near-identical choices instead of a
+# decision. Seven rungs is a menu; twenty-four is a spreadsheet.
+#
+# What it must never do is drop a shape silently, which is what it used to do —
+# `ParsedPrices.off_ladder` now records every package the ladder had no rung for,
+# so widening it is a decision someone makes from evidence.
+LADDER = [
+    (1024, 7, "4G"),     # 1 GB / 7 days   — 204 countries
+    (3072, 15, "5G"),    # 3 GB / 15 days  — 204
+    (3072, 30, "5G"),    # 3 GB / 30 days  — 194
+    (5120, 30, "5G"),    # 5 GB / 30 days  — 202
+    (10240, 30, "5G"),   # 10 GB / 30 days — 197
+    (20480, 30, "5G"),   # 20 GB / 30 days — 196
+    (51200, 30, "5G"),   # 50 GB / 30 days — 40, the heavy-user rung
+]
+
+
+LADDER_SHAPES = {(mb, days) for mb, days, _ in LADDER}
+
+
+def on_ladder(megabytes: int, days: int) -> bool:
+    """Whether a package shape has a rung, and so becomes a sellable plan."""
+    return (megabytes, days) in LADDER_SHAPES
+
+
+def ladder_rung(megabytes: int, days: int) -> tuple[int, str] | None:
+    """(sort order, network) for a shape, or None when it has no rung."""
+    for order, (mb, plan_days, network) in enumerate(LADDER):
+        if (mb, plan_days) == (megabytes, days):
+            return order, network
+    return None
+
 
 REQUIRED_COLUMNS = {"package_code", "location", "data_gb", "days", "cost_usd"}
 
@@ -35,6 +72,10 @@ class ParsedPrices:
     rows_read: int = 0
     rows_skipped: int = 0
     missing_columns: set[str] = field(default_factory=set)
+    # (GB, days) -> how many packages had that shape and no rung to sit on.
+    # Reported rather than discarded: a supplier adding a popular new size used
+    # to vanish here without a trace.
+    off_ladder: dict[tuple[float, int], int] = field(default_factory=dict)
 
 
 def parse(text: str) -> ParsedPrices:
@@ -96,11 +137,12 @@ def plan_changes(prices: ParsedPrices, provider: str, *, iso2: Iterable[str] | N
         if country is None:
             continue
         mb = int(round(gb * 1024))
-        if (mb, days, "5G") not in [(m, d, n) for m, d, n in LADDER] and (mb, days, "4G") not in [
-            (m, d, n) for m, d, n in LADDER
-        ]:
+        if not on_ladder(mb, days):
             # Only the rungs the catalogue actually sells; a wholesaler lists
-            # hundreds of shapes nobody has a plan for.
+            # two dozen shapes, most of them near-duplicates. What was dropped is
+            # recorded in prices.off_ladder rather than lost.
+            key = (gb, days)
+            prices.off_ladder[key] = prices.off_ladder.get(key, 0) + 1
             continue
 
         existing_plan = country.plans.filter(data_amount_mb=mb, validity_days=days).first()
@@ -198,6 +240,7 @@ def apply(prices: ParsedPrices, provider: str, *, iso2: Iterable[str] | None = N
     wanted = {code.upper() for code in iso2} if iso2 else None
     countries = {c.iso2.upper(): c for c in Country.objects.all() if c.iso2}
     ladder_index = {(mb, days): (order, network) for order, (mb, days, network) in enumerate(LADDER)}
+    # Same rule as the preview, via the same helper — see on_ladder().
     made_plans = made_offers = 0
 
     for (loc, gb, days), (code, cost) in sorted(prices.best.items()):
@@ -209,6 +252,8 @@ def apply(prices: ParsedPrices, provider: str, *, iso2: Iterable[str] | None = N
         mb = int(round(gb * 1024))
         rung = ladder_index.get((mb, days))
         if rung is None:
+            key = (gb, days)
+            prices.off_ladder[key] = prices.off_ladder.get(key, 0) + 1
             continue
         order, network = rung
 

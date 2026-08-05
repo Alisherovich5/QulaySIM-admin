@@ -1,12 +1,109 @@
 {% extends "admin/base_site.html" %}
 {% load i18n %}
 
+{% comment %}
+The page staff land on when they want to know where prices come from.
+
+It used to open with a file picker and no reason to use one, which reads as a
+chore with no purpose. The catalogue now comes from both wholesalers' APIs on a
+schedule, so this page's first job is to show that it is happening and what it
+did — automation nobody can see is the same as automation that stopped. The
+upload stays underneath as the manual override.
+{% endcomment %}
+
 {% block content %}
 <div class="qs-import">
-  <p class="qs-import__lede">
-    {% blocktrans %}Setting up one destination by hand means creating eleven objects — a country,
-    four tariffs and their supplier offers. Upload the wholesaler's price export
-    instead: the preview shows exactly what would change before anything is written.{% endblocktrans %}
+
+  <section class="qs-import__explain">
+    <h2>{% trans "Where prices come from" %}</h2>
+    <p>
+      {% blocktrans trimmed %}
+      Both wholesalers are read straight from their own APIs, and the catalogue is
+      built from what they actually sell. Nobody types a destination in: the sync
+      creates the countries the suppliers cover, gives each one its tariff ladder,
+      and records every supplier's price for every tariff.
+      {% endblocktrans %}
+    </p>
+    <p>
+      {% blocktrans trimmed %}
+      Both suppliers' prices are kept, not just the winner. The cheapest available
+      one becomes the tariff's cost and the route a paid order takes; the dearer
+      one stays on file as the fallback for when the winner is out of stock or its
+      API is down. Customers never see any of this — they see one tariff at one
+      price.
+      {% endblocktrans %}
+    </p>
+    <p class="qs-import__warn">
+      {% blocktrans trimmed %}
+      Supplier costs move retail prices through the pricing rules, so a sync can
+      change what the site charges. That is the point, and it is also why a
+      preview writes nothing and why newly discovered destinations arrive switched
+      off — waiting for someone to look at them before they go on sale.
+      {% endblocktrans %}
+    </p>
+  </section>
+
+  <section class="qs-import__runs">
+    <h2>{% trans "Recent syncs" %}</h2>
+    {% if runs %}
+      <table class="qs-import__table">
+        <thead>
+          <tr>
+            <th>{% trans "Started" %}</th>
+            <th>{% trans "Supplier" %}</th>
+            <th>{% trans "Result" %}</th>
+            <th>{% trans "Packages" %}</th>
+            <th>{% trans "New destinations" %}</th>
+            <th>{% trans "New tariffs" %}</th>
+            <th>{% trans "Prices" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for run in runs %}
+            <tr>
+              <td>
+                <a href="{% url 'admin:catalog_catalogsyncrun_change' run.pk %}">{{ run.started_at|date:"d M, H:i" }}</a>
+                {% if run.duration_seconds %}<span class="qs-import__muted">· {{ run.duration_seconds }}s</span>{% endif %}
+              </td>
+              <td>{{ run.provider }}</td>
+              <td>
+                {% if run.status == "failed" %}<b class="qs-import__error">{% trans "Failed" %}</b>
+                {% elif run.status == "running" %}{% trans "Running…" %}
+                {% elif run.dry_run %}<span class="qs-import__muted">{% trans "Preview only" %}</span>
+                {% else %}{% trans "Applied" %}{% endif %}
+              </td>
+              <td>{{ run.packages_read }}</td>
+              <td>{{ run.countries_created }}</td>
+              <td>{{ run.plans_created }}</td>
+              <td>{{ run.offers_written }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="qs-import__warn">
+        {% blocktrans trimmed %}
+        No sync has run yet, so the catalogue is still whatever was last entered
+        by hand.
+        {% endblocktrans %}
+      </p>
+    {% endif %}
+    <p class="qs-import__help">
+      {% blocktrans trimmed %}
+      The sync runs on its own overnight. Reading eSIMCard alone takes about five
+      minutes — its API answers one page of a hundred packages every four seconds
+      — which is why it is a scheduled job rather than a button that waits.
+      {% endblocktrans %}
+    </p>
+  </section>
+
+  <h2>{% trans "Upload a price list by hand" %}</h2>
+  <p class="qs-import__help">
+    {% blocktrans trimmed %}
+    The fallback, for two situations: a supplier's API is down and a price has to
+    be corrected now, or a wholesaler has sent a quote that is not in their API
+    yet. Everything else should come from the sync above.
+    {% endblocktrans %}
   </p>
 
   <form method="post" enctype="multipart/form-data" class="qs-import__form">
