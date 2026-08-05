@@ -1272,7 +1272,6 @@ msgstr "Bu reklama qilayotgan promokodni tanlang. Chegirma shu koddan olinadi, s
 msgid "Bar text (short)"
 msgstr "Chiziq matni (qisqa)"
 
-#, python-format
 msgid "Optional. Leave empty and the bar writes itself from the discount — \"20% off\" or \"$20 off\"."
 msgstr "Ixtiyoriy. Bo‘sh qoldirsangiz chiziq matni chegirmadan o‘zi yoziladi — «20% chegirma» yoki «$20 chegirma»."
 

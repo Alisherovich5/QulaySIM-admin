@@ -1272,7 +1272,6 @@ msgstr "Выберите промокод, который это реклами�
 msgid "Bar text (short)"
 msgstr "Текст полосы (кратко)"
 
-#, python-format
 msgid "Optional. Leave empty and the bar writes itself from the discount — \"20% off\" or \"$20 off\"."
 msgstr "Необязательно. Оставьте пустым — текст полосы составится из скидки: «скидка 20%» или «скидка $20»."
 
