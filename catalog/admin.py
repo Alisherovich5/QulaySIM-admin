@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib import admin, messages
 from django import forms
 from django.db import models
@@ -812,6 +814,7 @@ class PricingRuleAdmin(ModelAdmin):
     autocomplete_fields = ("country",)
     search_fields = ("provider", "country__name", "country__name_uz", "country__name_ru", "note")
     actions = ("apply_to_catalogue",)
+    readonly_fields = ("plain_summary", "effective_reach", "price_preview")
     fieldsets = (
         (
             _("Applies to"),
@@ -824,6 +827,11 @@ class PricingRuleAdmin(ModelAdmin):
             },
         ),
         (_("Markup"), {"fields": ("markup_percent", "min_margin_usd", "rounding")}),
+        # The two read-only blocks are the point of this form: one says in a
+        # sentence what the settings above mean, the other shows what they would
+        # do to real prices. Setting a markup and hoping is how a catalogue ends
+        # up mispriced by a decimal point nobody noticed.
+        (_("What this does"), {"fields": ("plain_summary", "effective_reach", "price_preview")}),
         (_("Admin"), {"fields": ("is_active", "note")}),
     )
 
@@ -835,6 +843,190 @@ class PricingRuleAdmin(ModelAdmin):
     def markup_badge(self, obj):
         return format_html(
             '<span style="font-weight:700;color:var(--qs-ink);">+{}%</span>', obj.markup_percent
+        )
+
+    @display(description=_("In plain words"))
+    def plain_summary(self, obj):
+        """One sentence, no jargon — the settings above restated.
+
+        `rounding` and `min_margin_usd` are the two fields operators read as
+        noise and leave at their defaults; spelling out their effect is what
+        makes them usable.
+        """
+        if obj.pk is None:
+            return _("Save the rule to see a summary.")
+
+        who = {
+            PricingRule.Scope.GLOBAL: _("every plan that no more specific rule covers"),
+            PricingRule.Scope.PROVIDER: _("every plan sourced from %(p)s") % {"p": obj.provider or "—"},
+            PricingRule.Scope.COUNTRY: _("every plan for %(c)s")
+            % {"c": obj.country.name if obj.country else "—"},
+        }[obj.scope]
+
+        parts = [
+            _("On %(who)s, the selling price is the supplier cost plus %(pct)s%%.")
+            % {"who": who, "pct": obj.markup_percent}
+        ]
+        if obj.min_margin_usd:
+            parts.append(
+                _("If that leaves less than $%(m)s of profit, the price rises until it does.")
+                % {"m": obj.min_margin_usd}
+            )
+        rounding_words = {
+            "none": None,
+            "charm": _("The result is then rounded up to end in .99."),
+            "half": _("The result is then rounded up to the next 50 cents."),
+            "whole": _("The result is then rounded up to a whole dollar."),
+        }
+        if rounding_words.get(obj.rounding):
+            parts.append(rounding_words[obj.rounding])
+        if not obj.is_active:
+            parts.append(_("This rule is switched off, so it changes nothing right now."))
+
+        return format_html(
+            '<div style="max-width:60ch;line-height:1.6;">{}</div>', " ".join(str(p) for p in parts)
+        )
+
+    @display(description=_("Which plans this rule decides"))
+    def effective_reach(self, obj):
+        """Covered is not the same as decided.
+
+        A global rule can cover the whole catalogue while a supplier rule
+        quietly governs most of it, and a plan with its own markup ignores every
+        rule. Reading "120 plans" on the list and assuming this rule sets 120
+        prices is the easiest mistake to make here. One rule's worth of cascade
+        resolution is cheap on a form; per row on the changelist it was the N+1
+        that column was fixed for.
+        """
+        if obj.pk is None:
+            return _("Save the rule to see its reach.")
+
+        from catalog.pricing import resolve_rule
+
+        rules = list(PricingRule.objects.filter(is_active=True))
+        pool = Plan.objects.filter(is_active=True, cost_usd__isnull=False).only(
+            "id", "country_id", "provider", "markup_percent", "price_locked"
+        )
+        if obj.scope == PricingRule.Scope.PROVIDER:
+            pool = pool.filter(provider=obj.provider)
+        elif obj.scope == PricingRule.Scope.COUNTRY:
+            pool = pool.filter(country_id=obj.country_id)
+
+        covered = decides = by_hand = locked = 0
+        for plan in pool:
+            covered += 1
+            winner = resolve_rule(plan, rules)
+            if winner is None or winner.pk != obj.pk:
+                continue
+            if plan.markup_percent is not None:
+                by_hand += 1
+            elif plan.price_locked:
+                locked += 1
+            else:
+                decides += 1
+
+        if not covered:
+            return _("No priced plans fall under this rule yet.")
+
+        lines = [
+            _("This rule sets the price of %(d)s of the %(c)s plans in its scope.")
+            % {"d": decides, "c": covered}
+        ]
+        elsewhere = covered - decides - by_hand - locked
+        if elsewhere:
+            lines.append(_("%(n)s are governed by a more specific rule.") % {"n": elsewhere})
+        if by_hand:
+            lines.append(
+                _("%(n)s carry their own markup, which overrides any rule.") % {"n": by_hand}
+            )
+        if locked:
+            lines.append(_("%(n)s have a locked price and are never recalculated.") % {"n": locked})
+
+        return format_html(
+            '<div style="max-width:60ch;line-height:1.6;">{}</div>',
+            " ".join(str(line) for line in lines),
+        )
+
+    @display(description=_("What prices would become"))
+    def price_preview(self, obj):
+        """Real plans this rule governs, priced with these settings.
+
+        Computed through catalog.pricing — the same code that writes prices —
+        so the preview cannot disagree with what saving will do. Only plans this
+        rule actually wins are shown: a destination rule that is shadowed by a
+        plan's own markup would otherwise promise a change it will not make.
+        """
+        if obj.pk is None:
+            return _("Save the rule to preview prices.")
+
+        from catalog.pricing import calculate_price, resolve_rule
+
+        candidates = (
+            Plan.objects.filter(is_active=True, cost_usd__isnull=False, price_locked=False)
+            .select_related("country")
+            .order_by("cost_usd")
+        )
+        if obj.scope == PricingRule.Scope.PROVIDER:
+            candidates = candidates.filter(provider=obj.provider)
+        elif obj.scope == PricingRule.Scope.COUNTRY:
+            candidates = candidates.filter(country_id=obj.country_id)
+
+        rules = list(PricingRule.objects.filter(is_active=True))
+        rows = []
+        # Walk cheapest-first and keep a spread: the cheapest plan is where a
+        # percentage markup collapses and the margin floor earns its keep, the
+        # dearest is where rounding is least visible.
+        pool = list(candidates[:400])
+        for plan in pool[:3] + pool[len(pool) // 2 : len(pool) // 2 + 1] + pool[-1:]:
+            if resolve_rule(plan, rules) is not None and resolve_rule(plan, rules).pk != obj.pk:
+                continue
+            after = calculate_price(plan, rules)
+            if after is None:
+                continue
+            profit = after - plan.cost_usd
+            pct = (profit / plan.cost_usd * 100).quantize(Decimal("1")) if plan.cost_usd else 0
+            rows.append((plan, after, profit, pct))
+            if len(rows) >= 4:
+                break
+
+        if not rows:
+            return _("No priced plans fall under this rule yet.")
+
+        cells = format_html_join(
+            "",
+            '<tr>'
+            '<td style="padding:4px 12px 4px 0;">{}</td>'
+            '<td style="padding:4px 12px 4px 0;color:var(--qs-ink-soft);">${}</td>'
+            '<td style="padding:4px 12px 4px 0;">${} &rarr; <b>${}</b></td>'
+            '<td style="padding:4px 0;color:var(--qs-teal-text);font-weight:600;">+${} ({}%)</td>'
+            '</tr>',
+            (
+                (
+                    f"{plan.country.name if plan.country else '—'} · {plan.title}",
+                    plan.cost_usd,
+                    plan.price_usd,
+                    after,
+                    profit,
+                    pct,
+                )
+                for plan, after, profit, pct in rows
+            ),
+        )
+        return format_html(
+            '<table style="font-size:12px;border-collapse:collapse;">'
+            '<thead><tr style="color:var(--qs-ink-soft);text-align:left;">'
+            "<th style=\"padding-right:12px;font-weight:600;\">{}</th>"
+            "<th style=\"padding-right:12px;font-weight:600;\">{}</th>"
+            "<th style=\"padding-right:12px;font-weight:600;\">{}</th>"
+            "<th style=\"font-weight:600;\">{}</th>"
+            "</tr></thead><tbody>{}</tbody></table>"
+            '<p style="margin-top:8px;font-size:11px;color:var(--qs-ink-soft);">{}</p>',
+            _("Plan"),
+            _("Cost"),
+            _("Price now → after"),
+            _("Profit"),
+            cells,
+            _("A sample of the plans this rule governs. Saving applies it to all of them."),
         )
 
     def delete_queryset(self, request, queryset):
@@ -894,6 +1086,14 @@ class PricingRuleAdmin(ModelAdmin):
 
     @display(description=_("Plans covered"), ordering="_affected")
     def affected(self, obj):
+        """How many plans this rule's scope contains, from the annotation.
+
+        Deliberately just the count. Working out how many it actually *decides*
+        means resolving the cascade per plan, and doing that per row is the N+1
+        this changelist was fixed for — measured at seven queries for three
+        rules. That breakdown lives on the change form under "What this does",
+        where one rule's worth of work is cheap.
+        """
         # NULL when the subquery matched no plans, which reads as 0.
         return obj._affected or 0
 

@@ -2722,3 +2722,72 @@ msgstr "Транзакции ATMOS"
 
 msgid "The account value ATMOS sent."
 msgstr "Значение account, которое прислал ATMOS."
+
+msgid "%(n)s are governed by a more specific rule."
+msgstr "%(n)s управляются более конкретным правилом."
+
+msgid "%(n)s carry their own markup, which overrides any rule."
+msgstr "У %(n)s своя наценка — она перекрывает любое правило."
+
+msgid "%(n)s have a locked price and are never recalculated."
+msgstr "У %(n)s цена закреплена и не пересчитывается."
+
+msgid "A sample of the plans this rule governs. Saving applies it to all of them."
+msgstr "Выборка тарифов, которыми управляет это правило. При сохранении применится ко всем."
+
+msgid "If that leaves less than $%(m)s of profit, the price rises until it does."
+msgstr "Если прибыль окажется меньше $%(m)s, цена поднимается до этого уровня."
+
+msgid "In plain words"
+msgstr "Простыми словами"
+
+msgid "No priced plans fall under this rule yet."
+msgstr "Под это правило пока не попадает ни один тариф с ценой."
+
+msgid "On %(who)s, the selling price is the supplier cost plus %(pct)s%%."
+msgstr "Для %(who)s цена продажи — себестоимость плюс %(pct)s%%."
+
+msgid "Price now → after"
+msgstr "Цена сейчас → после"
+
+msgid "Save the rule to preview prices."
+msgstr "Сохраните правило, чтобы увидеть цены."
+
+msgid "Save the rule to see a summary."
+msgstr "Сохраните правило, чтобы увидеть описание."
+
+msgid "Save the rule to see its reach."
+msgstr "Сохраните правило, чтобы увидеть охват."
+
+msgid "The result is then rounded up to a whole dollar."
+msgstr "Затем результат округляется вверх до целого доллара."
+
+msgid "The result is then rounded up to end in .99."
+msgstr "Затем результат округляется вверх до окончания на .99."
+
+msgid "The result is then rounded up to the next 50 cents."
+msgstr "Затем результат округляется вверх до следующих 50 центов."
+
+msgid "This rule is switched off, so it changes nothing right now."
+msgstr "Правило отключено, поэтому сейчас ничего не меняет."
+
+msgid "This rule sets the price of %(d)s of the %(c)s plans in its scope."
+msgstr "Это правило задаёт цену для %(d)s из %(c)s тарифов в своём охвате."
+
+msgid "What prices would become"
+msgstr "Какими станут цены"
+
+msgid "What this does"
+msgstr "Что это делает"
+
+msgid "Which plans this rule decides"
+msgstr "Какими тарифами управляет это правило"
+
+msgid "every plan for %(c)s"
+msgstr "каждого тарифа для %(c)s"
+
+msgid "every plan sourced from %(p)s"
+msgstr "каждого тарифа от %(p)s"
+
+msgid "every plan that no more specific rule covers"
+msgstr "каждого тарифа, который не покрыт более конкретным правилом"

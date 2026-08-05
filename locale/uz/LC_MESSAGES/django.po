@@ -2706,3 +2706,72 @@ msgstr "ATMOS tranzaksiyalari"
 
 msgid "The account value ATMOS sent."
 msgstr "ATMOS yuborgan account qiymati."
+
+msgid "%(n)s are governed by a more specific rule."
+msgstr "%(n)s tasi aniqroq qoida ostida."
+
+msgid "%(n)s carry their own markup, which overrides any rule."
+msgstr "%(n)s tasining o‘z ustamasi bor — u har qanday qoidadan ustun."
+
+msgid "%(n)s have a locked price and are never recalculated."
+msgstr "%(n)s tasining narxi qulflangan, qayta hisoblanmaydi."
+
+msgid "A sample of the plans this rule governs. Saving applies it to all of them."
+msgstr "Bu qoida qamragan tariflardan namuna. Saqlaganda hammasiga qo‘llanadi."
+
+msgid "If that leaves less than $%(m)s of profit, the price rises until it does."
+msgstr "Agar foyda $%(m)s dan kam chiqsa, narx shu darajaga ko‘tariladi."
+
+msgid "In plain words"
+msgstr "Oddiy tilda"
+
+msgid "No priced plans fall under this rule yet."
+msgstr "Bu qoida ostida narxlangan tarif hozircha yo‘q."
+
+msgid "On %(who)s, the selling price is the supplier cost plus %(pct)s%%."
+msgstr "%(who)s uchun sotuv narxi tannarx ustiga %(pct)s%% qo‘shilib hisoblanadi."
+
+msgid "Price now → after"
+msgstr "Hozirgi narx → keyin"
+
+msgid "Save the rule to preview prices."
+msgstr "Narxlarni ko‘rish uchun qoidani saqlang."
+
+msgid "Save the rule to see a summary."
+msgstr "Xulosani ko‘rish uchun qoidani saqlang."
+
+msgid "Save the rule to see its reach."
+msgstr "Qamrovni ko‘rish uchun qoidani saqlang."
+
+msgid "The result is then rounded up to a whole dollar."
+msgstr "So‘ng natija butun dollarga yuqoriga yaxlitlanadi."
+
+msgid "The result is then rounded up to end in .99."
+msgstr "So‘ng natija .99 bilan tugaydigan qilib yuqoriga yaxlitlanadi."
+
+msgid "The result is then rounded up to the next 50 cents."
+msgstr "So‘ng natija keyingi 50 sentga yuqoriga yaxlitlanadi."
+
+msgid "This rule is switched off, so it changes nothing right now."
+msgstr "Bu qoida o‘chirilgan, shuning uchun hozir hech narsani o‘zgartirmaydi."
+
+msgid "This rule sets the price of %(d)s of the %(c)s plans in its scope."
+msgstr "Bu qoida o‘z qamrovidagi %(c)s tarifdan %(d)s tasining narxini belgilaydi."
+
+msgid "What prices would become"
+msgstr "Narxlar qanday bo‘ladi"
+
+msgid "What this does"
+msgstr "Bu nima qiladi"
+
+msgid "Which plans this rule decides"
+msgstr "Bu qoida qaysi tariflarni belgilaydi"
+
+msgid "every plan for %(c)s"
+msgstr "%(c)s uchun har bir tarif"
+
+msgid "every plan sourced from %(p)s"
+msgstr "%(p)s dan olinadigan har bir tarif"
+
+msgid "every plan that no more specific rule covers"
+msgstr "aniqroq qoida qamramagan har bir tarif"
