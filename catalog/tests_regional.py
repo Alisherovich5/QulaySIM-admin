@@ -109,6 +109,38 @@ class CoverageIsCountedInCountriesNotEntriesTests(TestCase):
         self.assertEqual(coverage, 12)
 
 
+class WorldwideMustBeWorldwideTests(TestCase):
+    """A bundle called "Butun dunyo" has to be worth the word.
+
+    The region rule files anything spanning several continents as global, and a
+    20-country bundle across four of them qualifies. eSIM Access sells exactly
+    that at $18.33 for 3 GB, while a genuine 167-country package is $15.59 for
+    the same data over longer — so the customer would pay more for a twelfth of
+    the coverage, having read "worldwide".
+    """
+
+    def test_a_narrow_cross_continental_bundle_is_not_worldwide(self):
+        catalogue = supplier_api.FetchedCatalogue()
+        codes = "US GB JP BR ZA AU IN FR MX KE TH CA SG AE TR EG PE VN NZ CL".split()
+        self.assertEqual(geo.region_for_coverage(codes), geo.GLOBAL)
+        supplier_api._add_regional(catalogue, codes, 3.0, 15, "fake-global", Decimal("18.33"))
+        self.assertEqual(catalogue.regional, {})
+        self.assertEqual(catalogue.too_narrow, 1)
+
+    def test_a_real_worldwide_bundle_is_sold(self):
+        catalogue = supplier_api.FetchedCatalogue()
+        codes = [f"{a}{b}" for a in "ABCDEFG" for b in "ABCDEFGH"][:60]
+        supplier_api._add_regional(catalogue, codes, 3.0, 30, "global139", Decimal("15.59"))
+        self.assertEqual(len(catalogue.regional), 1)
+
+    def test_the_regional_floor_still_applies_to_regions(self):
+        # A 20-country European bundle is a perfectly good Europe product; the
+        # higher bar is only for claiming the whole world.
+        catalogue = supplier_api.FetchedCatalogue()
+        supplier_api._add_regional(catalogue, EUROPE_41[:20], 3.0, 30, "eu20", Decimal("7.00"))
+        self.assertEqual(len(catalogue.regional), 1)
+
+
 class CoverageBeatsPriceTests(TestCase):
     """The opposite rule from a single-country tariff, and deliberately so."""
 

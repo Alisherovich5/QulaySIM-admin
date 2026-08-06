@@ -91,6 +91,19 @@ def _gb_from_mb(megabytes: float) -> float:
 # regional product, and it is reported rather than sold.
 MIN_REGIONAL_COVERAGE = 8
 
+# A bundle sold as "Butun dunyo" has to be worth that word.
+#
+# The region rule files anything spanning several continents as global, and a
+# 20-country bundle across four continents qualifies — but sold as worldwide it
+# is worse than misleading, it is dearer: eSIM Access lists exactly such a
+# package at $18.33 for 3 GB while a genuine 167-country one costs $15.59 for
+# the same data over a longer period. A customer reading "Butun dunyo" and
+# paying more for a twelfth of the coverage has been sold something false.
+#
+# Below this a cross-continental bundle is simply not a product we have a shelf
+# for: it is not a region either, so it is reported and left alone.
+MIN_GLOBAL_COVERAGE = 40
+
 
 def _add_regional(
     catalogue: FetchedCatalogue,
@@ -125,7 +138,13 @@ def _add_regional(
         catalogue.too_narrow += 1
         return
     codes = unique
-    key = (region_for_coverage(codes), gb, days)
+    from catalog.geo import GLOBAL
+
+    region = region_for_coverage(codes)
+    if region == GLOBAL and len(codes) < MIN_GLOBAL_COVERAGE:
+        catalogue.too_narrow += 1
+        return
+    key = (region, gb, days)
     existing = catalogue.regional.get(key)
     # Widest first, then cheapest.
     if existing is None or (-len(codes), cost) < (-existing[2], existing[1]):
