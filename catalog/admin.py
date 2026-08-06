@@ -673,8 +673,172 @@ class PlanAdmin(ModelAdmin):
                 self.admin_site.admin_view(self.import_prices_view),
                 name="catalog_plan_import_prices",
             ),
+            path(
+                "prices/",
+                self.admin_site.admin_view(self.price_sheet),
+                name="catalog_plan_price_sheet",
+            ),
             *super().get_urls(),
         ]
+
+    def price_sheet(self, request):
+        """Every tariff's cost and price, by destination, editable in place.
+
+        Two jobs the rest of the admin does badly. Cost is spread across a
+        changelist column and an inline, so answering "what do we actually pay
+        for Qatar" meant filtering and squinting. And a price could only be typed
+        on a tariff's own page, one at a time, 1300 pages deep.
+
+        Typing a price LOCKS it. That is not a convenience, it is the difference
+        between the edit surviving and vanishing: Plan.save() recalculates from
+        cost on every write, so an unlocked hand-typed price is overwritten
+        before the page has finished reloading. Locking is undone with the
+        "avtomatik" checkbox, which hands the tariff back to the pricing rules.
+        """
+        from django.contrib import messages
+        from django.core.paginator import Paginator
+        from django.db.models import Prefetch, Q
+        from django.shortcuts import redirect, render
+        from django.urls import reverse
+
+        if not self.has_change_permission(request):
+            messages.error(request, _("You do not have permission to change tariffs."))
+            return redirect(reverse("admin:catalog_plan_changelist"))
+
+        if request.method == "POST":
+            return self._save_price_sheet(request)
+
+        query = (request.GET.get("q") or "").strip()
+        countries = Country.objects.order_by("-is_active", "sort_order", "name")
+        if query:
+            countries = countries.filter(
+                Q(name__icontains=query)
+                | Q(name_uz__icontains=query)
+                | Q(name_ru__icontains=query)
+                | Q(iso2__iexact=query)
+            )
+        # Paginated by destination rather than by tariff, so a country's ladder is
+        # never split across two pages — comparing 5 GB against 10 GB is the
+        # whole reason to look at this.
+        countries = countries.prefetch_related(
+            Prefetch(
+                "plans",
+                queryset=Plan.objects.order_by("sort_order", "data_amount_mb").prefetch_related(
+                    "offers"
+                ),
+            )
+        )
+        page = Paginator(countries, 15).get_page(request.GET.get("page"))
+
+        regional = (
+            Plan.objects.filter(country__isnull=True, region__isnull=False)
+            .select_related("region")
+            .order_by("region__sort_order", "sort_order")
+            .prefetch_related("offers")
+            if not query
+            else Plan.objects.none()
+        )
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": _("Cost and price sheet"),
+            "opts": self.model._meta,
+            "page": page,
+            "query": query,
+            "regional": regional,
+            "locked_count": Plan.objects.filter(price_locked=True).count(),
+            "total_count": Plan.objects.count(),
+        }
+        return render(request, "admin/catalog/price_sheet.html", context)
+
+    def _save_price_sheet(self, request):
+        """Write the prices that actually changed, and nothing else.
+
+        Only touched rows are saved: writing all 1300 would fire the sourcing and
+        repricing logic on every one of them for no reason, and would stamp
+        `updated_at` across a catalogue nobody edited.
+        """
+        from decimal import Decimal, InvalidOperation
+
+        from django.contrib import messages
+        from django.shortcuts import redirect
+
+        changed, unlocked, rejected = 0, 0, []
+        auto_ids = {
+            key.removeprefix("auto-")
+            for key in request.POST
+            if key.startswith("auto-")
+        }
+        plans = {
+            str(plan.id): plan
+            for plan in Plan.objects.filter(
+                id__in=[
+                    key.removeprefix("price-")
+                    for key in request.POST
+                    if key.startswith("price-") and key.removeprefix("price-").isdigit()
+                ]
+            )
+        }
+
+        for key, raw in request.POST.items():
+            if not key.startswith("price-"):
+                continue
+            plan_id = key.removeprefix("price-")
+            plan = plans.get(plan_id)
+            if plan is None:
+                continue
+
+            wants_auto = plan_id in auto_ids
+            if wants_auto:
+                if plan.price_locked:
+                    # Handed back to the pricing rules. save() reprices it from
+                    # cost, which is the point of unlocking.
+                    plan.price_locked = False
+                    plan.save()
+                    unlocked += 1
+                continue
+
+            try:
+                typed = Decimal(str(raw).strip().replace(",", "."))
+            except (InvalidOperation, ValueError):
+                rejected.append(f"{plan.title}: “{raw}”")
+                continue
+            if typed <= 0:
+                rejected.append(f"{plan.title}: {typed}")
+                continue
+            typed = typed.quantize(Decimal("0.01"))
+
+            already_manual = plan.price_locked
+            if typed == plan.price_usd and already_manual:
+                continue
+
+            plan.price_usd = typed
+            # Locked, or save() would recalculate from cost and the typed value
+            # would be gone before the page reloaded.
+            plan.price_locked = True
+            plan.save()
+            changed += 1
+
+        if changed:
+            messages.success(
+                request,
+                _("%(n)s price(s) saved and locked — the sync will not overwrite them.")
+                % {"n": changed},
+            )
+        if unlocked:
+            messages.info(
+                request,
+                _("%(n)s tariff(s) returned to automatic pricing.") % {"n": unlocked},
+            )
+        if rejected:
+            messages.error(
+                request,
+                _("Not a valid price, left unchanged: %(rows)s")
+                % {"rows": ", ".join(rejected[:5])},
+            )
+        if not (changed or unlocked or rejected):
+            messages.info(request, _("Nothing changed."))
+        return redirect(request.get_full_path())
 
     def import_prices_view(self, request):
         """Upload a wholesaler price list; preview first, write only on confirm.

@@ -1,0 +1,212 @@
+{% extends "admin/base_site.html" %}
+{% load i18n l10n %}
+
+{% comment %}
+Cost and price for every tariff, grouped by destination, editable in place.
+
+Grouped by country and not sorted as one flat table because the question people
+actually have is "what do we pay for Qatar, and what do we charge" — and that is
+unanswerable when 5 GB and 10 GB are four hundred rows apart.
+
+Typing a price locks it. The warning at the top is not decoration: Plan.save()
+recalculates the price from cost on every write, so without the lock a typed
+price is gone before the page finishes reloading. The "avtomatik" checkbox is how
+a tariff is handed back to the pricing rules.
+{% endcomment %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+  .qs-ps__lede { margin:0 0 1rem; }
+  .qs-ps__bar { display:flex; flex-wrap:wrap; gap:.75rem; align-items:center; margin:0 0 1.25rem; }
+  .qs-ps__search { flex:1 1 14rem; min-width:11rem; padding:.55rem .8rem; border-radius:.6rem;
+    border:1px solid var(--qs-line, #d5dbe3); background:var(--qs-surface, #fff); color:inherit; }
+  .qs-ps__save { padding:.6rem 1.2rem; border-radius:.6rem; border:0; cursor:pointer;
+    font-weight:700; background:var(--qs-teal-text, #0d6b52); color:#fff; }
+  .qs-ps__country { margin:0 0 1.5rem; border:1px solid var(--qs-line, #d5dbe3);
+    border-radius:.9rem; overflow:hidden; }
+  .qs-ps__head { display:flex; gap:.6rem; align-items:center; padding:.7rem 1rem;
+    background:var(--qs-surface-2, #f6f8fa); font-weight:700; }
+  .qs-ps__flag { font-size:1.3rem; line-height:1; }
+  .qs-ps__off { font-size:.72rem; font-weight:600; color:var(--qs-ink-soft, #64748b); }
+  .qs-ps__scroll { overflow-x:auto; }
+  .qs-ps__table { width:100%; border-collapse:collapse; min-width:44rem; }
+  .qs-ps__table th, .qs-ps__table td { padding:.5rem .8rem; text-align:left;
+    border-top:1px solid var(--qs-line, #d5dbe3); font-size:.85rem; white-space:nowrap; }
+  .qs-ps__table th { font-size:.72rem; text-transform:uppercase; letter-spacing:.03em;
+    color:var(--qs-ink-soft, #64748b); font-weight:700; border-top:0; }
+  .qs-ps__cost { font-weight:700; }
+  .qs-ps__margin { color:var(--qs-teal-text, #0d6b52); font-weight:700; }
+  .qs-ps__thin { color:var(--qs-bad-text, #b42318); font-weight:700; }
+  .qs-ps__input { width:6.5rem; padding:.35rem .5rem; border-radius:.4rem;
+    border:1px solid var(--qs-line, #d5dbe3); background:var(--qs-surface, #fff);
+    color:inherit; font-weight:700; }
+  .qs-ps__locked { border-color:var(--qs-accent-text, #a16207); }
+  .qs-ps__sup { font-size:.75rem; color:var(--qs-ink-soft, #64748b); }
+  .qs-ps__pager { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; margin:1.5rem 0; }
+  .qs-ps__pager a, .qs-ps__pager span { padding:.4rem .75rem; border-radius:.5rem;
+    border:1px solid var(--qs-line, #d5dbe3); text-decoration:none; color:inherit; font-size:.82rem; }
+  .qs-ps__pager .qs-ps__now { background:var(--qs-good-wash, #e6f7f1); border-color:transparent;
+    font-weight:700; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qs-ps">
+
+  <p class="qs-ps__lede">
+    {% blocktrans trimmed %}
+    What each tariff costs us and what the customer pays, by destination. Cost
+    comes from whichever wholesaler is cheapest and is refreshed by the nightly
+    sync; the price is normally calculated from it by the pricing rules.
+    {% endblocktrans %}
+  </p>
+  <p class="qs-import__warn">
+    {% blocktrans trimmed %}
+    Typing a price locks that tariff. It has to: the price is recalculated from
+    cost on every save, so an unlocked hand-typed value would be overwritten
+    immediately. A locked tariff stops following the pricing rules and stops
+    reacting to a cost change — tick “automatic” to hand it back.
+    {% endblocktrans %}
+  </p>
+  <p class="qs-import__help">
+    {% blocktrans trimmed with locked=locked_count total=total_count %}
+    {{ locked }} of {{ total }} tariffs are priced by hand; the rest follow the
+    pricing rules.
+    {% endblocktrans %}
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="qs-ps__bar">
+      <input type="search" name="q" value="{{ query }}" class="qs-ps__search"
+             placeholder="{% trans 'Search a destination…' %}"
+             form="qs-ps-search">
+      <button type="submit" class="qs-ps__save">{% trans "Save prices" %}</button>
+    </div>
+
+    {% for country in page %}
+      <div class="qs-ps__country">
+        <div class="qs-ps__head">
+          <span class="qs-ps__flag">{{ country.flag_emoji }}</span>
+          <span>{{ country.name_uz|default:country.name }}</span>
+          <span class="qs-ps__sup">{{ country.iso2 }}</span>
+          {% if not country.is_active %}
+            <span class="qs-ps__off">· {% trans "not on sale" %}</span>
+          {% endif %}
+        </div>
+        <div class="qs-ps__scroll">
+          <table class="qs-ps__table">
+            <thead>
+              <tr>
+                <th>{% trans "Tariff" %}</th>
+                <th>{% trans "Cost" %}</th>
+                <th>{% trans "Suppliers" %}</th>
+                <th>{% trans "Price" %}</th>
+                <th>{% trans "Margin" %}</th>
+                <th>{% trans "Automatic" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for plan in country.plans.all %}
+                <tr>
+                  <td>
+                    <a href="{% url 'admin:catalog_plan_change' plan.pk %}">{{ plan.title }}</a>
+                    {% if not plan.is_active %}<span class="qs-ps__off"> · {% trans "off" %}</span>{% endif %}
+                  </td>
+                  <td class="qs-ps__cost">{% if plan.cost_usd %}${{ plan.cost_usd }}{% else %}—{% endif %}</td>
+                  <td class="qs-ps__sup">
+                    {% for offer in plan.offers.all %}{{ offer.get_provider_display }} ${{ offer.cost_usd }}{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}
+                  </td>
+                  <td>
+                    <input type="text" inputmode="decimal" name="price-{{ plan.pk }}"
+                           value="{{ plan.price_usd|unlocalize }}"
+                           class="qs-ps__input {% if plan.price_locked %}qs-ps__locked{% endif %}"
+                           aria-label="{{ plan.title }} {% trans 'price' %}">
+                  </td>
+                  <td class="{% if plan.margin_usd and plan.margin_usd < 1 %}qs-ps__thin{% else %}qs-ps__margin{% endif %}">
+                    {% if plan.margin_usd is not None %}${{ plan.margin_usd }}{% else %}—{% endif %}
+                  </td>
+                  <td>
+                    <input type="checkbox" name="auto-{{ plan.pk }}"
+                           {% if not plan.price_locked %}checked{% endif %}
+                           aria-label="{{ plan.title }} {% trans 'automatic pricing' %}">
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="6" class="qs-ps__sup">{% trans "no tariffs yet" %}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% empty %}
+      <p class="qs-import__help">{% trans "Nothing matches that search." %}</p>
+    {% endfor %}
+
+    {% if regional %}
+      <div class="qs-ps__country">
+        <div class="qs-ps__head">
+          <span class="qs-ps__flag">🌍</span>
+          <span>{% trans "Regional and worldwide eSIMs" %}</span>
+        </div>
+        <div class="qs-ps__scroll">
+          <table class="qs-ps__table">
+            <thead>
+              <tr>
+                <th>{% trans "Tariff" %}</th>
+                <th>{% trans "Cost" %}</th>
+                <th>{% trans "Coverage" %}</th>
+                <th>{% trans "Price" %}</th>
+                <th>{% trans "Margin" %}</th>
+                <th>{% trans "Automatic" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for plan in regional %}
+                <tr>
+                  <td><a href="{% url 'admin:catalog_plan_change' plan.pk %}">{{ plan.title }}</a></td>
+                  <td class="qs-ps__cost">{% if plan.cost_usd %}${{ plan.cost_usd }}{% else %}—{% endif %}</td>
+                  <td class="qs-ps__sup">{{ plan.price_note|default:"—" }}</td>
+                  <td>
+                    <input type="text" inputmode="decimal" name="price-{{ plan.pk }}"
+                           value="{{ plan.price_usd|unlocalize }}"
+                           class="qs-ps__input {% if plan.price_locked %}qs-ps__locked{% endif %}"
+                           aria-label="{{ plan.title }} {% trans 'price' %}">
+                  </td>
+                  <td class="qs-ps__margin">
+                    {% if plan.margin_usd is not None %}${{ plan.margin_usd }}{% else %}—{% endif %}
+                  </td>
+                  <td>
+                    <input type="checkbox" name="auto-{{ plan.pk }}"
+                           {% if not plan.price_locked %}checked{% endif %}>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
+    <button type="submit" class="qs-ps__save">{% trans "Save prices" %}</button>
+  </form>
+
+  {# Outside the price form: a search must not submit 1300 price fields. #}
+  <form method="get" id="qs-ps-search"></form>
+
+  {% if page.paginator.num_pages > 1 %}
+    <div class="qs-ps__pager">
+      {% if page.has_previous %}
+        <a href="?page={{ page.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">‹ {% trans "Back" %}</a>
+      {% endif %}
+      <span class="qs-ps__now">
+        {% blocktrans with n=page.number of=page.paginator.num_pages %}{{ n }} / {{ of }}{% endblocktrans %}
+      </span>
+      {% if page.has_next %}
+        <a href="?page={{ page.next_page_number }}{% if query %}&q={{ query }}{% endif %}">{% trans "Next" %} ›</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

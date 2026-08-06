@@ -377,6 +377,11 @@ UNFOLD = {
                     {"title": _("Countries"), "icon": "flag", "link": reverse_lazy("admin:catalog_country_changelist")},
                     {"title": _("Plans"), "icon": "sim_card", "link": reverse_lazy("admin:catalog_plan_changelist")},
                     {
+                        "title": _("Cost and price sheet"),
+                        "icon": "price_change",
+                        "link": reverse_lazy("admin:catalog_plan_price_sheet"),
+                    },
+                    {
                         "title": _("Supplier prices"),
                         "icon": "compare_arrows",
                         "link": reverse_lazy("admin:catalog_supplieroffer_changelist"),

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-06 12:37+0500\n"
+"POT-Creation-Date: 2026-08-06 17:41+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -118,6 +118,27 @@ msgstr "Введите себестоимость поставщика — це�
 
 msgid "Visibility"
 msgstr "Отображение"
+
+msgid "You do not have permission to change tariffs."
+msgstr "У вас нет прав изменять тарифы."
+
+msgid "Cost and price sheet"
+msgstr "Себестоимость и цены"
+
+#, python-format
+msgid "%(n)s price(s) saved and locked — the sync will not overwrite them."
+msgstr "%(n)s цен(а) сохранена и закреплена — синхронизация их не перезапишет."
+
+#, python-format
+msgid "%(n)s tariff(s) returned to automatic pricing."
+msgstr "%(n)s тариф(а) возвращены к автоматическому расчёту цены."
+
+#, python-format
+msgid "Not a valid price, left unchanged: %(rows)s"
+msgstr "Некорректная цена, оставлено без изменений: %(rows)s"
+
+msgid "Nothing changed."
+msgstr "Ничего не изменилось."
 
 msgid "Target"
 msgstr "Применяется к"
@@ -1874,6 +1895,7 @@ msgstr "В продаже"
 msgid "Waiting for review"
 msgstr "Ждёт проверки"
 
+#, python-format
 msgid "%(n)s tariff"
 msgid_plural "%(n)s tariffs"
 msgstr[0] "%(n)s тариф"
@@ -2032,6 +2054,44 @@ msgid ""
 "          the <code>location</code> column holds ISO codes such as TR or AE, and\n"
 "          that those destinations exist."
 msgstr "Ничто в этом файле не совпало с направлением из каталога. Проверьте, что в столбце <code>location</code> стоят ISO-коды вида TR или AE и что такие направления существуют."
+
+msgid "What each tariff costs us and what the customer pays, by destination. Cost comes from whichever wholesaler is cheapest and is refreshed by the nightly sync; the price is normally calculated from it by the pricing rules."
+msgstr "Сколько каждый тариф стоит нам и сколько платит клиент — по направлениям. Себестоимость берётся у самого дешёвого поставщика и обновляется ночной синхронизацией; цена обычно рассчитывается из неё правилами ценообразования."
+
+msgid "Typing a price locks that tariff. It has to: the price is recalculated from cost on every save, so an unlocked hand-typed value would be overwritten immediately. A locked tariff stops following the pricing rules and stops reacting to a cost change — tick “automatic” to hand it back."
+msgstr "Если вписать цену вручную, тариф закрепляется. Так и должно быть: цена пересчитывается из себестоимости при каждом сохранении, поэтому незакреплённое значение было бы сразу перезаписано. Закреплённый тариф перестаёт следовать правилам ценообразования и не реагирует на изменение себестоимости — отметьте «автоматически», чтобы вернуть его."
+
+#, python-format
+msgid "%(locked)s of %(total)s tariffs are priced by hand; the rest follow the pricing rules."
+msgstr "Из %(total)s тарифов %(locked)s оценены вручную; остальные следуют правилам ценообразования."
+
+msgid "Save prices"
+msgstr "Сохранить цены"
+
+msgid "not on sale"
+msgstr "не в продаже"
+
+msgid "Automatic"
+msgstr "Автоматически"
+
+msgid "price"
+msgstr "цена"
+
+msgid "automatic pricing"
+msgstr "автоматический расчёт цены"
+
+msgid "Regional and worldwide eSIMs"
+msgstr "Региональные и всемирные eSIM"
+
+msgid "Coverage"
+msgstr "Покрытие"
+
+msgid "Back"
+msgstr "Назад"
+
+#, python-format
+msgid "%(n)s / %(of)s"
+msgstr "%(n)s / %(of)s"
 
 msgid "Live overview of QulaySIM sales, customers and eSIM activity."
 msgstr "Текущая картина продаж, клиентов и активности eSIM в QulaySIM."

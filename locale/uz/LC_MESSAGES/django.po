@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-06 12:37+0500\n"
+"POT-Creation-Date: 2026-08-06 17:41+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -118,6 +118,27 @@ msgstr "Ta’minotchi tannarxini kiriting — narx saqlanganda hisoblanadi. Usta
 
 msgid "Visibility"
 msgstr "Ko‘rinishi"
+
+msgid "You do not have permission to change tariffs."
+msgstr "Tariflarni o‘zgartirishga ruxsatingiz yo‘q."
+
+msgid "Cost and price sheet"
+msgstr "Tannarx va narxlar"
+
+#, python-format
+msgid "%(n)s price(s) saved and locked — the sync will not overwrite them."
+msgstr "%(n)s narx saqlandi va qulflandi — sinxronizatsiya ularni o‘zgartirmaydi."
+
+#, python-format
+msgid "%(n)s tariff(s) returned to automatic pricing."
+msgstr "%(n)s tarif avtomatik narxlashga qaytarildi."
+
+#, python-format
+msgid "Not a valid price, left unchanged: %(rows)s"
+msgstr "Narx to‘g‘ri emas, o‘zgartirilmadi: %(rows)s"
+
+msgid "Nothing changed."
+msgstr "Hech narsa o‘zgarmadi."
 
 msgid "Target"
 msgstr "Qo‘llanadi"
@@ -1874,6 +1895,7 @@ msgstr "Sotuvda"
 msgid "Waiting for review"
 msgstr "Ko‘rib chiqishni kutmoqda"
 
+#, python-format
 msgid "%(n)s tariff"
 msgid_plural "%(n)s tariffs"
 msgstr[0] "%(n)s ta tarif"
@@ -2014,6 +2036,44 @@ msgid ""
 "          the <code>location</code> column holds ISO codes such as TR or AE, and\n"
 "          that those destinations exist."
 msgstr "Bu fayldagi hech narsa katalogdagi yo‘nalishga mos kelmadi. <code>location</code> ustunida TR yoki AE kabi ISO kodlar turganini va o‘sha yo‘nalishlar mavjudligini tekshiring."
+
+msgid "What each tariff costs us and what the customer pays, by destination. Cost comes from whichever wholesaler is cheapest and is refreshed by the nightly sync; the price is normally calculated from it by the pricing rules."
+msgstr "Har bir tarif bizga qanchaga tushadi va mijoz qancha to‘laydi — yo‘nalishlar bo‘yicha. Tannarx eng arzon ulgurji ta’minotchidan olinadi va kechasi sinxronizatsiya bilan yangilanadi; narx esa odatda shundan narxlash qoidalari orqali hisoblanadi."
+
+msgid "Typing a price locks that tariff. It has to: the price is recalculated from cost on every save, so an unlocked hand-typed value would be overwritten immediately. A locked tariff stops following the pricing rules and stops reacting to a cost change — tick “automatic” to hand it back."
+msgstr "Narxni qo‘lda yozsangiz, o‘sha tarif qulflanadi. Shunday bo‘lishi shart: narx har saqlashda tannarxdan qayta hisoblanadi, ya’ni qulflanmagan qo‘lda yozilgan qiymat darhol ustidan yozilardi. Qulflangan tarif narxlash qoidalariga ham, tannarx o‘zgarishiga ham javob bermaydi — qaytarish uchun “avtomatik” ni belgilang."
+
+#, python-format
+msgid "%(locked)s of %(total)s tariffs are priced by hand; the rest follow the pricing rules."
+msgstr "%(total)s tarifdan %(locked)s tasi qo‘lda narxlangan; qolganlari narxlash qoidalariga bo‘ysunadi."
+
+msgid "Save prices"
+msgstr "Narxlarni saqlash"
+
+msgid "not on sale"
+msgstr "sotuvda emas"
+
+msgid "Automatic"
+msgstr "Avtomatik"
+
+msgid "price"
+msgstr "narx"
+
+msgid "automatic pricing"
+msgstr "avtomatik narxlash"
+
+msgid "Regional and worldwide eSIMs"
+msgstr "Hududiy va butun dunyo eSIM’lari"
+
+msgid "Coverage"
+msgstr "Qamrov"
+
+msgid "Back"
+msgstr "Orqaga"
+
+#, python-format
+msgid "%(n)s / %(of)s"
+msgstr "%(n)s / %(of)s"
 
 msgid "Live overview of QulaySIM sales, customers and eSIM activity."
 msgstr "QulaySIM savdosi, mijozlari va eSIM faoliyatining joriy ko‘rinishi."
