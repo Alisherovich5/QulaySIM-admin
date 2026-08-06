@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-06 17:41+0500\n"
+"POT-Creation-Date: 2026-08-06 17:51+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -2064,6 +2064,25 @@ msgstr "Если вписать цену вручную, тариф закреп
 #, python-format
 msgid "%(locked)s of %(total)s tariffs are priced by hand; the rest follow the pricing rules."
 msgstr "Из %(total)s тарифов %(locked)s оценены вручную; остальные следуют правилам ценообразования."
+
+#, python-format
+msgid "Showing %(shown)s of %(total)s destinations · %(tariffs)s tariffs in the catalogue"
+msgstr "Показано %(shown)s из %(total)s направлений · в каталоге %(tariffs)s тарифов"
+
+msgid "Every region"
+msgstr "Все регионы"
+
+msgid "15 per page"
+msgstr "По 15 на странице"
+
+msgid "50 per page"
+msgstr "По 50 на странице"
+
+msgid "All on one page"
+msgstr "Все на одной странице"
+
+msgid "Apply"
+msgstr "Применить"
 
 msgid "Save prices"
 msgstr "Сохранить цены"

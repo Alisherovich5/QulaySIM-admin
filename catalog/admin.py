@@ -709,6 +709,7 @@ class PlanAdmin(ModelAdmin):
             return self._save_price_sheet(request)
 
         query = (request.GET.get("q") or "").strip()
+        region_slug = (request.GET.get("region") or "").strip()
         countries = Country.objects.order_by("-is_active", "sort_order", "name")
         if query:
             countries = countries.filter(
@@ -717,6 +718,8 @@ class PlanAdmin(ModelAdmin):
                 | Q(name_ru__icontains=query)
                 | Q(iso2__iexact=query)
             )
+        if region_slug:
+            countries = countries.filter(region__slug=region_slug)
         # Paginated by destination rather than by tariff, so a country's ladder is
         # never split across two pages — comparing 5 GB against 10 GB is the
         # whole reason to look at this.
@@ -728,16 +731,28 @@ class PlanAdmin(ModelAdmin):
                 ),
             )
         )
-        page = Paginator(countries, 15).get_page(request.GET.get("page"))
+        # Everything is reachable either way; the size is the operator's call.
+        # 15 destinations is a page you can read, and "all" is a page you can
+        # work through in one sitting — roughly 1400 rows and a few megabytes of
+        # HTML, which is why it is opt-in rather than the default.
+        sizes = {"15": 15, "50": 50, "all": 10_000}
+        size_key = request.GET.get("show") if request.GET.get("show") in sizes else "15"
+        page = Paginator(countries, sizes[size_key]).get_page(request.GET.get("page"))
 
-        regional = (
-            Plan.objects.filter(country__isnull=True, region__isnull=False)
-            .select_related("region")
-            .order_by("region__sort_order", "sort_order")
-            .prefetch_related("offers")
-            if not query
-            else Plan.objects.none()
-        )
+        # Multi-country tariffs. Hidden while searching for a destination — a
+        # search for "turk" is about Turkey, not about the Europe bundle — but
+        # narrowed rather than dropped when a region is chosen, because that is
+        # exactly when someone wants to see it.
+        regional = Plan.objects.none()
+        if not query:
+            regional = (
+                Plan.objects.filter(country__isnull=True, region__isnull=False)
+                .select_related("region")
+                .order_by("region__sort_order", "sort_order")
+                .prefetch_related("offers")
+            )
+            if region_slug:
+                regional = regional.filter(region__slug=region_slug)
 
         context = {
             **self.admin_site.each_context(request),
@@ -748,6 +763,13 @@ class PlanAdmin(ModelAdmin):
             "regional": regional,
             "locked_count": Plan.objects.filter(price_locked=True).count(),
             "total_count": Plan.objects.count(),
+            "size_key": size_key,
+            "region_slug": region_slug,
+            "regions": Region.objects.order_by("sort_order", "name"),
+            # Shown so it is obvious the sheet covers the whole catalogue and not
+            # just the page in front of you.
+            "country_total": Country.objects.count(),
+            "matched_countries": countries.count(),
         }
         return render(request, "admin/catalog/price_sheet.html", context)
 

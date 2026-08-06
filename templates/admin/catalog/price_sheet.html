@@ -17,6 +17,7 @@ a tariff is handed back to the pricing rules.
 {% block extrastyle %}{{ block.super }}
 <style>
   .qs-ps__lede { margin:0 0 1rem; }
+  .qs-ps__counts { margin:0 0 1rem; font-weight:700; }
   .qs-ps__bar { display:flex; flex-wrap:wrap; gap:.75rem; align-items:center; margin:0 0 1.25rem; }
   .qs-ps__search { flex:1 1 14rem; min-width:11rem; padding:.55rem .8rem; border-radius:.6rem;
     border:1px solid var(--qs-line, #d5dbe3); background:var(--qs-surface, #fff); color:inherit; }
@@ -75,18 +76,45 @@ a tariff is handed back to the pricing rules.
     {% endblocktrans %}
   </p>
 
+  {# The whole catalogue is here, not just the page in front of you. Said out
+     loud because a paginated sheet reads as a partial one. #}
+  <p class="qs-ps__counts">
+    {% blocktrans trimmed with shown=matched_countries total=country_total tariffs=total_count %}
+    Showing {{ shown }} of {{ total }} destinations · {{ tariffs }} tariffs in the
+    catalogue
+    {% endblocktrans %}
+  </p>
+
+  {# Filters live in their own GET form: a search must not submit 1400 price
+     fields, and a price form must not lose its filters. #}
+  <form method="get" id="qs-ps-search" class="qs-ps__bar">
+    <input type="search" name="q" value="{{ query }}" class="qs-ps__search"
+           placeholder="{% trans 'Search a destination…' %}">
+    <select name="region" class="qs-ps__search" style="flex:0 1 11rem">
+      <option value="">{% trans "Every region" %}</option>
+      {% for r in regions %}
+        <option value="{{ r.slug }}" {% if r.slug == region_slug %}selected{% endif %}>
+          {{ r.name_uz|default:r.name }}
+        </option>
+      {% endfor %}
+    </select>
+    <select name="show" class="qs-ps__search" style="flex:0 1 12rem">
+      <option value="15" {% if size_key == "15" %}selected{% endif %}>{% trans "15 per page" %}</option>
+      <option value="50" {% if size_key == "50" %}selected{% endif %}>{% trans "50 per page" %}</option>
+      <option value="all" {% if size_key == "all" %}selected{% endif %}>{% trans "All on one page" %}</option>
+    </select>
+    <button type="submit" class="qs-ps__save">{% trans "Apply" %}</button>
+  </form>
+
   <form method="post">
     {% csrf_token %}
-
+    {# Carried through the save so the filters survive the redirect. #}
     <div class="qs-ps__bar">
-      <input type="search" name="q" value="{{ query }}" class="qs-ps__search"
-             placeholder="{% trans 'Search a destination…' %}"
-             form="qs-ps-search">
       <button type="submit" class="qs-ps__save">{% trans "Save prices" %}</button>
     </div>
 
     {% for country in page %}
-      <div class="qs-ps__country">
+      <div class="qs-ps__country" data-country="{{ country.iso2 }}">
         <div class="qs-ps__head">
           <span class="qs-ps__flag">{{ country.flag_emoji }}</span>
           <span>{{ country.name_uz|default:country.name }}</span>
@@ -145,7 +173,7 @@ a tariff is handed back to the pricing rules.
     {% endfor %}
 
     {% if regional %}
-      <div class="qs-ps__country">
+      <div class="qs-ps__country" data-regional="1">
         <div class="qs-ps__head">
           <span class="qs-ps__flag">🌍</span>
           <span>{% trans "Regional and worldwide eSIMs" %}</span>
@@ -192,19 +220,16 @@ a tariff is handed back to the pricing rules.
     <button type="submit" class="qs-ps__save">{% trans "Save prices" %}</button>
   </form>
 
-  {# Outside the price form: a search must not submit 1300 price fields. #}
-  <form method="get" id="qs-ps-search"></form>
-
   {% if page.paginator.num_pages > 1 %}
     <div class="qs-ps__pager">
       {% if page.has_previous %}
-        <a href="?page={{ page.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">‹ {% trans "Back" %}</a>
+        <a href="?page={{ page.previous_page_number }}&show={{ size_key }}{% if query %}&q={{ query }}{% endif %}{% if region_slug %}&region={{ region_slug }}{% endif %}">‹ {% trans "Back" %}</a>
       {% endif %}
       <span class="qs-ps__now">
         {% blocktrans with n=page.number of=page.paginator.num_pages %}{{ n }} / {{ of }}{% endblocktrans %}
       </span>
       {% if page.has_next %}
-        <a href="?page={{ page.next_page_number }}{% if query %}&q={{ query }}{% endif %}">{% trans "Next" %} ›</a>
+        <a href="?page={{ page.next_page_number }}&show={{ size_key }}{% if query %}&q={{ query }}{% endif %}{% if region_slug %}&region={{ region_slug }}{% endif %}">{% trans "Next" %} ›</a>
       {% endif %}
     </div>
   {% endif %}

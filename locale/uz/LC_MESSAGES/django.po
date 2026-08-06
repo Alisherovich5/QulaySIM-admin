@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-06 17:41+0500\n"
+"POT-Creation-Date: 2026-08-06 17:51+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -2046,6 +2046,25 @@ msgstr "Narxni qo‘lda yozsangiz, o‘sha tarif qulflanadi. Shunday bo‘lishi 
 #, python-format
 msgid "%(locked)s of %(total)s tariffs are priced by hand; the rest follow the pricing rules."
 msgstr "%(total)s tarifdan %(locked)s tasi qo‘lda narxlangan; qolganlari narxlash qoidalariga bo‘ysunadi."
+
+#, python-format
+msgid "Showing %(shown)s of %(total)s destinations · %(tariffs)s tariffs in the catalogue"
+msgstr "%(total)s yo‘nalishdan %(shown)s tasi ko‘rsatilyapti · katalogda %(tariffs)s tarif"
+
+msgid "Every region"
+msgstr "Barcha hududlar"
+
+msgid "15 per page"
+msgstr "Sahifada 15 ta"
+
+msgid "50 per page"
+msgstr "Sahifada 50 ta"
+
+msgid "All on one page"
+msgstr "Hammasi bir sahifada"
+
+msgid "Apply"
+msgstr "Qo‘llash"
 
 msgid "Save prices"
 msgstr "Narxlarni saqlash"

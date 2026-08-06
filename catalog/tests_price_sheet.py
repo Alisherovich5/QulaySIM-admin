@@ -17,7 +17,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from catalog.models import Country, Plan, PricingRule
+from catalog.models import Country, Plan, PricingRule, Region
 
 
 # Production redirects to HTTPS, which turns every admin GET in a test into a
@@ -161,3 +161,101 @@ class PriceSheetTests(TestCase):
         self.plan.refresh_from_db()
         self.assertEqual(self.plan.price_usd, Decimal("2.09"))
         self.assertIn(response.status_code, (302, 403))
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class PriceSheetCoversEverythingTests(TestCase):
+    """A paginated sheet reads as a partial one, so the totals are stated and
+    the whole catalogue is reachable in one page if that is what someone wants.
+    """
+
+    def setUp(self):
+        PricingRule.objects.create(scope=PricingRule.Scope.GLOBAL, markup_percent=Decimal("50"))
+        self.europe = Region.objects.create(name="Europe", name_uz="Yevropa", slug="europe")
+        self.asia = Region.objects.create(name="Asia", name_uz="Osiyo", slug="asia", sort_order=2)
+        for index in range(22):
+            region = self.europe if index % 2 == 0 else self.asia
+            country = Country.objects.create(
+                name=f"Country {index:02d}",
+                name_uz=f"Davlat {index:02d}",
+                slug=f"country-{index:02d}",
+                iso2=f"C{index:X}"[:2],
+                region=region,
+            )
+            Plan.objects.create(
+                country=country,
+                title=f"Country {index:02d} 3 GB",
+                data_amount_mb=3072,
+                validity_days=15,
+                cost_usd=Decimal("2.00"),
+                price_usd=Decimal("0"),
+                provider="esimaccess",
+                provider_package_code=f"C{index}",
+            )
+        # A multi-country tariff, which belongs to a region and no country.
+        Plan.objects.create(
+            region=self.europe,
+            title="Europe 5 GB · 30 days",
+            scope=Plan.Scope.REGIONAL,
+            data_amount_mb=5120,
+            validity_days=30,
+            cost_usd=Decimal("11.00"),
+            price_usd=Decimal("0"),
+            provider="esimaccess",
+            provider_package_code="EU_5_30",
+        )
+        user = get_user_model().objects.create_superuser("staff2", "s2@x.uz", "Pw-1234-abcd")
+        self.client.force_login(user)
+        self.url = reverse("admin:catalog_plan_price_sheet")
+
+    def _blocks(self, **params):
+        """Destination blocks only. Counted on a data attribute rather than the
+        class name, which also appears in the page's own stylesheet."""
+        body = self.client.get(self.url, params).content.decode()
+        return body.count("data-country="), body
+
+    def test_the_default_page_is_readable_not_complete(self):
+        blocks, body = self._blocks()
+        self.assertEqual(blocks, 15)
+        # And it says so, so nobody mistakes the page for the catalogue.
+        self.assertIn("22", body)
+
+    def test_everything_fits_on_one_page_when_asked(self):
+        blocks, body = self._blocks(show="all")
+        self.assertEqual(blocks, 22)
+        # The multi-country tariffs come along, in their own block.
+        self.assertIn('data-regional="1"', body)
+
+    def test_fifty_per_page_holds_them_all_here(self):
+        blocks, _ = self._blocks(show="50")
+        self.assertEqual(blocks, 22)
+
+    def test_a_region_narrows_both_the_destinations_and_the_bundles(self):
+        blocks, body = self._blocks(region="europe", show="all")
+        self.assertEqual(blocks, 11)
+        self.assertIn("Europe 5 GB", body)
+
+    def test_a_region_with_no_bundle_shows_only_its_destinations(self):
+        blocks, body = self._blocks(region="asia", show="all")
+        self.assertEqual(blocks, 11)
+        self.assertNotIn("Europe 5 GB", body)
+        self.assertNotIn('data-regional="1"', body)
+
+    def test_paging_keeps_the_filters(self):
+        # 22 destinations at 15 a page means a second page exists, and its link
+        # has to carry the region or the filter is lost on the way there.
+        body = self.client.get(self.url, {"region": "europe", "show": "15"}).content.decode()
+        self.assertIn("data-country=", body)
+        body_all = self.client.get(self.url).content.decode()
+        self.assertIn("page=2", body_all)
+        self.assertIn("show=15", body_all)
+
+    def test_an_unknown_page_size_falls_back_rather_than_erroring(self):
+        blocks, _ = self._blocks(show="99999")
+        self.assertEqual(blocks, 15)
+
+    def test_the_page_says_how_much_of_the_catalogue_it_is_showing(self):
+        _, body = self._blocks()
+        # 15 of 22 — stated, because a paginated sheet reads as a partial one.
+        self.assertIn("15", body)
+        self.assertIn("22", body)
