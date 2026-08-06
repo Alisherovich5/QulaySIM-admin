@@ -153,6 +153,19 @@ ADMIN_URL_PATH = config("ADMIN_URL_PATH", default="admin")
 # idempotency key). Listed here means "we have code that can buy from it" and
 # nothing more — the API still needs a token in the backend's environment and a
 # funded wallet, and neither of those is something this setting can know about.
+# The price sheet posts one field per tariff, and the catalogue is 1377 tariffs
+# and growing. Django's default of 1000 made "all on one page" silently refuse
+# every save with TooManyFieldsSent — the operator typed a price, pressed save,
+# and got a bare 400 with no hint that the page size was the reason.
+#
+# Raised rather than removed: the cap exists to blunt hash-collision DoS, and a
+# ceiling of 8000 still bounds that while leaving room for the catalogue to
+# double. The per-row save button means a normal edit sends three fields, so
+# this only matters for a bulk save.
+DATA_UPLOAD_MAX_NUMBER_FIELDS = config(
+    "DATA_UPLOAD_MAX_NUMBER_FIELDS", default=8000, cast=int
+)
+
 FULFILLABLE_PROVIDERS = config(
     "FULFILLABLE_PROVIDERS", default="esimaccess,esimcard", cast=Csv()
 )

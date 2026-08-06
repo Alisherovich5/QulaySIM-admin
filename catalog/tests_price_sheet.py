@@ -312,3 +312,94 @@ class PriceSheetRendersNoCommentaryTests(TestCase):
         # costs an operator their edit.
         self.assertIn("qs-ps__note", body)
         self.assertIn("qulflanadi", body)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class PerRowSaveTests(TestCase):
+    """One button per price, and the bug that made the bulk save look broken.
+
+    With "all on one page" the sheet posts two fields per tariff. At 1377 tariffs
+    that is 2755, and Django's default DATA_UPLOAD_MAX_NUMBER_FIELDS is 1000 — so
+    every save was refused with a bare 400 and no hint that the page size was the
+    reason. The operator typed a price, pressed save, and nothing happened.
+    """
+
+    def setUp(self):
+        PricingRule.objects.create(scope=PricingRule.Scope.GLOBAL, markup_percent=Decimal("50"))
+        country = Country.objects.create(name="Turkey", name_uz="Turkiya", slug="turkey", iso2="TR")
+        self.a = Plan.objects.create(
+            country=country, title="Turkey 3 GB", data_amount_mb=3072, validity_days=15,
+            cost_usd=Decimal("2.00"), price_usd=Decimal("0"),
+            provider="esimaccess", provider_package_code="A",
+        )
+        self.b = Plan.objects.create(
+            country=country, title="Turkey 5 GB", data_amount_mb=5120, validity_days=30,
+            cost_usd=Decimal("4.00"), price_usd=Decimal("0"),
+            provider="esimaccess", provider_package_code="B",
+        )
+        self.client.force_login(
+            get_user_model().objects.create_superuser("staff4", "s4@x.uz", "Pw-1234-abcd")
+        )
+        self.url = reverse("admin:catalog_plan_price_sheet")
+
+    def test_every_row_has_its_own_save_button(self):
+        body = self.client.get(self.url).content.decode()
+        self.assertIn(f'name="row" value="{self.a.pk}"', body)
+        self.assertIn(f'name="row" value="{self.b.pk}"', body)
+
+    def test_a_row_save_touches_only_that_row(self):
+        # The browser posts the whole form; the button says which row it meant.
+        self.client.post(
+            self.url,
+            {
+                "row": str(self.a.pk),
+                f"price-{self.a.pk}": "9.99",
+                f"price-{self.b.pk}": "1.11",
+                f"auto-{self.b.pk}": "on",
+            },
+        )
+        self.a.refresh_from_db()
+        self.b.refresh_from_db()
+        self.assertEqual(self.a.price_usd, Decimal("9.99"))
+        self.assertTrue(self.a.price_locked)
+        # The other row was in the payload and must be untouched.
+        self.assertEqual(self.b.price_usd, Decimal("6.00"))
+        self.assertFalse(self.b.price_locked)
+
+    def test_a_row_save_can_also_unlock_just_that_row(self):
+        self.client.post(self.url, {"row": str(self.a.pk), f"price-{self.a.pk}": "9.99"})
+        self.client.post(
+            self.url,
+            {
+                "row": str(self.a.pk),
+                f"price-{self.a.pk}": "9.99",
+                f"auto-{self.a.pk}": "on",
+                f"price-{self.b.pk}": "1.11",
+            },
+        )
+        self.a.refresh_from_db()
+        self.b.refresh_from_db()
+        self.assertFalse(self.a.price_locked)
+        self.assertEqual(self.a.price_usd, Decimal("3.00"), "back to the rule")
+        self.assertEqual(self.b.price_usd, Decimal("6.00"), "still untouched")
+
+    def test_the_bulk_save_still_works_without_a_row(self):
+        self.client.post(
+            self.url,
+            {f"price-{self.a.pk}": "9.99", f"price-{self.b.pk}": "8.88"},
+        )
+        self.a.refresh_from_db()
+        self.b.refresh_from_db()
+        self.assertEqual((self.a.price_usd, self.b.price_usd), (Decimal("9.99"), Decimal("8.88")))
+
+    def test_the_field_ceiling_clears_the_whole_catalogue_twice_over(self):
+        from django.conf import settings as dj
+
+        # Two fields per tariff, plus the CSRF token and the row marker.
+        needed = Plan.objects.count() * 2 + 2
+        self.assertGreater(
+            dj.DATA_UPLOAD_MAX_NUMBER_FIELDS,
+            needed,
+            "a bulk save would be refused with a bare 400",
+        )
+        self.assertGreaterEqual(dj.DATA_UPLOAD_MAX_NUMBER_FIELDS, 8000)

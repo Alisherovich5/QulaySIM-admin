@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-06 17:56+0500\n"
+"POT-Creation-Date: 2026-08-06 22:26+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -2075,6 +2075,12 @@ msgstr "Avtomatik"
 
 msgid "price"
 msgstr "narx"
+
+msgid "Save this price"
+msgstr "Shu narxni saqlash"
+
+msgid "save this price"
+msgstr "shu narxni saqlash"
 
 msgid "automatic pricing"
 msgstr "avtomatik narxlash"

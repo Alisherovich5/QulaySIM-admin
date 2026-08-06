@@ -785,6 +785,11 @@ class PlanAdmin(ModelAdmin):
         from django.contrib import messages
         from django.shortcuts import redirect
 
+        # A per-row save names the one tariff it means. Everything else on the
+        # page is ignored, which keeps a single edit to three fields instead of
+        # the 2755 a full sheet would otherwise post.
+        only = (request.POST.get("row") or "").strip()
+
         changed, unlocked, rejected = 0, 0, []
         auto_ids = {
             key.removeprefix("auto-")
@@ -806,6 +811,8 @@ class PlanAdmin(ModelAdmin):
             if not key.startswith("price-"):
                 continue
             plan_id = key.removeprefix("price-")
+            if only and plan_id != only:
+                continue
             plan = plans.get(plan_id)
             if plan is None:
                 continue

@@ -28,6 +28,13 @@ a tariff is handed back to the pricing rules.
     padding:.65rem .85rem; border-radius:.6rem; font-size:.85rem; line-height:1.5;
     background:var(--qs-warn-wash, #fef6e7); color:var(--qs-accent-text, #a16207); }
   .qs-ps__lock { flex:0 0 auto; }
+  .qs-ps__pricecell { display:flex; gap:.35rem; align-items:center; }
+  .qs-ps__rowsave { flex:0 0 auto; width:1.9rem; height:1.9rem; padding:0; cursor:pointer;
+    border-radius:.4rem; border:1px solid var(--qs-line, #d5dbe3); line-height:1;
+    background:var(--qs-surface-2, #f6f8fa); color:var(--qs-ink-soft, #64748b);
+    font-size:.95rem; font-weight:800; }
+  .qs-ps__rowsave:hover { background:var(--qs-good-wash, #e6f7f1);
+    color:var(--qs-teal-text, #0d6b52); border-color:var(--qs-teal-text, #0d6b52); }
   .qs-ps__bar { display:flex; flex-wrap:wrap; gap:.75rem; align-items:center; margin:0 0 1.25rem; }
   .qs-ps__search { flex:1 1 14rem; min-width:11rem; padding:.55rem .8rem; border-radius:.6rem;
     border:1px solid var(--qs-line, #d5dbe3); background:var(--qs-surface, #fff); color:inherit; }
@@ -159,11 +166,15 @@ a tariff is handed back to the pricing rules.
                   <td class="qs-ps__sup">
                     {% for offer in plan.offers.all %}{{ offer.get_provider_display }} ${{ offer.cost_usd }}{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}
                   </td>
-                  <td>
+                  <td class="qs-ps__pricecell">
                     <input type="text" inputmode="decimal" name="price-{{ plan.pk }}"
                            value="{{ plan.price_usd|unlocalize }}"
                            class="qs-ps__input {% if plan.price_locked %}qs-ps__locked{% endif %}"
                            aria-label="{{ plan.title }} {% trans 'price' %}">
+                    <button type="submit" name="row" value="{{ plan.pk }}"
+                            class="qs-ps__rowsave"
+                            title="{% trans 'Save this price' %}"
+                            aria-label="{{ plan.title }} — {% trans 'save this price' %}">✓</button>
                   </td>
                   <td class="{% if plan.margin_usd and plan.margin_usd < 1 %}qs-ps__thin{% else %}qs-ps__margin{% endif %}">
                     {% if plan.margin_usd is not None %}${{ plan.margin_usd }}{% else %}—{% endif %}
@@ -209,11 +220,15 @@ a tariff is handed back to the pricing rules.
                   <td><a href="{% url 'admin:catalog_plan_change' plan.pk %}">{{ plan.title }}</a></td>
                   <td class="qs-ps__cost">{% if plan.cost_usd %}${{ plan.cost_usd }}{% else %}—{% endif %}</td>
                   <td class="qs-ps__sup">{{ plan.price_note|default:"—" }}</td>
-                  <td>
+                  <td class="qs-ps__pricecell">
                     <input type="text" inputmode="decimal" name="price-{{ plan.pk }}"
                            value="{{ plan.price_usd|unlocalize }}"
                            class="qs-ps__input {% if plan.price_locked %}qs-ps__locked{% endif %}"
                            aria-label="{{ plan.title }} {% trans 'price' %}">
+                    <button type="submit" name="row" value="{{ plan.pk }}"
+                            class="qs-ps__rowsave"
+                            title="{% trans 'Save this price' %}"
+                            aria-label="{{ plan.title }} — {% trans 'save this price' %}">✓</button>
                   </td>
                   <td class="qs-ps__margin">
                     {% if plan.margin_usd is not None %}${{ plan.margin_usd }}{% else %}—{% endif %}
