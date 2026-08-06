@@ -166,6 +166,22 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = config(
     "DATA_UPLOAD_MAX_NUMBER_FIELDS", default=8000, cast=int
 )
 
+# ---------------------------------------------------------------------------
+# Seller details, printed on the payment confirmation.
+#
+# Env vars rather than hardcoded, because they are the business's to supply and
+# they land at different times: the legal name and INN exist from registration,
+# the bank details arrive later. Anything unset prints as a visible placeholder
+# instead of silently vanishing, so a document is never issued looking complete
+# while missing the field a customer would need to dispute it.
+# ---------------------------------------------------------------------------
+COMPANY_NAME = config("COMPANY_NAME", default="")
+COMPANY_INN = config("COMPANY_INN", default="")
+COMPANY_ADDRESS = config("COMPANY_ADDRESS", default="")
+COMPANY_PHONE = config("COMPANY_PHONE", default="")
+COMPANY_EMAIL = config("COMPANY_EMAIL", default="support@qulaysim.uz")
+COMPANY_BANK = config("COMPANY_BANK", default="")
+
 FULFILLABLE_PROVIDERS = config(
     "FULFILLABLE_PROVIDERS", default="esimaccess,esimcard", cast=Csv()
 )

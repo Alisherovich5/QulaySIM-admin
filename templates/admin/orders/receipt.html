@@ -1,0 +1,187 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% comment %}
+One payment as a document a customer can be sent.
+
+Deliberately titled a payment confirmation, not a fiscal receipt. ATMOS is
+registered as our commissioner and issues the fiscal receipt itself; calling this
+one a chek would present a non-fiscal document as one.
+
+Amounts are read off the order, never recomputed. The som figure was frozen at
+checkout against that moment's rate, and a document that recalculated it from
+today's prices would disagree with the customer's bank statement the moment a
+price moves — which is exactly when someone asks for the receipt.
+
+Missing seller fields print as a visible placeholder rather than a blank, so
+nobody hands out a document that looks complete while lacking the INN a customer
+would need to dispute the charge.
+{% endcomment %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+  .qs-rc { max-width:46rem; }
+  .qs-rc__doc { padding:1.6rem; border:1px solid var(--qs-line, #d5dbe3); border-radius:.8rem;
+    background:var(--qs-surface, #fff); }
+  .qs-rc__top { display:flex; flex-wrap:wrap; gap:1rem; justify-content:space-between;
+    align-items:flex-start; padding-bottom:1rem; border-bottom:2px solid var(--qs-line, #d5dbe3); }
+  .qs-rc__brand { font-size:1.3rem; font-weight:800; letter-spacing:-.01em; }
+  .qs-rc__kind { margin-top:.15rem; font-size:.8rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.05em; color:var(--qs-ink-soft, #64748b); }
+  .qs-rc__no { text-align:right; font-size:.85rem; line-height:1.6; }
+  .qs-rc__no b { font-size:1.05rem; }
+  .qs-rc__cols { display:flex; flex-wrap:wrap; gap:1.5rem; margin:1.1rem 0; }
+  .qs-rc__col { flex:1 1 13rem; font-size:.84rem; line-height:1.65; }
+  .qs-rc__lbl { display:block; margin-bottom:.2rem; font-size:.7rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.04em; color:var(--qs-ink-soft, #64748b); }
+  .qs-rc__gap { color:var(--qs-bad-text, #b42318); font-weight:700; }
+  .qs-rc__t { width:100%; border-collapse:collapse; margin:.5rem 0 0; }
+  .qs-rc__t th, .qs-rc__t td { padding:.5rem .3rem; font-size:.85rem; text-align:left;
+    border-bottom:1px solid var(--qs-line, #d5dbe3); }
+  .qs-rc__t th { font-size:.7rem; text-transform:uppercase; letter-spacing:.04em;
+    color:var(--qs-ink-soft, #64748b); font-weight:700; }
+  .qs-rc__t .r { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .qs-rc__sums { margin-top:.9rem; margin-left:auto; width:min(100%, 17rem); font-size:.88rem; }
+  .qs-rc__row { display:flex; justify-content:space-between; padding:.28rem 0; }
+  .qs-rc__row--tot { margin-top:.35rem; padding-top:.55rem; font-size:1.05rem; font-weight:800;
+    border-top:2px solid var(--qs-line, #d5dbe3); }
+  .qs-rc__som { font-size:.8rem; color:var(--qs-ink-soft, #64748b); }
+  .qs-rc__foot { margin-top:1.3rem; padding-top:.9rem; font-size:.78rem; line-height:1.6;
+    color:var(--qs-ink-soft, #64748b); border-top:1px solid var(--qs-line, #d5dbe3); }
+  .qs-rc__bar { display:flex; gap:.6rem; margin:0 0 1rem; }
+  .qs-rc__btn { padding:.5rem 1rem; border:1px solid var(--qs-line,#d5dbe3); border-radius:.5rem;
+    cursor:pointer; font-weight:700; background:var(--qs-surface-2,#f6f8fa); color:inherit;
+    text-decoration:none; }
+  .qs-rc__warn { margin:0 0 1rem; padding:.6rem .8rem; border-radius:.5rem; font-size:.82rem;
+    background:var(--qs-warn-wash,#fef6e7); color:var(--qs-accent-text,#a16207); }
+  @media print {
+    .qs-rc__bar, .qs-rc__warn, #nav-sidebar, header, nav, .qs-rc__noprint { display:none !important; }
+    .qs-rc__doc { border:0; padding:0; }
+    body { background:#fff !important; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qs-rc">
+
+  <div class="qs-rc__bar qs-rc__noprint">
+    <button type="button" class="qs-rc__btn" onclick="window.print()">🖨 {% trans "Print" %}</button>
+    <a class="qs-rc__btn" href="{% url 'admin:orders_order_change' order.pk %}">{% trans "Open the order" %}</a>
+    <a class="qs-rc__btn" href="{% url 'admin:orders_payment_changelist' %}">{% trans "All payments" %}</a>
+  </div>
+
+  {% if seller_missing %}
+    <p class="qs-rc__warn qs-rc__noprint">
+      {% blocktrans trimmed count n=seller_missing|length %}
+      {{ n }} seller detail is still missing and prints as a gap. Fill it in the
+      server environment before sending this to a customer.
+      {% plural %}
+      {{ n }} seller details are still missing and print as gaps. Fill them in the
+      server environment before sending this to a customer.
+      {% endblocktrans %}
+    </p>
+  {% endif %}
+
+  <div class="qs-rc__doc">
+    <div class="qs-rc__top">
+      <div>
+        <div class="qs-rc__brand">QulaySIM</div>
+        <div class="qs-rc__kind">{% trans "Payment confirmation" %}</div>
+      </div>
+      <div class="qs-rc__no">
+        <b>№ {{ payment.pk }}</b><br>
+        {{ payment.created_at|date:"d.m.Y, H:i" }}<br>
+        {% trans "Order" %} № {{ order.pk }}
+      </div>
+    </div>
+
+    <div class="qs-rc__cols">
+      <div class="qs-rc__col">
+        <span class="qs-rc__lbl">{% trans "Seller" %}</span>
+        {% if seller.name %}{{ seller.name }}{% else %}<span class="qs-rc__gap">[{% trans "legal name" %}]</span>{% endif %}<br>
+        {% trans "INN" %}: {% if seller.inn %}{{ seller.inn }}{% else %}<span class="qs-rc__gap">[—]</span>{% endif %}<br>
+        {% if seller.address %}{{ seller.address }}<br>{% else %}<span class="qs-rc__gap">[{% trans "address" %}]</span><br>{% endif %}
+        {% if seller.phone %}{{ seller.phone }} · {% endif %}{{ seller.email }}
+        {% if seller.bank %}<br>{{ seller.bank }}{% endif %}
+      </div>
+      <div class="qs-rc__col">
+        <span class="qs-rc__lbl">{% trans "Buyer" %}</span>
+        {{ order.customer.full_name|default:order.customer.email }}<br>
+        {{ order.customer.email }}
+      </div>
+      <div class="qs-rc__col">
+        <span class="qs-rc__lbl">{% trans "Payment" %}</span>
+        {{ payment.get_status_display }} · {{ payment.method|upper }}<br>
+        {% if payment.provider_ref %}{% trans "Transaction" %}: {{ payment.provider_ref }}<br>{% endif %}
+        {% if order.paid_at %}{% trans "Paid" %}: {{ order.paid_at|date:"d.m.Y, H:i" }}{% endif %}
+      </div>
+    </div>
+
+    <table class="qs-rc__t">
+      <thead>
+        <tr>
+          <th>{% trans "Service" %}</th>
+          <th class="r">{% trans "Qty" %}</th>
+          <th class="r">{% trans "Unit" %}</th>
+          <th class="r">{% trans "Sum" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+          <tr>
+            <td>
+              {% if item.plan %}{{ item.plan.title }}{% else %}<span class="qs-rc__gap">{% trans "tariff removed" %}</span>{% endif %}
+              {% if item.plan.country %}<br><span class="qs-rc__som">{{ item.plan.country.name_uz|default:item.plan.country.name }}</span>{% endif %}
+            </td>
+            <td class="r">{{ item.quantity }} {% trans "pc" %}</td>
+            <td class="r">${{ item.unit_price }}</td>
+            <td class="r">${{ item.line_total }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4" class="qs-rc__som">{% trans "no line items recorded" %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="qs-rc__sums">
+      <div class="qs-rc__row"><span>{% trans "Subtotal" %}</span><span>${{ order.subtotal }}</span></div>
+      {% if order.discount %}
+        <div class="qs-rc__row">
+          <span>{% trans "Discount" %}{% if order.promo_code %} ({{ order.promo_code.code }}){% endif %}</span>
+          <span>−${{ order.discount }}</span>
+        </div>
+      {% endif %}
+      <div class="qs-rc__row qs-rc__row--tot">
+        <span>{% trans "Total" %}</span><span>${{ payment.amount }}</span>
+      </div>
+      {% if order.amount_uzs %}
+        <div class="qs-rc__row qs-rc__som">
+          <span>{% trans "Charged" %}</span>
+          <span>{{ order.amount_uzs|floatformat:"0g" }} {% trans "so‘m" %}</span>
+        </div>
+        {% if order.exchange_rate %}
+          <div class="qs-rc__row qs-rc__som">
+            <span>{% trans "Rate" %}</span>
+            <span>1 USD = {{ order.exchange_rate|floatformat:"2g" }}</span>
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <div class="qs-rc__foot">
+      {% blocktrans trimmed %}
+      This is the sale as we recorded it. The fiscal receipt for this payment is
+      issued by ATMOS, which is registered as our commissioner — it reaches the
+      buyer through the payment provider, not through this document.
+      {% endblocktrans %}
+      {% if order.amount_uzs %}
+        {% blocktrans trimmed %}
+        The som amount is the figure the card was actually charged, frozen at the
+        rate in force when the order was placed.
+        {% endblocktrans %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1620,7 +1620,9 @@ class SupplierImportPageTests(TestCase):
             {
                 "provider": "esimaccess",
                 "csv_file": SimpleUploadedFile("p.csv", csv.encode(), content_type="text/csv"),
-                "only_countries": [str(self.turkey.pk)],
+                # ISO codes now, not primary keys: the field was a multi-select
+                # over every destination, which rendered all 208 of them inline.
+                "only_countries": self.turkey.iso2,
             },
         )
         self.assertEqual(Plan.objects.filter(country=japan).count(), 0)

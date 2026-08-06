@@ -403,3 +403,60 @@ class PerRowSaveTests(TestCase):
             "a bulk save would be refused with a bare 400",
         )
         self.assertGreaterEqual(dj.DATA_UPLOAD_MAX_NUMBER_FIELDS, 8000)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class SyncPageTests(TestCase):
+    """The page rebuilt, and the field that made it unusable.
+
+    `only_countries` was a multi-select over every destination. At 25 countries
+    that was a list; at 208 the browser rendered every one of them inline, a wall
+    that filled the screen and buried the form under it.
+    """
+
+    def setUp(self):
+        PricingRule.objects.create(scope=PricingRule.Scope.GLOBAL, markup_percent=Decimal("50"))
+        Country.objects.create(name="Turkey", name_uz="Turkiya", slug="turkey", iso2="TR")
+        Country.objects.create(name="UAE", name_uz="BAA", slug="uae", iso2="AE")
+        self.client.force_login(
+            get_user_model().objects.create_superuser("sync", "sy@x.uz", "Pw-1234-abcd")
+        )
+        self.url = reverse("admin:catalog_plan_import_prices")
+
+    def test_the_page_no_longer_lists_every_destination_inline(self):
+        body = self.client.get(self.url).content.decode()
+        self.assertNotIn("Turkey (TR)", body)
+        self.assertIn('placeholder="TR, AE, UZ"', body)
+
+    def test_the_status_strip_answers_did_it_run(self):
+        body = self.client.get(self.url).content.decode()
+        self.assertIn("qs-sy__card", body)
+        # The manual upload is folded away — it is the fallback, not the point.
+        self.assertIn("<details", body)
+
+    def test_iso_codes_resolve_however_they_are_typed(self):
+        from catalog.forms import SupplierPriceUploadForm
+
+        for raw in ("tr,ae", "TR, AE", "tr ae", "TR; ae", " tr , AE "):
+            with self.subTest(raw=raw):
+                form = SupplierPriceUploadForm(data={"provider": "esimaccess", "only_countries": raw})
+                form.is_valid()
+                self.assertEqual(
+                    {c.iso2 for c in form.cleaned_data["only_countries"]}, {"TR", "AE"}
+                )
+
+    def test_an_unknown_code_is_named_rather_than_dropped(self):
+        from catalog.forms import SupplierPriceUploadForm
+
+        # Silently ignoring ZZ would give a preview covering only Turkey with no
+        # hint that half the request was thrown away.
+        form = SupplierPriceUploadForm(data={"provider": "esimaccess", "only_countries": "TR, ZZ"})
+        form.is_valid()
+        self.assertIn("ZZ", str(form.errors["only_countries"]))
+
+    def test_empty_means_the_whole_file(self):
+        from catalog.forms import SupplierPriceUploadForm
+
+        form = SupplierPriceUploadForm(data={"provider": "esimaccess", "only_countries": "  "})
+        form.is_valid()
+        self.assertEqual(list(form.cleaned_data["only_countries"]), [])

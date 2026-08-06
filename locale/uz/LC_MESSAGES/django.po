@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-06 22:26+0500\n"
+"POT-Creation-Date: 2026-08-07 00:16+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -200,8 +200,8 @@ msgstr "Narxlarni tannarx va qoidalar bo‘yicha qayta hisoblash"
 msgid "Applies to"
 msgstr "Qo‘llanadi"
 
-msgid "Pick one. 'Everything' is the house default; a supplier or destination rule overrides it for the plans it covers."
-msgstr "Bittasini tanlang. «Hammasi» — asosiy qoida; ta’minotchi yoki yo‘nalish qoidasi o‘zi qamragan tariflar uchun uning ustidan o‘tadi."
+msgid "The narrowest rule about a tariff wins. In order: this destination AND this size, then this size everywhere, then this destination, then this supplier, then the house default. Leave the size empty unless the rule is about one."
+msgstr "Tarif haqidagi eng aniq qoida g‘olib bo‘ladi. Tartib: shu yo‘nalish VA shu o‘lcham, keyin shu o‘lcham hamma yerda, keyin shu yo‘nalish, keyin shu ta’minotchi, oxirida uy standarti. Qoida bitta o‘lcham haqida bo‘lmasa, o‘lchamni bo‘sh qoldiring."
 
 msgid "Markup"
 msgstr "Ustama"
@@ -211,6 +211,12 @@ msgstr "Bu nima qiladi"
 
 msgid "Admin"
 msgstr "Boshqaruv"
+
+msgid "Traffic size"
+msgstr "Trafik o‘lchami"
+
+msgid "any size"
+msgstr "har qanday o‘lcham"
 
 msgid "In plain words"
 msgstr "Oddiy tilda"
@@ -228,6 +234,17 @@ msgstr "%(p)s dan olinadigan har bir tarif"
 #, python-format
 msgid "every plan for %(c)s"
 msgstr "%(c)s uchun har bir tarif"
+
+#, python-format
+msgid "every %(t)s plan, in every destination"
+msgstr "har bir yo‘nalishdagi %(t)s tarifi"
+
+msgid "the plans this rule covers"
+msgstr "bu qoida qamrab olgan tariflar"
+
+#, python-format
+msgid "the %(t)s plan for %(c)s"
+msgstr "%(c)s uchun %(t)s tarifi"
 
 #, python-format
 msgid "On %(who)s, the selling price is the supplier cost plus %(pct)s%%."
@@ -348,8 +365,12 @@ msgstr "Birinchi marta buni yoqilgan qoldiring. Qo‘llash ta’minotchi tannarx
 msgid "Limit to these destinations"
 msgstr "Faqat shu yo‘nalishlar bilan cheklash"
 
-msgid "Leave empty to apply the whole file. Choosing destinations is how you set one up without repricing everything else."
-msgstr "Butun faylni qo‘llash uchun bo‘sh qoldiring. Yo‘nalish tanlash — qolgan hammasining narxini o‘zgartirmasdan bittasini sozlash usuli."
+msgid "ISO codes, comma-separated. Leave empty to apply the whole file — naming destinations is how you set one up without repricing the rest."
+msgstr "ISO kodlar, vergul bilan. Butun faylni qo‘llash uchun bo‘sh qoldiring — yo‘nalish nomlash qolganlarining narxini o‘zgartirmasdan bittasini sozlash usuli."
+
+#, python-format
+msgid "Not a destination we have: %(codes)s"
+msgstr "Bunday yo‘nalish yo‘q: %(codes)s"
 
 msgid "name"
 msgstr "nom"
@@ -552,6 +573,18 @@ msgstr "ta’minotchi taklifi"
 msgid "supplier offers"
 msgstr "ta’minotchi takliflari"
 
+msgid "Everything (house default)"
+msgstr "Hammasi (uy standarti)"
+
+msgid "One supplier"
+msgstr "Bitta ta’minotchi"
+
+msgid "One destination"
+msgstr "Bitta yo‘nalish"
+
+msgid "One traffic size, every destination"
+msgstr "Bitta trafik o‘lchami, hamma yo‘nalishda"
+
 msgid "Required when the scope is 'One supplier', e.g. esimaccess."
 msgstr "Qamrov «Bitta ta’minotchi» bo‘lganda majburiy, masalan esimaccess."
 
@@ -560,6 +593,18 @@ msgstr "Qamrov «Bitta yo‘nalish» bo‘lganda majburiy."
 
 msgid "Added on top of supplier cost."
 msgstr "Ta’minotchi tannarxi ustiga qo‘shiladi."
+
+msgid "Traffic size in MB, e.g. 1024 for 1 GB. Leave empty for any size."
+msgstr "Trafik o‘lchami MB da, masalan 1 GB uchun 1024. Har qanday o‘lcham uchun bo‘sh qoldiring."
+
+msgid "traffic size (MB)"
+msgstr "trafik o‘lchami (MB)"
+
+msgid "Validity in days. Leave empty to match any duration of that size."
+msgstr "Amal muddati kunlarda. Shu o‘lchamning har qanday muddati uchun bo‘sh qoldiring."
+
+msgid "validity (days)"
+msgstr "amal muddati (kun)"
 
 msgid "Profit floor. A percentage on a cheap plan can be pennies; this prevents that."
 msgstr "Foydaning eng past chegarasi. Arzon tarifdagi foiz tiyin-chaqa bo‘lib qolishi mumkin; bu shuning oldini oladi."
@@ -578,6 +623,9 @@ msgstr "narxlash qoidasi"
 
 msgid "pricing rules"
 msgstr "narxlash qoidalari"
+
+msgid "Give the traffic size this rule is about, in MB."
+msgstr "Bu qoida qaysi trafik o‘lchami haqida — MB da yozing."
 
 msgid "Paid"
 msgstr "To‘langan"
@@ -1658,6 +1706,15 @@ msgstr "Sarflangan trafik"
 msgid "QR code"
 msgstr "QR kod"
 
+msgid "Payment confirmation"
+msgstr "To‘lov tasdiqnomasi"
+
+msgid "Confirmation"
+msgstr "Tasdiqnoma"
+
+msgid "open"
+msgstr "ochish"
+
 msgid "Amount"
 msgstr "Summa"
 
@@ -1912,17 +1969,39 @@ msgstr "o‘chiq"
 msgid "Nothing matches that search."
 msgstr "Bu so‘rovga hech nima topilmadi."
 
-msgid "Where prices come from"
-msgstr "Narxlar qayerdan keladi"
+msgid "Right now"
+msgstr "Hozir"
 
-msgid "Both wholesalers are read straight from their own APIs, and the catalogue is built from what they actually sell. Nobody types a destination in: the sync creates the countries the suppliers cover, gives each one its tariff ladder, and records every supplier's price for every tariff."
-msgstr "Ikkala ulgurji ta’minotchi ham o‘z API’laridan o‘qiladi va katalog ular haqiqatan sotadigan narsadan quriladi. Yo‘nalishni hech kim qo‘lda kiritmaydi: sinxronizatsiya ta’minotchilar qamrab olgan davlatlarni yaratadi, har biriga tarif pog‘onasini beradi va har bir tarif uchun har bir ta’minotchining narxini yozib qo‘yadi."
+msgid "Syncing…"
+msgstr "Sinxronlanmoqda…"
 
-msgid "Both suppliers' prices are kept, not just the winner. The cheapest available one becomes the tariff's cost and the route a paid order takes; the dearer one stays on file as the fallback for when the winner is out of stock or its API is down. Customers never see any of this — they see one tariff at one price."
-msgstr "Ikkala ta’minotchining narxi ham saqlanadi, faqat g‘olibi emas. Eng arzon mavjudi tarifning tannarxi va to‘langan buyurtma boradigan yo‘l bo‘ladi; qimmatrog‘i g‘olib zaxirada qolmaganda yoki API’si ishlamaganda ishlatiladigan zaxira sifatida qoladi. Mijozlar bularning hech birini ko‘rmaydi — ular bitta tarifni bitta narxda ko‘radi."
+msgid "started a moment ago"
+msgstr "hozir boshlandi"
 
-msgid "Supplier costs move retail prices through the pricing rules, so a sync can change what the site charges. That is the point, and it is also why a preview writes nothing and why newly discovered destinations arrive switched off — waiting for someone to look at them before they go on sale."
-msgstr "Ta’minotchi tannarxi narxlash qoidalari orqali chakana narxni harakatga keltiradi, ya’ni sinxronizatsiya sayt oladigan pulni o‘zgartirishi mumkin. Buning maqsadi shu — va shuning uchun ko‘rib chiqish hech narsa yozmaydi va yangi topilgan yo‘nalishlar o‘chirilgan holda keladi: sotuvga chiqishdan oldin kimdir ularga qarab chiqishi kerak."
+msgid "Last applied"
+msgstr "Oxirgi qo‘llanishi"
+
+msgid "packages"
+msgstr "paket"
+
+msgid "never run"
+msgstr "hech qachon ishlamagan"
+
+msgid "Catalogue"
+msgstr "Katalog"
+
+#, python-format
+msgid "%(c)s destinations · %(o)s supplier prices"
+msgstr "%(c)s yo‘nalish · %(o)s ta’minotchi narxi"
+
+msgid "Last failure"
+msgstr "Oxirgi nosozlik"
+
+msgid "see the log"
+msgstr "jurnalni ko‘rish"
+
+msgid "Both wholesalers are read from their own APIs every night and the catalogue is built from what they actually sell — nobody types a destination in. New destinations arrive switched off, because a tariff goes on sale the moment it is active and a fresh one has had nobody check its price."
+msgstr "Ikkala ulgurji ta’minotchi ham har kecha o‘z API’laridan o‘qiladi va katalog ular haqiqatan sotadigan narsadan quriladi — yo‘nalishni hech kim qo‘lda kiritmaydi. Yangi yo‘nalishlar o‘chirilgan holda keladi: tarif faol bo‘lgan zahoti sotuvga chiqadi, yangisining narxiga esa hech kim qaramagan."
 
 msgid "Recent syncs"
 msgstr "Oxirgi sinxronizatsiyalar"
@@ -1948,23 +2027,17 @@ msgstr "Narxlar"
 msgid "Running…"
 msgstr "Bajarilmoqda…"
 
-msgid "Preview only"
-msgstr "Faqat ko‘rib chiqish"
-
 msgid "Applied"
 msgstr "Qo‘llandi"
 
-msgid "No sync has run yet, so the catalogue is still whatever was last entered by hand."
-msgstr "Hali birorta sinxronizatsiya ishlamadi, ya’ni katalog oxirgi marta qo‘lda kiritilgan holatda."
-
-msgid "The sync runs on its own overnight. Reading eSIMCard alone takes about five minutes — its API answers one page of a hundred packages every four seconds — which is why it is a scheduled job rather than a button that waits."
-msgstr "Sinxronizatsiya kechasi o‘zi ishlaydi. Faqat eSIMCard’ni o‘qish besh daqiqacha oladi — uning API’si yuz paketli bitta sahifani to‘rt sekundda beradi — shuning uchun bu kutib turadigan tugma emas, rejalashtirilgan vazifa."
+msgid "No sync has run yet."
+msgstr "Hali sinxronizatsiya ishlamadi."
 
 msgid "Upload a price list by hand"
 msgstr "Narx ro‘yxatini qo‘lda yuklash"
 
-msgid "The fallback, for two situations: a supplier's API is down and a price has to be corrected now, or a wholesaler has sent a quote that is not in their API yet. Everything else should come from the sync above."
-msgstr "Zaxira yo‘l, ikki holat uchun: ta’minotchining API’si ishlamaydi va narxni hozir tuzatish kerak, yoki ulgurji ta’minotchi hali API’sida yo‘q taklifni yuborgan. Qolgan hammasi yuqoridagi sinxronizatsiyadan kelishi kerak."
+msgid "The fallback: a supplier's API is down and a price has to be corrected now, or a wholesaler sent a quote that is not in their API yet."
+msgstr "Zaxira yo‘l: ta’minotchining API’si ishlamaydi va narxni hozir tuzatish kerak, yoki ulgurji ta’minotchi hali API’sida yo‘q taklifni yuborgan."
 
 msgid "Read the file"
 msgstr "Faylni o‘qish"
@@ -1982,24 +2055,21 @@ msgid ", %(n)s unusable and skipped"
 msgid_plural ", %(n)s unusable and skipped"
 msgstr[0] ", %(n)s tasi yaroqsiz va o‘tkazib yuborildi"
 
-#, python-format
-msgid "<b>%(n)s</b> new tariff"
-msgid_plural "<b>%(n)s</b> new tariffs"
-msgstr[0] "<b>%(n)s</b> yangi tarif"
+msgid "new tariffs"
+msgstr "yangi tariflar"
+
+msgid "new supplier prices"
+msgstr "yangi ta’minotchi narxlari"
+
+msgid "price changes"
+msgstr "narx o‘zgarishlari"
+
+msgid "unchanged"
+msgstr "o‘zgarmadi"
 
 #, python-format
-msgid "<b>%(n)s</b> new supplier price"
-msgid_plural "<b>%(n)s</b> new supplier prices"
-msgstr[0] "<b>%(n)s</b> yangi ta’minotchi narxi"
-
-#, python-format
-msgid "<b>%(n)s</b> price change"
-msgid_plural "<b>%(n)s</b> price changes"
-msgstr[0] "<b>%(n)s</b> narx o‘zgarishi"
-
-#, python-format
-msgid "<b>%(n)s</b> unchanged"
-msgstr "<b>%(n)s</b> o‘zgarmadi"
+msgid "%(n)s package(s) have a size or duration the tariff ladder has no rung for, so they were not imported:"
+msgstr "%(n)s paketning o‘lchami yoki muddati tarif pog‘onasida yo‘q, shuning uchun import qilinmadi:"
 
 msgid "Destination"
 msgstr "Yo‘nalish"
@@ -2025,16 +2095,10 @@ msgstr "yangi narx"
 msgid "price change"
 msgstr "narx o‘zgarishi"
 
-msgid ""
-"To write these, submit again with <b>“Preview only”</b> unchecked.\n"
-"          Applying moves supplier costs, and retail prices follow through the\n"
-"          pricing rules."
-msgstr "Bularni yozish uchun <b>«Faqat ko‘rib chiqish»</b> belgisini olib tashlab, qaytadan yuboring. Qo‘llash ta’minotchi tannarxlarini o‘zgartiradi, chakana narxlar esa narxlash qoidalari orqali ergashadi."
+msgid "To write these, submit again with <b>“Preview only”</b> unchecked."
+msgstr "Bularni yozish uchun <b>“Faqat ko‘rib chiqish”</b> ni olib tashlab qayta yuboring."
 
-msgid ""
-"Nothing in this file matches a destination in the catalogue. Check that\n"
-"          the <code>location</code> column holds ISO codes such as TR or AE, and\n"
-"          that those destinations exist."
+msgid "Nothing in this file matches a destination in the catalogue. Check that the <code>location</code> column holds ISO codes such as TR or AE."
 msgstr "Bu fayldagi hech narsa katalogdagi yo‘nalishga mos kelmadi. <code>location</code> ustunida TR yoki AE kabi ISO kodlar turganini va o‘sha yo‘nalishlar mavjudligini tekshiring."
 
 msgid "destinations shown"
@@ -2222,6 +2286,126 @@ msgstr "Buyurtma"
 
 msgid "Total"
 msgstr "Jami"
+
+msgid "Print"
+msgstr "Chop etish"
+
+msgid "Open the order"
+msgstr "Buyurtmani ochish"
+
+msgid "All payments"
+msgstr "Barcha to‘lovlar"
+
+#, python-format
+msgid "%(n)s seller detail is still missing and prints as a gap. Fill it in the server environment before sending this to a customer."
+msgid_plural "%(n)s seller details are still missing and print as gaps. Fill them in the server environment before sending this to a customer."
+msgstr[0] "Sotuvchi rekvizitlaridan %(n)s tasi hali yo‘q va bo‘sh joy bo‘lib chiqadi. Mijozga yuborishdan oldin server sozlamalarida to‘ldiring."
+
+msgid "Seller"
+msgstr "Sotuvchi"
+
+msgid "legal name"
+msgstr "yuridik nom"
+
+msgid "INN"
+msgstr "STIR"
+
+msgid "address"
+msgstr "manzil"
+
+msgid "Buyer"
+msgstr "Xaridor"
+
+msgid "Payment"
+msgstr "To‘lov"
+
+msgid "Transaction"
+msgstr "Tranzaksiya"
+
+msgid "Service"
+msgstr "Xizmat"
+
+msgid "Qty"
+msgstr "Soni"
+
+msgid "Unit"
+msgstr "Donasi"
+
+msgid "Sum"
+msgstr "Summa"
+
+msgid "tariff removed"
+msgstr "tarif o‘chirilgan"
+
+msgid "pc"
+msgstr "dona"
+
+msgid "no line items recorded"
+msgstr "qatorlar yozilmagan"
+
+msgid "Subtotal"
+msgstr "Oraliq summa"
+
+msgid "Charged"
+msgstr "Yechildi"
+
+msgid "so‘m"
+msgstr "so‘m"
+
+msgid "Rate"
+msgstr "Kurs"
+
+msgid "This is the sale as we recorded it. The fiscal receipt for this payment is issued by ATMOS, which is registered as our commissioner — it reaches the buyer through the payment provider, not through this document."
+msgstr "Bu — savdoni biz qanday qayd etganimiz. Bu to‘lov uchun fiskal chekni ATMOS chiqaradi: u bizning komissionerimiz sifatida ro‘yxatga olingan, va chek xaridorga to‘lov tizimi orqali boradi, bu hujjat orqali emas."
+
+msgid "The som amount is the figure the card was actually charged, frozen at the rate in force when the order was placed."
+msgstr "So‘mdagi summa — kartadan haqiqatan yechilgan miqdor, buyurtma berilgan paytdagi kurs bo‘yicha qotirilgan."
+
+#~ msgid "Pick one. 'Everything' is the house default; a supplier or destination rule overrides it for the plans it covers."
+#~ msgstr "Bittasini tanlang. «Hammasi» — asosiy qoida; ta’minotchi yoki yo‘nalish qoidasi o‘zi qamragan tariflar uchun uning ustidan o‘tadi."
+
+#~ msgid "Where prices come from"
+#~ msgstr "Narxlar qayerdan keladi"
+
+#~ msgid "Both suppliers' prices are kept, not just the winner. The cheapest available one becomes the tariff's cost and the route a paid order takes; the dearer one stays on file as the fallback for when the winner is out of stock or its API is down. Customers never see any of this — they see one tariff at one price."
+#~ msgstr "Ikkala ta’minotchining narxi ham saqlanadi, faqat g‘olibi emas. Eng arzon mavjudi tarifning tannarxi va to‘langan buyurtma boradigan yo‘l bo‘ladi; qimmatrog‘i g‘olib zaxirada qolmaganda yoki API’si ishlamaganda ishlatiladigan zaxira sifatida qoladi. Mijozlar bularning hech birini ko‘rmaydi — ular bitta tarifni bitta narxda ko‘radi."
+
+#~ msgid "Supplier costs move retail prices through the pricing rules, so a sync can change what the site charges. That is the point, and it is also why a preview writes nothing and why newly discovered destinations arrive switched off — waiting for someone to look at them before they go on sale."
+#~ msgstr "Ta’minotchi tannarxi narxlash qoidalari orqali chakana narxni harakatga keltiradi, ya’ni sinxronizatsiya sayt oladigan pulni o‘zgartirishi mumkin. Buning maqsadi shu — va shuning uchun ko‘rib chiqish hech narsa yozmaydi va yangi topilgan yo‘nalishlar o‘chirilgan holda keladi: sotuvga chiqishdan oldin kimdir ularga qarab chiqishi kerak."
+
+#~ msgid "Preview only"
+#~ msgstr "Faqat ko‘rib chiqish"
+
+#~ msgid "No sync has run yet, so the catalogue is still whatever was last entered by hand."
+#~ msgstr "Hali birorta sinxronizatsiya ishlamadi, ya’ni katalog oxirgi marta qo‘lda kiritilgan holatda."
+
+#~ msgid "The sync runs on its own overnight. Reading eSIMCard alone takes about five minutes — its API answers one page of a hundred packages every four seconds — which is why it is a scheduled job rather than a button that waits."
+#~ msgstr "Sinxronizatsiya kechasi o‘zi ishlaydi. Faqat eSIMCard’ni o‘qish besh daqiqacha oladi — uning API’si yuz paketli bitta sahifani to‘rt sekundda beradi — shuning uchun bu kutib turadigan tugma emas, rejalashtirilgan vazifa."
+
+#, python-format
+#~ msgid "<b>%(n)s</b> new tariff"
+#~ msgid_plural "<b>%(n)s</b> new tariffs"
+#~ msgstr[0] "<b>%(n)s</b> yangi tarif"
+
+#, python-format
+#~ msgid "<b>%(n)s</b> new supplier price"
+#~ msgid_plural "<b>%(n)s</b> new supplier prices"
+#~ msgstr[0] "<b>%(n)s</b> yangi ta’minotchi narxi"
+
+#, python-format
+#~ msgid "<b>%(n)s</b> price change"
+#~ msgid_plural "<b>%(n)s</b> price changes"
+#~ msgstr[0] "<b>%(n)s</b> narx o‘zgarishi"
+
+#, python-format
+#~ msgid "<b>%(n)s</b> unchanged"
+#~ msgstr "<b>%(n)s</b> o‘zgarmadi"
+
+#~ msgid ""
+#~ "To write these, submit again with <b>“Preview only”</b> unchecked.\n"
+#~ "          Applying moves supplier costs, and retail prices follow through the\n"
+#~ "          pricing rules."
+#~ msgstr "Bularni yozish uchun <b>«Faqat ko‘rib chiqish»</b> belgisini olib tashlab, qaytadan yuboring. Qo‘llash ta’minotchi tannarxlarini o‘zgartiradi, chakana narxlar esa narxlash qoidalari orqali ergashadi."
 
 #~ msgid "What each tariff costs us and what the customer pays, by destination. Cost comes from whichever wholesaler is cheapest and is refreshed by the nightly sync; the price is normally calculated from it by the pricing rules."
 #~ msgstr "Har bir tarif bizga qanchaga tushadi va mijoz qancha to‘laydi — yo‘nalishlar bo‘yicha. Tannarx eng arzon ulgurji ta’minotchidan olinadi va kechasi sinxronizatsiya bilan yangilanadi; narx esa odatda shundan narxlash qoidalari orqali hisoblanadi."

@@ -32,15 +32,45 @@ class SupplierPriceUploadForm(forms.Form):
             "moves retail prices through the pricing rules."
         ),
     )
-    only_countries = forms.ModelMultipleChoiceField(
-        queryset=Country.objects.order_by("name"),
+    # Typed codes, not a picker.
+    #
+    # This was a multi-select over every destination. At 25 countries that was a
+    # list; at 208 the browser renders an unreadable wall that fills the screen
+    # and buries the rest of the form. Nobody scrolls 208 options to find Turkey —
+    # they know it is TR.
+    only_countries = forms.CharField(
         required=False,
         label=_("Limit to these destinations"),
+        widget=forms.TextInput(attrs={"placeholder": "TR, AE, UZ"}),
         help_text=_(
-            "Leave empty to apply the whole file. Choosing destinations is how you "
-            "set one up without repricing everything else."
+            "ISO codes, comma-separated. Leave empty to apply the whole file — "
+            "naming destinations is how you set one up without repricing the rest."
         ),
     )
+
+    def clean_only_countries(self):
+        """Codes to Country rows, naming anything that does not exist.
+
+        Silently dropping an unknown code would mean an operator asks for
+        "TR, AA" and gets a preview covering only Turkey with no hint that half
+        their request was ignored.
+        """
+        raw = (self.cleaned_data.get("only_countries") or "").strip()
+        if not raw:
+            return Country.objects.none()
+        codes = {
+            part.strip().upper()
+            for part in raw.replace(";", ",").replace(" ", ",").split(",")
+            if part.strip()
+        }
+        found = Country.objects.filter(iso2__in=codes)
+        missing = codes - {c.iso2.upper() for c in found}
+        if missing:
+            raise forms.ValidationError(
+                _("Not a destination we have: %(codes)s")
+                % {"codes": ", ".join(sorted(missing))}
+            )
+        return found
 
     def clean_csv_file(self):
         upload = self.cleaned_data["csv_file"]

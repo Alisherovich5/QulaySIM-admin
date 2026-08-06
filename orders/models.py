@@ -199,6 +199,15 @@ class OrderItem(models.Model):
     )
     quantity = models.PositiveIntegerField(default=1, verbose_name=_("quantity"))
 
+    @property
+    def line_total(self):
+        """What this line came to. Computed, never stored.
+
+        A stored total is a third number that can disagree with the two it comes
+        from; the receipt needs it and nothing else does.
+        """
+        return (self.unit_price or 0) * (self.quantity or 0)
+
     class Meta:
         db_table = "orders_orderitem"
         verbose_name = _("order item")

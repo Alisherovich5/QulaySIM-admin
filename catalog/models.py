@@ -496,9 +496,10 @@ class PricingRule(models.Model):
     """
 
     class Scope(models.TextChoices):
-        GLOBAL = "global", "Everything (house default)"
-        PROVIDER = "provider", "One supplier"
-        COUNTRY = "country", "One destination"
+        GLOBAL = "global", _("Everything (house default)")
+        PROVIDER = "provider", _("One supplier")
+        COUNTRY = "country", _("One destination")
+        TIER = "tier", _("One traffic size, every destination")
 
     class Rounding(models.TextChoices):
         NONE = "none", "Exact cents"
@@ -525,6 +526,25 @@ class PricingRule(models.Model):
     markup_percent = models.DecimalField(
         max_digits=6, decimal_places=2, default=30, help_text=_("Added on top of supplier cost."),
         verbose_name=_("markup percent"),
+    )
+    # Which traffic size this rule is about. Set on a TIER rule; optional on a
+    # COUNTRY rule, where it narrows the rule to one tariff of that destination.
+    #
+    # Exists because a single percentage cannot price a catalogue whose costs run
+    # from $0.46 to $222. At +50% the 1 GB tariffs earn 23 cents, which a card fee
+    # eats, while the 50 GB ones earn $32 — and fixing that one tariff at a time
+    # across 208 destinations is 1400 edits.
+    tier_data_mb = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=_("Traffic size in MB, e.g. 1024 for 1 GB. Leave empty for any size."),
+        verbose_name=_("traffic size (MB)"),
+    )
+    tier_days = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=_("Validity in days. Leave empty to match any duration of that size."),
+        verbose_name=_("validity (days)"),
     )
     min_margin_usd = models.DecimalField(
         max_digits=8,
@@ -557,10 +577,34 @@ class PricingRule(models.Model):
                 condition=models.Q(scope="provider"),
                 name="one_rule_per_provider",
             ),
+            # One rule per (destination, size). The constraint used to be on the
+            # destination alone, which was right when a rule could only name a
+            # country — and wrong the moment one could be narrowed to a tariff,
+            # because "Japan" and "Japan 1 GB" are different statements and a
+            # destination legitimately needs both.
+            #
+            # Two constraints because NULL is never equal to NULL in SQL, so a
+            # single one over nullable columns would let unlimited "Japan, any
+            # size" rules coexist.
             models.UniqueConstraint(
                 fields=["country"],
-                condition=models.Q(scope="country"),
+                condition=models.Q(scope="country", tier_data_mb__isnull=True),
                 name="one_rule_per_country",
+            ),
+            models.UniqueConstraint(
+                fields=["country", "tier_data_mb", "tier_days"],
+                condition=models.Q(scope="country", tier_data_mb__isnull=False),
+                name="one_rule_per_country_tier",
+            ),
+            models.UniqueConstraint(
+                fields=["tier_data_mb", "tier_days"],
+                condition=models.Q(scope="tier", tier_days__isnull=False),
+                name="one_rule_per_tier",
+            ),
+            models.UniqueConstraint(
+                fields=["tier_data_mb"],
+                condition=models.Q(scope="tier", tier_days__isnull=True),
+                name="one_rule_per_tier_any_duration",
             ),
             models.CheckConstraint(
                 condition=models.Q(markup_percent__gte=0), name="markup_not_negative"
@@ -570,13 +614,28 @@ class PricingRule(models.Model):
             ),
         ]
 
+    @property
+    def tier_label(self) -> str:
+        """"3 GB · 30 days", or "" when the rule is not about one size."""
+        if not self.tier_data_mb:
+            return ""
+        gb = self.tier_data_mb / 1024
+        size = f"{gb:g} GB" if gb >= 1 else f"{self.tier_data_mb} MB"
+        return f"{size} · {self.tier_days} days" if self.tier_days else size
+
     def __str__(self):
         if self.scope == self.Scope.PROVIDER:
             target = self.provider or "?"
         elif self.scope == self.Scope.COUNTRY:
             target = self.country.name if self.country else "?"
+        elif self.scope == self.Scope.TIER:
+            target = self.tier_label or "?"
         else:
             target = "everything"
+        # A country rule narrowed to one size names both, or two rules on the
+        # same destination read identically in a list.
+        if self.scope == self.Scope.COUNTRY and self.tier_label:
+            target = f"{target} {self.tier_label}"
         return f"{target} +{self.markup_percent}%"
 
     def save(self, *args, **kwargs):
@@ -592,6 +651,8 @@ class PricingRule(models.Model):
             previous.scope != self.scope
             or previous.provider != self.provider
             or previous.country_id != self.country_id
+            or previous.tier_data_mb != self.tier_data_mb
+            or previous.tier_days != self.tier_days
         ):
             # Moving the rule from Japan to Turkey used to reprice Turkey only,
             # leaving Japan's plans priced by a rule that no longer names them.
@@ -613,6 +674,15 @@ class PricingRule(models.Model):
             plans = plans.filter(provider=self.provider)
         elif self.scope == self.Scope.COUNTRY:
             plans = plans.filter(country_id=self.country_id)
+        elif self.scope == self.Scope.TIER:
+            plans = plans.filter(data_amount_mb=self.tier_data_mb)
+            if self.tier_days:
+                plans = plans.filter(validity_days=self.tier_days)
+        # A country rule can also be narrowed to one size.
+        if self.scope == self.Scope.COUNTRY and self.tier_data_mb:
+            plans = plans.filter(data_amount_mb=self.tier_data_mb)
+            if self.tier_days:
+                plans = plans.filter(validity_days=self.tier_days)
 
         changed = [plan for plan in plans if plan.recalculate_price(rules)]
         if changed:
@@ -633,6 +703,20 @@ class PricingRule(models.Model):
             raise ValidationError({"provider": "Choose the supplier this rule applies to."})
         if self.scope == self.Scope.COUNTRY and not self.country:
             raise ValidationError({"country": "Choose the destination this rule applies to."})
+        if self.scope == self.Scope.TIER and not self.tier_data_mb:
+            raise ValidationError(
+                {"tier_data_mb": _("Give the traffic size this rule is about, in MB.")}
+            )
         if self.scope == self.Scope.GLOBAL:
+            self.provider = ""
+            self.country = None
+            # A global rule with a size left on it would silently govern only
+            # that size while calling itself the house default.
+            self.tier_data_mb = None
+            self.tier_days = None
+        if self.scope == self.Scope.PROVIDER:
+            self.tier_data_mb = None
+            self.tier_days = None
+        if self.scope == self.Scope.TIER:
             self.provider = ""
             self.country = None

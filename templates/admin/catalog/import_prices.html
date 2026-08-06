@@ -2,60 +2,140 @@
 {% load i18n %}
 
 {% comment %}
-The page staff land on when they want to know where prices come from.
+Where prices come from, rebuilt.
 
-It used to open with a file picker and no reason to use one, which reads as a
-chore with no purpose. The catalogue now comes from both wholesalers' APIs on a
-schedule, so this page's first job is to show that it is happening and what it
-did — automation nobody can see is the same as automation that stopped. The
-upload stays underneath as the manual override.
+The previous version opened with three paragraphs explaining the sourcing model,
+then a ten-row history table, then a CSV form whose destination picker rendered
+all 208 countries inline as an unreadable wall. Everything was equally loud, so
+the one thing anyone comes here for — did the sync run, and is the catalogue
+fresh — was buried at the bottom of a page of prose.
+
+Now: a status strip that answers that in one glance, the history as a compact
+table, and the manual upload folded away because it is the fallback. The
+reasoning that used to be on the screen lives here.
+
+The sourcing model, for whoever needs it: both wholesalers are read from their
+APIs; every supplier's price for every tariff is kept, not just the winner. The
+cheapest available becomes the tariff's cost and the route a paid order takes,
+and the dearer stays as the fallback for a stock-out or an API outage. Customers
+see one tariff at one price. Costs move retail prices through the pricing rules,
+which is why a preview writes nothing and new destinations arrive switched off.
 {% endcomment %}
 
+{% block extrastyle %}{{ block.super }}
+<style>
+  .qs-sy__strip { display:flex; flex-wrap:wrap; gap:.6rem; margin:0 0 1.25rem; }
+  .qs-sy__card { flex:1 1 11rem; padding:.8rem .95rem; border-radius:.7rem;
+    border:1px solid var(--qs-line, #d5dbe3); background:var(--qs-surface, #fff); }
+  .qs-sy__card--good { border-left:3px solid var(--qs-teal-text, #0d6b52); }
+  .qs-sy__card--bad { border-left:3px solid var(--qs-bad-text, #b42318); }
+  .qs-sy__card--busy { border-left:3px solid var(--qs-accent-text, #a16207); }
+  .qs-sy__k { display:block; font-size:.72rem; font-weight:700; letter-spacing:.03em;
+    text-transform:uppercase; color:var(--qs-ink-soft, #64748b); }
+  .qs-sy__v { display:block; margin-top:.2rem; font-size:1.15rem; font-weight:800;
+    line-height:1.2; }
+  .qs-sy__sub { display:block; margin-top:.1rem; font-size:.76rem;
+    color:var(--qs-ink-soft, #64748b); }
+  .qs-sy__bad { color:var(--qs-bad-text, #b42318); }
+  .qs-sy__h { margin:1.75rem 0 .5rem; font-size:1rem; font-weight:800; }
+  .qs-sy__hint { margin:0 0 .9rem; font-size:.83rem; line-height:1.55;
+    color:var(--qs-ink-soft, #64748b); }
+  .qs-sy__wrap { overflow-x:auto; border:1px solid var(--qs-line, #d5dbe3);
+    border-radius:.7rem; }
+  .qs-sy__t { width:100%; border-collapse:collapse; min-width:38rem; }
+  .qs-sy__t th, .qs-sy__t td { padding:.5rem .8rem; text-align:left; font-size:.84rem;
+    border-top:1px solid var(--qs-line, #d5dbe3); white-space:nowrap; }
+  .qs-sy__t th { border-top:0; font-size:.71rem; text-transform:uppercase;
+    letter-spacing:.03em; font-weight:700; color:var(--qs-ink-soft, #64748b); }
+  .qs-sy__t td.num, .qs-sy__t th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .qs-sy__pill { display:inline-block; padding:1px 8px; border-radius:999px;
+    font-size:.72rem; font-weight:700; }
+  .qs-sy__pill--ok { color:var(--qs-teal-text,#0d6b52); background:var(--qs-good-wash,#e6f7f1); }
+  .qs-sy__pill--dry { color:var(--qs-ink-soft,#64748b); background:var(--qs-neutral-wash,#f1f5f9); }
+  .qs-sy__pill--bad { color:var(--qs-bad-text,#b42318); background:var(--qs-bad-wash,#fdecea); }
+  .qs-sy__fold { margin:1.75rem 0 0; border:1px solid var(--qs-line, #d5dbe3);
+    border-radius:.7rem; overflow:hidden; }
+  .qs-sy__fold > summary { padding:.8rem 1rem; cursor:pointer; font-weight:700;
+    background:var(--qs-surface-2, #f6f8fa); }
+  .qs-sy__body { padding:1rem; }
+  .qs-sy__field { margin:0 0 .9rem; }
+  .qs-sy__field label { display:block; margin-bottom:.25rem; font-size:.8rem; font-weight:700; }
+  .qs-sy__field input[type=text], .qs-sy__field input[type=file], .qs-sy__field select {
+    width:100%; max-width:26rem; padding:.5rem .7rem; border-radius:.5rem;
+    border:1px solid var(--qs-line, #d5dbe3); background:var(--qs-surface, #fff);
+    color:inherit; }
+  .qs-sy__field p { margin:.25rem 0 0; font-size:.78rem; color:var(--qs-ink-soft, #64748b); }
+  .qs-sy__err { color:var(--qs-bad-text, #b42318); font-weight:600; }
+  .qs-sy__check { display:flex; gap:.5rem; align-items:flex-start; }
+  .qs-sy__btn { padding:.55rem 1.1rem; border:0; border-radius:.55rem; cursor:pointer;
+    font-weight:700; background:var(--qs-teal-text, #0d6b52); color:#fff; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="qs-import">
+<div class="qs-sy">
 
-  <section class="qs-import__explain">
-    <h2>{% trans "Where prices come from" %}</h2>
-    <p>
-      {% blocktrans trimmed %}
-      Both wholesalers are read straight from their own APIs, and the catalogue is
-      built from what they actually sell. Nobody types a destination in: the sync
-      creates the countries the suppliers cover, gives each one its tariff ladder,
-      and records every supplier's price for every tariff.
-      {% endblocktrans %}
-    </p>
-    <p>
-      {% blocktrans trimmed %}
-      Both suppliers' prices are kept, not just the winner. The cheapest available
-      one becomes the tariff's cost and the route a paid order takes; the dearer
-      one stays on file as the fallback for when the winner is out of stock or its
-      API is down. Customers never see any of this — they see one tariff at one
-      price.
-      {% endblocktrans %}
-    </p>
-    <p class="qs-import__warn">
-      {% blocktrans trimmed %}
-      Supplier costs move retail prices through the pricing rules, so a sync can
-      change what the site charges. That is the point, and it is also why a
-      preview writes nothing and why newly discovered destinations arrive switched
-      off — waiting for someone to look at them before they go on sale.
-      {% endblocktrans %}
-    </p>
-  </section>
+  <div class="qs-sy__strip">
+    {% if running %}
+      <div class="qs-sy__card qs-sy__card--busy">
+        <span class="qs-sy__k">{% trans "Right now" %}</span>
+        <span class="qs-sy__v">{% trans "Syncing…" %}</span>
+        <span class="qs-sy__sub">{% trans "started a moment ago" %}</span>
+      </div>
+    {% endif %}
+    <div class="qs-sy__card {% if last_ok %}qs-sy__card--good{% endif %}">
+      <span class="qs-sy__k">{% trans "Last applied" %}</span>
+      {% if last_ok %}
+        <span class="qs-sy__v">{{ last_ok.started_at|date:"d M, H:i" }}</span>
+        <span class="qs-sy__sub">
+          {{ last_ok.packages_read }} {% trans "packages" %}
+          {% if last_ok.duration_seconds %}· {{ last_ok.duration_seconds }}s{% endif %}
+        </span>
+      {% else %}
+        <span class="qs-sy__v">—</span>
+        <span class="qs-sy__sub">{% trans "never run" %}</span>
+      {% endif %}
+    </div>
+    <div class="qs-sy__card">
+      <span class="qs-sy__k">{% trans "Catalogue" %}</span>
+      <span class="qs-sy__v">{{ plan_count }}</span>
+      <span class="qs-sy__sub">
+        {% blocktrans with c=country_count o=offer_count %}{{ c }} destinations · {{ o }} supplier prices{% endblocktrans %}
+      </span>
+    </div>
+    {% if last_failed %}
+      <div class="qs-sy__card qs-sy__card--bad">
+        <span class="qs-sy__k">{% trans "Last failure" %}</span>
+        <span class="qs-sy__v qs-sy__bad">{{ last_failed.started_at|date:"d M, H:i" }}</span>
+        <span class="qs-sy__sub">
+          <a href="{% url 'admin:catalog_catalogsyncrun_change' last_failed.pk %}">{% trans "see the log" %}</a>
+        </span>
+      </div>
+    {% endif %}
+  </div>
 
-  <section class="qs-import__runs">
-    <h2>{% trans "Recent syncs" %}</h2>
-    {% if runs %}
-      <table class="qs-import__table">
+  <p class="qs-sy__hint">
+    {% blocktrans trimmed %}
+    Both wholesalers are read from their own APIs every night and the catalogue is
+    built from what they actually sell — nobody types a destination in. New
+    destinations arrive switched off, because a tariff goes on sale the moment it
+    is active and a fresh one has had nobody check its price.
+    {% endblocktrans %}
+  </p>
+
+  <h2 class="qs-sy__h">{% trans "Recent syncs" %}</h2>
+  {% if runs %}
+    <div class="qs-sy__wrap">
+      <table class="qs-sy__t">
         <thead>
           <tr>
             <th>{% trans "Started" %}</th>
             <th>{% trans "Supplier" %}</th>
             <th>{% trans "Result" %}</th>
-            <th>{% trans "Packages" %}</th>
-            <th>{% trans "New destinations" %}</th>
-            <th>{% trans "New tariffs" %}</th>
-            <th>{% trans "Prices" %}</th>
+            <th class="num">{% trans "Packages" %}</th>
+            <th class="num">{% trans "New destinations" %}</th>
+            <th class="num">{% trans "New tariffs" %}</th>
+            <th class="num">{% trans "Prices" %}</th>
           </tr>
         </thead>
         <tbody>
@@ -63,116 +143,136 @@ upload stays underneath as the manual override.
             <tr>
               <td>
                 <a href="{% url 'admin:catalog_catalogsyncrun_change' run.pk %}">{{ run.started_at|date:"d M, H:i" }}</a>
-                {% if run.duration_seconds %}<span class="qs-import__muted">· {{ run.duration_seconds }}s</span>{% endif %}
+                {% if run.duration_seconds %}<span class="qs-sy__sub"> {{ run.duration_seconds }}s</span>{% endif %}
               </td>
               <td>{{ run.provider }}</td>
               <td>
-                {% if run.status == "failed" %}<b class="qs-import__error">{% trans "Failed" %}</b>
-                {% elif run.status == "running" %}{% trans "Running…" %}
-                {% elif run.dry_run %}<span class="qs-import__muted">{% trans "Preview only" %}</span>
-                {% else %}{% trans "Applied" %}{% endif %}
+                {% if run.status == "failed" %}
+                  <span class="qs-sy__pill qs-sy__pill--bad">{% trans "Failed" %}</span>
+                {% elif run.status == "running" %}
+                  <span class="qs-sy__pill qs-sy__pill--dry">{% trans "Running…" %}</span>
+                {% elif run.dry_run %}
+                  <span class="qs-sy__pill qs-sy__pill--dry">{% trans "Preview" %}</span>
+                {% else %}
+                  <span class="qs-sy__pill qs-sy__pill--ok">{% trans "Applied" %}</span>
+                {% endif %}
               </td>
-              <td>{{ run.packages_read }}</td>
-              <td>{{ run.countries_created }}</td>
-              <td>{{ run.plans_created }}</td>
-              <td>{{ run.offers_written }}</td>
+              <td class="num">{{ run.packages_read }}</td>
+              <td class="num">{{ run.countries_created }}</td>
+              <td class="num">{{ run.plans_created }}</td>
+              <td class="num">{{ run.offers_written }}</td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
-    {% else %}
-      <p class="qs-import__warn">
+    </div>
+  {% else %}
+    <p class="qs-sy__hint">{% trans "No sync has run yet." %}</p>
+  {% endif %}
+
+  <details class="qs-sy__fold" {% if previewed or form.errors %}open{% endif %}>
+    <summary>{% trans "Upload a price list by hand" %}</summary>
+    <div class="qs-sy__body">
+      <p class="qs-sy__hint">
         {% blocktrans trimmed %}
-        No sync has run yet, so the catalogue is still whatever was last entered
-        by hand.
+        The fallback: a supplier's API is down and a price has to be corrected now,
+        or a wholesaler sent a quote that is not in their API yet.
         {% endblocktrans %}
       </p>
-    {% endif %}
-    <p class="qs-import__help">
-      {% blocktrans trimmed %}
-      The sync runs on its own overnight. Reading eSIMCard alone takes about five
-      minutes — its API answers one page of a hundred packages every four seconds
-      — which is why it is a scheduled job rather than a button that waits.
-      {% endblocktrans %}
-    </p>
-  </section>
 
-  <h2>{% trans "Upload a price list by hand" %}</h2>
-  <p class="qs-import__help">
-    {% blocktrans trimmed %}
-    The fallback, for two situations: a supplier's API is down and a price has to
-    be corrected now, or a wholesaler has sent a quote that is not in their API
-    yet. Everything else should come from the sync above.
-    {% endblocktrans %}
-  </p>
-
-  <form method="post" enctype="multipart/form-data" class="qs-import__form">
-    {% csrf_token %}
-    {% for field in form %}
-      <div class="qs-import__field">
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {{ field }}
-        {% if field.help_text %}<p class="qs-import__help">{{ field.help_text }}</p>{% endif %}
-        {% for error in field.errors %}<p class="qs-import__error">{{ error }}</p>{% endfor %}
-      </div>
-    {% endfor %}
-    <button type="submit" class="qs-import__submit">{% trans "Read the file" %}</button>
-  </form>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="qs-sy__field">
+            {% if field.field.widget.input_type == "checkbox" %}
+              <div class="qs-sy__check">
+                {{ field }}
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              </div>
+            {% else %}
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+            {% endif %}
+            {% if field.help_text %}<p>{{ field.help_text }}</p>{% endif %}
+            {% for error in field.errors %}<p class="qs-sy__err">{{ error }}</p>{% endfor %}
+          </div>
+        {% endfor %}
+        <button type="submit" class="qs-sy__btn">{% trans "Read the file" %}</button>
+      </form>
+    </div>
+  </details>
 
   {% if previewed %}
-    <div class="qs-import__result">
-      <h2>{% trans "Preview — nothing has been written" %}</h2>
-      <p class="qs-import__help">
-        {% blocktrans count n=prices.rows_read %}{{ n }} row read{% plural %}{{ n }} rows read{% endblocktrans %}{% if prices.rows_skipped %}{% blocktrans count n=prices.rows_skipped %}, {{ n }} unusable and skipped{% plural %}, {{ n }} unusable and skipped{% endblocktrans %}{% endif %}.
+    <h2 class="qs-sy__h">{% trans "Preview — nothing has been written" %}</h2>
+    <p class="qs-sy__hint">
+      {% blocktrans count n=prices.rows_read %}{{ n }} row read{% plural %}{{ n }} rows read{% endblocktrans %}{% if prices.rows_skipped %}{% blocktrans count n=prices.rows_skipped %}, {{ n }} unusable and skipped{% plural %}, {{ n }} unusable and skipped{% endblocktrans %}{% endif %}.
+      <b>{{ count_new_plans }}</b> {% trans "new tariffs" %} ·
+      <b>{{ count_new_offers }}</b> {% trans "new supplier prices" %} ·
+      <b>{{ count_price_changes }}</b> {% trans "price changes" %} ·
+      {{ count_unchanged }} {% trans "unchanged" %}
+    </p>
+
+    {% if off_ladder %}
+      <p class="qs-sy__hint">
+        {% blocktrans trimmed with n=off_ladder_total %}
+        {{ n }} package(s) have a size or duration the tariff ladder has no rung
+        for, so they were not imported:
+        {% endblocktrans %}
+        {% for shape, count in off_ladder %}{{ shape }} ×{{ count }}{% if not forloop.last %}, {% endif %}{% endfor %}
       </p>
+    {% endif %}
 
-      <div class="qs-import__counts">
-        <span>{% blocktrans count n=count_new_plans %}<b>{{ n }}</b> new tariff{% plural %}<b>{{ n }}</b> new tariffs{% endblocktrans %}</span>
-        <span>{% blocktrans count n=count_new_offers %}<b>{{ n }}</b> new supplier price{% plural %}<b>{{ n }}</b> new supplier prices{% endblocktrans %}</span>
-        <span>{% blocktrans count n=count_price_changes %}<b>{{ n }}</b> price change{% plural %}<b>{{ n }}</b> price changes{% endblocktrans %}</span>
-        <span class="qs-import__muted">{% blocktrans with n=count_unchanged %}<b>{{ n }}</b> unchanged{% endblocktrans %}</span>
-      </div>
-
-      {% if changes %}
-        <table class="qs-import__table">
+    {% if changes %}
+      <div class="qs-sy__wrap">
+        <table class="qs-sy__t">
           <thead>
-            <tr><th>{% trans "Destination" %}</th><th>{% trans "Tariff" %}</th><th>{% trans "What happens" %}</th>
-                <th>{% trans "Supplier cost" %}</th><th>{% trans "Retail price" %}</th></tr>
+            <tr>
+              <th>{% trans "Destination" %}</th>
+              <th>{% trans "Tariff" %}</th>
+              <th>{% trans "What happens" %}</th>
+              <th class="num">{% trans "Supplier cost" %}</th>
+              <th class="num">{% trans "Retail price" %}</th>
+            </tr>
           </thead>
           <tbody>
             {% for change in changes %}
               {% if change.kind != "unchanged" %}
-              <tr>
-                <td>{{ change.country }}</td>
-                <td>{{ change.label }}</td>
-                <td><span class="qs-tag qs-tag--{{ change.kind }}">{% if change.kind == "new-plan" %}{% trans "new tariff" %}{% elif change.kind == "new-offer" %}{% trans "new price" %}{% elif change.kind == "price-change" %}{% trans "price change" %}{% else %}{{ change.kind }}{% endif %}</span></td>
-                <td>
-                  {% if change.previous_cost %}${{ change.previous_cost }} →{% endif %}
-                  ${{ change.cost_usd }}
-                </td>
-                <td>
-                  {% if change.price_before %}
-                    ${{ change.price_before }} → <b>${{ change.price_after }}</b>
-                  {% else %}—{% endif %}
-                </td>
-              </tr>
+                <tr>
+                  <td>{{ change.country }}</td>
+                  <td>{{ change.label }}</td>
+                  <td>
+                    <span class="qs-sy__pill qs-sy__pill--dry">
+                      {% if change.kind == "new-plan" %}{% trans "new tariff" %}
+                      {% elif change.kind == "new-offer" %}{% trans "new price" %}
+                      {% elif change.kind == "price-change" %}{% trans "price change" %}
+                      {% else %}{{ change.kind }}{% endif %}
+                    </span>
+                  </td>
+                  <td class="num">
+                    {% if change.previous_cost %}<span class="qs-sy__sub">${{ change.previous_cost }} →</span> {% endif %}${{ change.cost_usd }}
+                  </td>
+                  <td class="num">
+                    {% if change.price_before %}<span class="qs-sy__sub">${{ change.price_before }} →</span> <b>${{ change.price_after }}</b>{% else %}—{% endif %}
+                  </td>
+                </tr>
               {% endif %}
             {% endfor %}
           </tbody>
         </table>
-        <p class="qs-import__warn">
-          {% blocktrans %}To write these, submit again with <b>“Preview only”</b> unchecked.
-          Applying moves supplier costs, and retail prices follow through the
-          pricing rules.{% endblocktrans %}
-        </p>
-      {% else %}
-        <p class="qs-import__warn">
-          {% blocktrans %}Nothing in this file matches a destination in the catalogue. Check that
-          the <code>location</code> column holds ISO codes such as TR or AE, and
-          that those destinations exist.{% endblocktrans %}
-        </p>
-      {% endif %}
-    </div>
+      </div>
+      <p class="qs-sy__hint">
+        {% blocktrans trimmed %}
+        To write these, submit again with <b>“Preview only”</b> unchecked.
+        {% endblocktrans %}
+      </p>
+    {% else %}
+      <p class="qs-sy__hint qs-sy__err">
+        {% blocktrans trimmed %}
+        Nothing in this file matches a destination in the catalogue. Check that the
+        <code>location</code> column holds ISO codes such as TR or AE.
+        {% endblocktrans %}
+      </p>
+    {% endif %}
   {% endif %}
 </div>
 {% endblock %}

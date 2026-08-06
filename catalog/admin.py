@@ -908,7 +908,21 @@ class PlanAdmin(ModelAdmin):
             # The page's whole point is showing that the scheduled sync happens.
             # Ten runs is enough to see a pattern and spot a supplier that
             # started failing without turning the page into a log viewer.
-            "runs": CatalogSyncRun.objects.all()[:10],
+            "runs": CatalogSyncRun.objects.all()[:8],
+            # The header answers "is it working and how fresh is this" without
+            # anyone reading a paragraph.
+            "last_ok": CatalogSyncRun.objects.filter(
+                status=CatalogSyncRun.Status.OK, dry_run=False
+            ).first(),
+            "last_failed": CatalogSyncRun.objects.filter(
+                status=CatalogSyncRun.Status.FAILED
+            ).first(),
+            "running": CatalogSyncRun.objects.filter(
+                status=CatalogSyncRun.Status.RUNNING
+            ).exists(),
+            "plan_count": Plan.objects.count(),
+            "country_count": Country.objects.count(),
+            "offer_count": SupplierOffer.objects.count(),
         }
 
         if request.method != "POST":
@@ -1193,8 +1207,17 @@ class PricingRuleAdmin(ModelAdmin):
     """Markup rules. The most specific active rule wins:
     plan override → destination → supplier → everything."""
 
-    list_display = ("scope_label", "markup_badge", "min_margin_usd", "rounding", "affected", "is_active")
+    list_display = (
+        "scope_label",
+        "tier_col",
+        "markup_badge",
+        "min_margin_usd",
+        "rounding",
+        "affected",
+        "is_active",
+    )
     list_filter = ("scope", "is_active", "rounding")
+    ordering = ("scope", "-tier_data_mb")
     list_editable = ("is_active",)
     autocomplete_fields = ("country",)
     search_fields = ("provider", "country__name", "country__name_uz", "country__name_ru", "note")
@@ -1204,10 +1227,12 @@ class PricingRuleAdmin(ModelAdmin):
         (
             _("Applies to"),
             {
-                "fields": ("scope", "provider", "country"),
+                "fields": ("scope", "provider", "country", "tier_data_mb", "tier_days"),
                 "description": _(
-                    "Pick one. 'Everything' is the house default; a supplier or "
-                    "destination rule overrides it for the plans it covers."
+                    "The narrowest rule about a tariff wins. In order: this "
+                    "destination AND this size, then this size everywhere, then "
+                    "this destination, then this supplier, then the house default. "
+                    "Leave the size empty unless the rule is about one."
                 ),
             },
         ),
@@ -1219,6 +1244,18 @@ class PricingRuleAdmin(ModelAdmin):
         (_("What this does"), {"fields": ("plain_summary", "effective_reach", "price_preview")}),
         (_("Admin"), {"fields": ("is_active", "note")}),
     )
+
+    @display(description=_("Traffic size"), ordering="tier_data_mb")
+    def tier_col(self, obj):
+        """Which size the rule is about, or a dash for any.
+
+        Its own column because two rules on the same destination are otherwise
+        indistinguishable in the list, and telling them apart is exactly what
+        someone is doing when they open this page.
+        """
+        if not obj.tier_data_mb:
+            return format_html('<span style="color:var(--qs-ink-mute)">{}</span>', _("any size"))
+        return obj.tier_label
 
     @display(description=_("Applies to"), ordering="scope")
     def scope_label(self, obj):
@@ -1241,12 +1278,25 @@ class PricingRuleAdmin(ModelAdmin):
         if obj.pk is None:
             return _("Save the rule to see a summary.")
 
+        # .get with a fallback, not [obj.scope]: a new scope added to the model
+        # without touching this dict used to raise KeyError and take the whole
+        # change form down rather than degrade to a vaguer sentence.
         who = {
             PricingRule.Scope.GLOBAL: _("every plan that no more specific rule covers"),
-            PricingRule.Scope.PROVIDER: _("every plan sourced from %(p)s") % {"p": obj.provider or "—"},
+            PricingRule.Scope.PROVIDER: _("every plan sourced from %(p)s")
+            % {"p": obj.provider or "—"},
             PricingRule.Scope.COUNTRY: _("every plan for %(c)s")
             % {"c": obj.country.name if obj.country else "—"},
-        }[obj.scope]
+            PricingRule.Scope.TIER: _("every %(t)s plan, in every destination")
+            % {"t": obj.tier_label or "—"},
+        }.get(obj.scope, _("the plans this rule covers"))
+        # A destination rule narrowed to one size is a fifth case the dict cannot
+        # express, because it is a combination rather than a scope.
+        if obj.scope == PricingRule.Scope.COUNTRY and obj.tier_label:
+            who = _("the %(t)s plan for %(c)s") % {
+                "t": obj.tier_label,
+                "c": obj.country.name if obj.country else "—",
+            }
 
         parts = [
             _("On %(who)s, the selling price is the supplier cost plus %(pct)s%%.")
@@ -1289,13 +1339,31 @@ class PricingRuleAdmin(ModelAdmin):
         from catalog.pricing import resolve_rule
 
         rules = list(PricingRule.objects.filter(is_active=True))
+        # data_amount_mb and validity_days are in the deferred set because
+        # resolve_rule reads them to match a tier rule. Left out, every row would
+        # fetch them on access — an N+1 across 1377 plans on a page that exists to
+        # be quick.
         pool = Plan.objects.filter(is_active=True, cost_usd__isnull=False).only(
-            "id", "country_id", "provider", "markup_percent", "price_locked"
+            "id",
+            "country_id",
+            "provider",
+            "markup_percent",
+            "price_locked",
+            "data_amount_mb",
+            "validity_days",
         )
         if obj.scope == PricingRule.Scope.PROVIDER:
             pool = pool.filter(provider=obj.provider)
         elif obj.scope == PricingRule.Scope.COUNTRY:
             pool = pool.filter(country_id=obj.country_id)
+        elif obj.scope == PricingRule.Scope.TIER:
+            pool = pool.filter(data_amount_mb=obj.tier_data_mb)
+            if obj.tier_days:
+                pool = pool.filter(validity_days=obj.tier_days)
+        if obj.scope == PricingRule.Scope.COUNTRY and obj.tier_data_mb:
+            pool = pool.filter(data_amount_mb=obj.tier_data_mb)
+            if obj.tier_days:
+                pool = pool.filter(validity_days=obj.tier_days)
 
         covered = decides = by_hand = locked = 0
         for plan in pool:
@@ -1450,6 +1518,15 @@ class PricingRuleAdmin(ModelAdmin):
             .annotate(n=Count("pk"))
             .values("n")
         )
+        # A tier rule covers one size everywhere. Counted with the same subquery
+        # trick so the column stays one query however many rules exist — the N+1
+        # this changelist was already fixed for once.
+        by_tier = (
+            active.filter(data_amount_mb=models.OuterRef("tier_data_mb"))
+            .values("data_amount_mb")
+            .annotate(n=Count("pk"))
+            .values("n")
+        )
         return (
             super()
             .get_queryset(request)
@@ -1463,6 +1540,10 @@ class PricingRuleAdmin(ModelAdmin):
                     models.When(
                         scope=PricingRule.Scope.COUNTRY,
                         then=models.Subquery(by_country, output_field=models.IntegerField()),
+                    ),
+                    models.When(
+                        scope=PricingRule.Scope.TIER,
+                        then=models.Subquery(by_tier, output_field=models.IntegerField()),
                     ),
                     default=models.Subquery(total, output_field=models.IntegerField()),
                 )

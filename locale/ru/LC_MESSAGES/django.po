@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-06 22:26+0500\n"
+"POT-Creation-Date: 2026-08-07 00:16+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -200,8 +200,8 @@ msgstr "Пересчитать цены по себестоимости и пр�
 msgid "Applies to"
 msgstr "Применяется к"
 
-msgid "Pick one. 'Everything' is the house default; a supplier or destination rule overrides it for the plans it covers."
-msgstr "Выберите одно. «Всё» — правило по умолчанию; правило по поставщику или направлению переопределяет его для охваченных тарифов."
+msgid "The narrowest rule about a tariff wins. In order: this destination AND this size, then this size everywhere, then this destination, then this supplier, then the house default. Leave the size empty unless the rule is about one."
+msgstr "Побеждает самое узкое правило о тарифе. Порядок: это направление И этот размер, затем этот размер везде, затем это направление, затем этот поставщик, и в конце — правило по умолчанию. Если правило не про один размер, оставьте размер пустым."
 
 msgid "Markup"
 msgstr "Наценка"
@@ -211,6 +211,12 @@ msgstr "Что это делает"
 
 msgid "Admin"
 msgstr "Админ"
+
+msgid "Traffic size"
+msgstr "Размер трафика"
+
+msgid "any size"
+msgstr "любой размер"
 
 msgid "In plain words"
 msgstr "Простыми словами"
@@ -228,6 +234,17 @@ msgstr "каждого тарифа от %(p)s"
 #, python-format
 msgid "every plan for %(c)s"
 msgstr "каждого тарифа для %(c)s"
+
+#, python-format
+msgid "every %(t)s plan, in every destination"
+msgstr "тариф %(t)s в каждом направлении"
+
+msgid "the plans this rule covers"
+msgstr "тарифы, охваченные этим правилом"
+
+#, python-format
+msgid "the %(t)s plan for %(c)s"
+msgstr "тариф %(t)s для %(c)s"
 
 #, python-format
 msgid "On %(who)s, the selling price is the supplier cost plus %(pct)s%%."
@@ -348,8 +365,12 @@ msgstr "В первый раз оставьте включённым. Приме
 msgid "Limit to these destinations"
 msgstr "Ограничить этими направлениями"
 
-msgid "Leave empty to apply the whole file. Choosing destinations is how you set one up without repricing everything else."
-msgstr "Оставьте пустым, чтобы применить весь файл. Выбор направлений — способ настроить одно, не переоценивая всё остальное."
+msgid "ISO codes, comma-separated. Leave empty to apply the whole file — naming destinations is how you set one up without repricing the rest."
+msgstr "ISO-коды через запятую. Оставьте пустым, чтобы применить весь файл — указание направлений позволяет настроить одно, не меняя цены остальных."
+
+#, python-format
+msgid "Not a destination we have: %(codes)s"
+msgstr "Такого направления нет: %(codes)s"
 
 msgid "name"
 msgstr "название"
@@ -552,6 +573,18 @@ msgstr "предложение поставщика"
 msgid "supplier offers"
 msgstr "предложения поставщиков"
 
+msgid "Everything (house default)"
+msgstr "Всё (правило по умолчанию)"
+
+msgid "One supplier"
+msgstr "Один поставщик"
+
+msgid "One destination"
+msgstr "Одно направление"
+
+msgid "One traffic size, every destination"
+msgstr "Один размер трафика, все направления"
+
 msgid "Required when the scope is 'One supplier', e.g. esimaccess."
 msgstr "Обязательно, когда область — «Один поставщик», например esimaccess."
 
@@ -560,6 +593,18 @@ msgstr "Обязательно, когда область — «Одно нап�
 
 msgid "Added on top of supplier cost."
 msgstr "Добавляется к себестоимости поставщика."
+
+msgid "Traffic size in MB, e.g. 1024 for 1 GB. Leave empty for any size."
+msgstr "Размер трафика в МБ, например 1024 для 1 ГБ. Оставьте пустым для любого размера."
+
+msgid "traffic size (MB)"
+msgstr "размер трафика (МБ)"
+
+msgid "Validity in days. Leave empty to match any duration of that size."
+msgstr "Срок действия в днях. Оставьте пустым для любого срока этого размера."
+
+msgid "validity (days)"
+msgstr "срок действия (дней)"
 
 msgid "Profit floor. A percentage on a cheap plan can be pennies; this prevents that."
 msgstr "Минимальная прибыль. Процент от дешёвого тарифа может быть копейками; это исключает такой случай."
@@ -578,6 +623,9 @@ msgstr "правило ценообразования"
 
 msgid "pricing rules"
 msgstr "правила ценообразования"
+
+msgid "Give the traffic size this rule is about, in MB."
+msgstr "Укажите размер трафика, к которому относится правило, в МБ."
 
 msgid "Paid"
 msgstr "Оплачен"
@@ -1658,6 +1706,15 @@ msgstr "Использовано трафика"
 msgid "QR code"
 msgstr "QR-код"
 
+msgid "Payment confirmation"
+msgstr "Подтверждение платежа"
+
+msgid "Confirmation"
+msgstr "Подтверждение"
+
+msgid "open"
+msgstr "открыть"
+
 msgid "Amount"
 msgstr "Сумма"
 
@@ -1915,17 +1972,39 @@ msgstr "выключено"
 msgid "Nothing matches that search."
 msgstr "По этому запросу ничего нет."
 
-msgid "Where prices come from"
-msgstr "Откуда берутся цены"
+msgid "Right now"
+msgstr "Сейчас"
 
-msgid "Both wholesalers are read straight from their own APIs, and the catalogue is built from what they actually sell. Nobody types a destination in: the sync creates the countries the suppliers cover, gives each one its tariff ladder, and records every supplier's price for every tariff."
-msgstr "Оба поставщика читаются напрямую из их API, и каталог строится из того, что они действительно продают. Направления никто не вводит руками: синхронизация создаёт страны, которые покрывают поставщики, даёт каждой лестницу тарифов и записывает цену каждого поставщика для каждого тарифа."
+msgid "Syncing…"
+msgstr "Синхронизация…"
 
-msgid "Both suppliers' prices are kept, not just the winner. The cheapest available one becomes the tariff's cost and the route a paid order takes; the dearer one stays on file as the fallback for when the winner is out of stock or its API is down. Customers never see any of this — they see one tariff at one price."
-msgstr "Сохраняются цены обоих поставщиков, а не только победителя. Самая дешёвая доступная становится себестоимостью тарифа и маршрутом оплаченного заказа; более дорогая остаётся резервом на случай, когда победителя нет в наличии или его API недоступен. Клиенты этого не видят — они видят один тариф по одной цене."
+msgid "started a moment ago"
+msgstr "началась только что"
 
-msgid "Supplier costs move retail prices through the pricing rules, so a sync can change what the site charges. That is the point, and it is also why a preview writes nothing and why newly discovered destinations arrive switched off — waiting for someone to look at them before they go on sale."
-msgstr "Себестоимость поставщика двигает розничную цену через правила ценообразования, поэтому синхронизация может изменить то, что берёт сайт. В этом и смысл — и поэтому предпросмотр ничего не записывает, а новые найденные направления приходят выключенными: прежде чем они попадут в продажу, на них должен посмотреть человек."
+msgid "Last applied"
+msgstr "Последнее применение"
+
+msgid "packages"
+msgstr "пакетов"
+
+msgid "never run"
+msgstr "ни разу не запускалась"
+
+msgid "Catalogue"
+msgstr "Каталог"
+
+#, python-format
+msgid "%(c)s destinations · %(o)s supplier prices"
+msgstr "%(c)s направлений · %(o)s цен поставщиков"
+
+msgid "Last failure"
+msgstr "Последний сбой"
+
+msgid "see the log"
+msgstr "смотреть журнал"
+
+msgid "Both wholesalers are read from their own APIs every night and the catalogue is built from what they actually sell — nobody types a destination in. New destinations arrive switched off, because a tariff goes on sale the moment it is active and a fresh one has had nobody check its price."
+msgstr "Оба поставщика читаются из своих API каждую ночь, и каталог строится из того, что они действительно продают — направления никто не вводит руками. Новые направления приходят выключенными: тариф попадает в продажу сразу после включения, а его цену ещё никто не проверял."
 
 msgid "Recent syncs"
 msgstr "Последние синхронизации"
@@ -1951,23 +2030,17 @@ msgstr "Цены"
 msgid "Running…"
 msgstr "Выполняется…"
 
-msgid "Preview only"
-msgstr "Только предпросмотр"
-
 msgid "Applied"
 msgstr "Применено"
 
-msgid "No sync has run yet, so the catalogue is still whatever was last entered by hand."
-msgstr "Синхронизация ещё не выполнялась, поэтому каталог остаётся таким, каким его последний раз внесли вручную."
-
-msgid "The sync runs on its own overnight. Reading eSIMCard alone takes about five minutes — its API answers one page of a hundred packages every four seconds — which is why it is a scheduled job rather than a button that waits."
-msgstr "Синхронизация выполняется сама по ночам. Чтение одного eSIMCard занимает около пяти минут — его API отдаёт страницу из ста пакетов раз в четыре секунды — поэтому это плановая задача, а не кнопка, которая ждёт."
+msgid "No sync has run yet."
+msgstr "Синхронизация ещё не выполнялась."
 
 msgid "Upload a price list by hand"
 msgstr "Загрузить прайс вручную"
 
-msgid "The fallback, for two situations: a supplier's API is down and a price has to be corrected now, or a wholesaler has sent a quote that is not in their API yet. Everything else should come from the sync above."
-msgstr "Резервный путь для двух случаев: API поставщика недоступен и цену надо исправить сейчас, либо поставщик прислал предложение, которого ещё нет в его API. Всё остальное должно приходить из синхронизации выше."
+msgid "The fallback: a supplier's API is down and a price has to be corrected now, or a wholesaler sent a quote that is not in their API yet."
+msgstr "Резервный путь: API поставщика недоступен и цену надо исправить сейчас, либо поставщик прислал предложение, которого ещё нет в его API."
 
 msgid "Read the file"
 msgstr "Прочитать файл"
@@ -1991,33 +2064,21 @@ msgstr[1] ", %(n)s непригодны и пропущены"
 msgstr[2] ", %(n)s непригодных и пропущено"
 msgstr[3] ", %(n)s непригодных и пропущено"
 
-#, python-format
-msgid "<b>%(n)s</b> new tariff"
-msgid_plural "<b>%(n)s</b> new tariffs"
-msgstr[0] "<b>%(n)s</b> новый тариф"
-msgstr[1] "<b>%(n)s</b> новых тарифа"
-msgstr[2] "<b>%(n)s</b> новых тарифов"
-msgstr[3] "<b>%(n)s</b> новых тарифов"
+msgid "new tariffs"
+msgstr "новых тарифов"
+
+msgid "new supplier prices"
+msgstr "новых цен поставщиков"
+
+msgid "price changes"
+msgstr "изменений цен"
+
+msgid "unchanged"
+msgstr "без изменений"
 
 #, python-format
-msgid "<b>%(n)s</b> new supplier price"
-msgid_plural "<b>%(n)s</b> new supplier prices"
-msgstr[0] "<b>%(n)s</b> новая цена поставщика"
-msgstr[1] "<b>%(n)s</b> новых цены поставщиков"
-msgstr[2] "<b>%(n)s</b> новых цен поставщиков"
-msgstr[3] "<b>%(n)s</b> новых цен поставщиков"
-
-#, python-format
-msgid "<b>%(n)s</b> price change"
-msgid_plural "<b>%(n)s</b> price changes"
-msgstr[0] "<b>%(n)s</b> изменение цены"
-msgstr[1] "<b>%(n)s</b> изменения цены"
-msgstr[2] "<b>%(n)s</b> изменений цен"
-msgstr[3] "<b>%(n)s</b> изменений цен"
-
-#, python-format
-msgid "<b>%(n)s</b> unchanged"
-msgstr "<b>%(n)s</b> без изменений"
+msgid "%(n)s package(s) have a size or duration the tariff ladder has no rung for, so they were not imported:"
+msgstr "У %(n)s пакет(ов) размер или срок, для которых в лестнице тарифов нет ступени, поэтому они не импортированы:"
 
 msgid "Destination"
 msgstr "Направление"
@@ -2043,16 +2104,10 @@ msgstr "новая цена"
 msgid "price change"
 msgstr "изменение цены"
 
-msgid ""
-"To write these, submit again with <b>“Preview only”</b> unchecked.\n"
-"          Applying moves supplier costs, and retail prices follow through the\n"
-"          pricing rules."
-msgstr "Чтобы записать это, отправьте снова, сняв отметку <b>«Только предпросмотр»</b>. Применение меняет себестоимость, а розничные цены следуют за ней через правила ценообразования."
+msgid "To write these, submit again with <b>“Preview only”</b> unchecked."
+msgstr "Чтобы записать это, отправьте снова, сняв <b>«Только предпросмотр»</b>."
 
-msgid ""
-"Nothing in this file matches a destination in the catalogue. Check that\n"
-"          the <code>location</code> column holds ISO codes such as TR or AE, and\n"
-"          that those destinations exist."
+msgid "Nothing in this file matches a destination in the catalogue. Check that the <code>location</code> column holds ISO codes such as TR or AE."
 msgstr "Ничто в этом файле не совпало с направлением из каталога. Проверьте, что в столбце <code>location</code> стоят ISO-коды вида TR или AE и что такие направления существуют."
 
 msgid "destinations shown"
@@ -2243,6 +2298,138 @@ msgstr "Заказ"
 
 msgid "Total"
 msgstr "Итого"
+
+msgid "Print"
+msgstr "Печать"
+
+msgid "Open the order"
+msgstr "Открыть заказ"
+
+msgid "All payments"
+msgstr "Все платежи"
+
+#, python-format
+msgid "%(n)s seller detail is still missing and prints as a gap. Fill it in the server environment before sending this to a customer."
+msgid_plural "%(n)s seller details are still missing and print as gaps. Fill them in the server environment before sending this to a customer."
+msgstr[0] "Не заполнена %(n)s реквизит продавца — он печатается как пробел. Заполните его в настройках сервера, прежде чем отправлять это клиенту."
+msgstr[1] "Не заполнены %(n)s реквизита продавца — они печатаются как пробелы. Заполните их в настройках сервера, прежде чем отправлять это клиенту."
+msgstr[2] "Не заполнено %(n)s реквизитов продавца — они печатаются как пробелы. Заполните их в настройках сервера, прежде чем отправлять это клиенту."
+msgstr[3] "Не заполнено %(n)s реквизита продавца — они печатаются как пробелы. Заполните их в настройках сервера, прежде чем отправлять это клиенту."
+
+msgid "Seller"
+msgstr "Продавец"
+
+msgid "legal name"
+msgstr "юридическое название"
+
+msgid "INN"
+msgstr "ИНН"
+
+msgid "address"
+msgstr "адрес"
+
+msgid "Buyer"
+msgstr "Покупатель"
+
+msgid "Payment"
+msgstr "Платёж"
+
+msgid "Transaction"
+msgstr "Транзакция"
+
+msgid "Service"
+msgstr "Услуга"
+
+msgid "Qty"
+msgstr "Кол-во"
+
+msgid "Unit"
+msgstr "За ед."
+
+msgid "Sum"
+msgstr "Сумма"
+
+msgid "tariff removed"
+msgstr "тариф удалён"
+
+msgid "pc"
+msgstr "шт"
+
+msgid "no line items recorded"
+msgstr "позиции не записаны"
+
+msgid "Subtotal"
+msgstr "Промежуточная сумма"
+
+msgid "Charged"
+msgstr "Списано"
+
+msgid "so‘m"
+msgstr "сум"
+
+msgid "Rate"
+msgstr "Курс"
+
+msgid "This is the sale as we recorded it. The fiscal receipt for this payment is issued by ATMOS, which is registered as our commissioner — it reaches the buyer through the payment provider, not through this document."
+msgstr "Это продажа в том виде, в котором мы её зафиксировали. Фискальный чек по этому платежу выдаёт ATMOS — он зарегистрирован как наш комиссионер, и чек попадает покупателю через платёжную систему, а не через этот документ."
+
+msgid "The som amount is the figure the card was actually charged, frozen at the rate in force when the order was placed."
+msgstr "Сумма в сумах — это то, что фактически списано с карты, зафиксировано по курсу на момент оформления заказа."
+
+#~ msgid "Pick one. 'Everything' is the house default; a supplier or destination rule overrides it for the plans it covers."
+#~ msgstr "Выберите одно. «Всё» — правило по умолчанию; правило по поставщику или направлению переопределяет его для охваченных тарифов."
+
+#~ msgid "Where prices come from"
+#~ msgstr "Откуда берутся цены"
+
+#~ msgid "Both suppliers' prices are kept, not just the winner. The cheapest available one becomes the tariff's cost and the route a paid order takes; the dearer one stays on file as the fallback for when the winner is out of stock or its API is down. Customers never see any of this — they see one tariff at one price."
+#~ msgstr "Сохраняются цены обоих поставщиков, а не только победителя. Самая дешёвая доступная становится себестоимостью тарифа и маршрутом оплаченного заказа; более дорогая остаётся резервом на случай, когда победителя нет в наличии или его API недоступен. Клиенты этого не видят — они видят один тариф по одной цене."
+
+#~ msgid "Supplier costs move retail prices through the pricing rules, so a sync can change what the site charges. That is the point, and it is also why a preview writes nothing and why newly discovered destinations arrive switched off — waiting for someone to look at them before they go on sale."
+#~ msgstr "Себестоимость поставщика двигает розничную цену через правила ценообразования, поэтому синхронизация может изменить то, что берёт сайт. В этом и смысл — и поэтому предпросмотр ничего не записывает, а новые найденные направления приходят выключенными: прежде чем они попадут в продажу, на них должен посмотреть человек."
+
+#~ msgid "Preview only"
+#~ msgstr "Только предпросмотр"
+
+#~ msgid "No sync has run yet, so the catalogue is still whatever was last entered by hand."
+#~ msgstr "Синхронизация ещё не выполнялась, поэтому каталог остаётся таким, каким его последний раз внесли вручную."
+
+#~ msgid "The sync runs on its own overnight. Reading eSIMCard alone takes about five minutes — its API answers one page of a hundred packages every four seconds — which is why it is a scheduled job rather than a button that waits."
+#~ msgstr "Синхронизация выполняется сама по ночам. Чтение одного eSIMCard занимает около пяти минут — его API отдаёт страницу из ста пакетов раз в четыре секунды — поэтому это плановая задача, а не кнопка, которая ждёт."
+
+#, python-format
+#~ msgid "<b>%(n)s</b> new tariff"
+#~ msgid_plural "<b>%(n)s</b> new tariffs"
+#~ msgstr[0] "<b>%(n)s</b> новый тариф"
+#~ msgstr[1] "<b>%(n)s</b> новых тарифа"
+#~ msgstr[2] "<b>%(n)s</b> новых тарифов"
+#~ msgstr[3] "<b>%(n)s</b> новых тарифов"
+
+#, python-format
+#~ msgid "<b>%(n)s</b> new supplier price"
+#~ msgid_plural "<b>%(n)s</b> new supplier prices"
+#~ msgstr[0] "<b>%(n)s</b> новая цена поставщика"
+#~ msgstr[1] "<b>%(n)s</b> новых цены поставщиков"
+#~ msgstr[2] "<b>%(n)s</b> новых цен поставщиков"
+#~ msgstr[3] "<b>%(n)s</b> новых цен поставщиков"
+
+#, python-format
+#~ msgid "<b>%(n)s</b> price change"
+#~ msgid_plural "<b>%(n)s</b> price changes"
+#~ msgstr[0] "<b>%(n)s</b> изменение цены"
+#~ msgstr[1] "<b>%(n)s</b> изменения цены"
+#~ msgstr[2] "<b>%(n)s</b> изменений цен"
+#~ msgstr[3] "<b>%(n)s</b> изменений цен"
+
+#, python-format
+#~ msgid "<b>%(n)s</b> unchanged"
+#~ msgstr "<b>%(n)s</b> без изменений"
+
+#~ msgid ""
+#~ "To write these, submit again with <b>“Preview only”</b> unchecked.\n"
+#~ "          Applying moves supplier costs, and retail prices follow through the\n"
+#~ "          pricing rules."
+#~ msgstr "Чтобы записать это, отправьте снова, сняв отметку <b>«Только предпросмотр»</b>. Применение меняет себестоимость, а розничные цены следуют за ней через правила ценообразования."
 
 #~ msgid "What each tariff costs us and what the customer pays, by destination. Cost comes from whichever wholesaler is cheapest and is refreshed by the nightly sync; the price is normally calculated from it by the pricing rules."
 #~ msgstr "Сколько каждый тариф стоит нам и сколько платит клиент — по направлениям. Себестоимость берётся у самого дешёвого поставщика и обновляется ночной синхронизацией; цена обычно рассчитывается из неё правилами ценообразования."

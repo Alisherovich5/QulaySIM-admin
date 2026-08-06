@@ -66,7 +66,40 @@ def resolve_rule(plan, rules: list | None = None):
     country_id = plan.country_id
     provider = plan.provider
 
-    by_country = [r for r in rules if r.scope == PricingRule.Scope.COUNTRY and r.country_id == country_id]
+    # Most specific first. A tariff can be named four ways and the narrowest
+    # statement about it has to win, or an operator's exception is silently
+    # overruled by a broader rule they set weeks earlier.
+    def matches_tier(rule) -> bool:
+        if not rule.tier_data_mb:
+            return False
+        if rule.tier_data_mb != plan.data_amount_mb:
+            return False
+        return rule.tier_days in (None, plan.validity_days)
+
+    # 1. this destination AND this size — "Japan 1 GB"
+    exact = [
+        r
+        for r in rules
+        if r.scope == PricingRule.Scope.COUNTRY
+        and r.country_id == country_id
+        and matches_tier(r)
+    ]
+    if exact:
+        return exact[0]
+
+    # 2. this size, everywhere — "1 GB is priced this way"
+    by_tier = [r for r in rules if r.scope == PricingRule.Scope.TIER and matches_tier(r)]
+    if by_tier:
+        return by_tier[0]
+
+    # 3. this destination, any size
+    by_country = [
+        r
+        for r in rules
+        if r.scope == PricingRule.Scope.COUNTRY
+        and r.country_id == country_id
+        and not r.tier_data_mb
+    ]
     if by_country:
         return by_country[0]
 

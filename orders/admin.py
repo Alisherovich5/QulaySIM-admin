@@ -190,15 +190,99 @@ class ESIMAdmin(ModelAdmin):
 
 @admin.register(Payment)
 class PaymentAdmin(ModelAdmin):
-    list_display = ("provider_ref", "order", "method", "amount", "status_badge", "created_at")
+    """Payments, each with a printable confirmation.
+
+    The confirmation is deliberately NOT called a fiscal receipt. ATMOS is
+    registered as our commissioner and issues the fiscal receipt itself, so this
+    document is the sale as we recorded it — what was bought, for how much, and
+    against which transaction. Labelling it as the fiscal receipt would present a
+    non-fiscal document as one, which is the kind of thing a tax inspection
+    notices.
+    """
+
+    list_display = (
+        "provider_ref",
+        "order",
+        "method",
+        "amount",
+        "status_badge",
+        "receipt_link",
+        "created_at",
+    )
     list_filter = ("status", "method", "created_at")
-    search_fields = ("provider_ref", "order__id")
-    readonly_fields = ("created_at",)
+    search_fields = ("provider_ref", "order__id", "order__customer__email")
+    readonly_fields = ("created_at", "receipt_link")
     ordering = ("-created_at",)
+    list_select_related = ("order", "order__customer")
+    list_per_page = 50
+
+    def get_urls(self):
+        from django.urls import path
+
+        return [
+            path(
+                "<int:payment_id>/receipt/",
+                self.admin_site.admin_view(self.receipt_view),
+                name="orders_payment_receipt",
+            ),
+            *super().get_urls(),
+        ]
+
+    def receipt_view(self, request, payment_id: int):
+        """One payment as a printable document.
+
+        Reads the order's items rather than re-deriving a total: the amount the
+        card was charged is frozen on the order, and a receipt that recomputes it
+        from today's prices would disagree with the customer's bank statement the
+        moment a price moves.
+        """
+        from django.conf import settings
+        from django.shortcuts import get_object_or_404, render
+
+        payment = get_object_or_404(
+            Payment.objects.select_related("order", "order__customer"), pk=payment_id
+        )
+        order = payment.order
+        items = list(
+            order.items.select_related("plan", "plan__country", "plan__region").all()
+        )
+        seller = {
+            "name": settings.COMPANY_NAME,
+            "inn": settings.COMPANY_INN,
+            "address": settings.COMPANY_ADDRESS,
+            "phone": settings.COMPANY_PHONE,
+            "email": settings.COMPANY_EMAIL,
+            "bank": settings.COMPANY_BANK,
+        }
+        context = {
+            **self.admin_site.each_context(request),
+            "title": _("Payment confirmation"),
+            "opts": self.model._meta,
+            "payment": payment,
+            "order": order,
+            "items": items,
+            "seller": seller,
+            # Named so the template can say which fields the business still owes
+            # us instead of printing blanks.
+            "seller_missing": [key for key, value in seller.items() if not value],
+        }
+        return render(request, "admin/orders/receipt.html", context)
 
     @display(description=_("Status"))
     def status_badge(self, obj):
         return _status_badge(obj.status, obj.get_status_display())
+
+    @display(description=_("Confirmation"))
+    def receipt_link(self, obj):
+        if obj.pk is None:
+            return "—"
+        from django.urls import reverse
+
+        return format_html(
+            '<a href="{}" target="_blank" rel="noopener">{}</a>',
+            reverse("admin:orders_payment_receipt", args=[obj.pk]),
+            _("open"),
+        )
 
 
 @admin.register(PaymeTransaction)
