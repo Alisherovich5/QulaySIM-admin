@@ -72,6 +72,43 @@ class TooNarrowToBeRegionalTests(TestCase):
         self.assertEqual(len(catalogue.regional), 1)
 
 
+class CoverageIsCountedInCountriesNotEntriesTests(TestCase):
+    """eSIMCard lists one coverage entry per country AND network.
+
+    Its "eSIM Data For 3GB in 30 Days, Europe" reports 97 entries for 55
+    countries. Counting entries shipped the tariff to customers labelled "97 ta
+    davlat" — an overstatement of the product by 42 countries — and let a narrow
+    bundle with many operators past the minimum-coverage floor.
+    """
+
+    def test_duplicate_entries_do_not_inflate_the_count(self):
+        catalogue = supplier_api.FetchedCatalogue()
+        # Ten countries, each listed three times as three networks.
+        codes = [c for c in EUROPE_41[:10] for _ in range(3)]
+        supplier_api._add_regional(catalogue, codes, 3.0, 30, "eu", Decimal("7.30"))
+        (_, _, coverage) = next(iter(catalogue.regional.values()))
+        self.assertEqual(coverage, 10, "must count countries, not coverage rows")
+
+    def test_a_narrow_bundle_cannot_buy_its_way_past_the_floor_with_networks(self):
+        catalogue = supplier_api.FetchedCatalogue()
+        # Three countries, thirty entries — comfortably over the raw floor.
+        codes = [c for c in ["PL", "CZ", "SK"] for _ in range(10)]
+        supplier_api._add_regional(catalogue, codes, 5.0, 30, "narrow", Decimal("4.00"))
+        self.assertEqual(catalogue.regional, {})
+        self.assertEqual(catalogue.too_narrow, 1)
+
+    def test_the_wider_bundle_still_wins_on_unique_countries(self):
+        catalogue = supplier_api.FetchedCatalogue()
+        # 12 real countries listed once each, versus 10 listed three times.
+        supplier_api._add_regional(catalogue, EUROPE_41[:12], 5.0, 30, "twelve", Decimal("9.00"))
+        supplier_api._add_regional(
+            catalogue, [c for c in EUROPE_41[:10] for _ in range(3)], 5.0, 30, "ten", Decimal("8.00")
+        )
+        (code, _, coverage) = next(iter(catalogue.regional.values()))
+        self.assertEqual(code, "twelve")
+        self.assertEqual(coverage, 12)
+
+
 class CoverageBeatsPriceTests(TestCase):
     """The opposite rule from a single-country tariff, and deliberately so."""
 

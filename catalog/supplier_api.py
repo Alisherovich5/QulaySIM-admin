@@ -114,9 +114,17 @@ def _add_regional(
     if gb <= 0 or days <= 0 or cost <= 0 or not code:
         catalogue.unusable += 1
         return
-    if len(codes) < MIN_REGIONAL_COVERAGE:
+
+    # Deduplicated, because eSIMCard's coverage list has one entry per
+    # country-AND-network: its "Europe 3GB" reports 97 entries for 55 countries.
+    # Counting raw entries overstated the product to the customer — the tariff
+    # went out labelled "97 ta davlat" — and let a three-country bundle with
+    # enough operators slip past the minimum-coverage floor.
+    unique = sorted({c.upper() for c in codes if c})
+    if len(unique) < MIN_REGIONAL_COVERAGE:
         catalogue.too_narrow += 1
         return
+    codes = unique
     key = (region_for_coverage(codes), gb, days)
     existing = catalogue.regional.get(key)
     # Widest first, then cheapest.
