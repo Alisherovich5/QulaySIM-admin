@@ -16,8 +16,18 @@ a tariff is handed back to the pricing rules.
 
 {% block extrastyle %}{{ block.super }}
 <style>
-  .qs-ps__lede { margin:0 0 1rem; }
-  .qs-ps__counts { margin:0 0 1rem; font-weight:700; }
+  .qs-ps__stats { display:flex; flex-wrap:wrap; gap:.6rem; margin:0 0 1rem; }
+  .qs-ps__stat { flex:1 1 9rem; padding:.7rem .9rem; border-radius:.7rem;
+    border:1px solid var(--qs-line, #d5dbe3); background:var(--qs-surface, #fff); }
+  .qs-ps__num { display:block; font-size:1.45rem; font-weight:800; line-height:1.1; }
+  .qs-ps__num--warn { color:var(--qs-accent-text, #a16207); }
+  .qs-ps__of { font-size:.9rem; font-weight:600; color:var(--qs-ink-soft, #64748b); }
+  .qs-ps__lbl { display:block; margin-top:.15rem; font-size:.74rem; font-weight:600;
+    text-transform:uppercase; letter-spacing:.03em; color:var(--qs-ink-soft, #64748b); }
+  .qs-ps__note { display:flex; gap:.5rem; align-items:baseline; margin:0 0 1.25rem;
+    padding:.65rem .85rem; border-radius:.6rem; font-size:.85rem; line-height:1.5;
+    background:var(--qs-warn-wash, #fef6e7); color:var(--qs-accent-text, #a16207); }
+  .qs-ps__lock { flex:0 0 auto; }
   .qs-ps__bar { display:flex; flex-wrap:wrap; gap:.75rem; align-items:center; margin:0 0 1.25rem; }
   .qs-ps__search { flex:1 1 14rem; min-width:11rem; padding:.55rem .8rem; border-radius:.6rem;
     border:1px solid var(--qs-line, #d5dbe3); background:var(--qs-surface, #fff); color:inherit; }
@@ -54,39 +64,42 @@ a tariff is handed back to the pricing rules.
 {% block content %}
 <div class="qs-ps">
 
-  <p class="qs-ps__lede">
+  {% comment %}
+  Three paragraphs of prose used to sit here. It read as documentation rather
+  than a screen: by the time you had finished it you had forgotten which page you
+  were on. The facts that matter — the counts and the locking rule — are now a
+  stat strip and a one-line note, and the long explanation lives in this comment
+  where it belongs.
+
+  Two of these blocks were {# … #} spanning several lines, which Django does NOT
+  treat as a comment: it renders them verbatim, so the reasoning was printed on
+  the page above the numbers it was explaining. Only {% templatetag openblock %}
+  comment {% templatetag closeblock %} is multi-line.
+  {% endcomment %}
+
+  <div class="qs-ps__stats">
+    <div class="qs-ps__stat">
+      <span class="qs-ps__num">{{ matched_countries }}<span class="qs-ps__of">/{{ country_total }}</span></span>
+      <span class="qs-ps__lbl">{% trans "destinations shown" %}</span>
+    </div>
+    <div class="qs-ps__stat">
+      <span class="qs-ps__num">{{ total_count }}</span>
+      <span class="qs-ps__lbl">{% trans "tariffs in the catalogue" %}</span>
+    </div>
+    <div class="qs-ps__stat">
+      <span class="qs-ps__num {% if locked_count %}qs-ps__num--warn{% endif %}">{{ locked_count }}</span>
+      <span class="qs-ps__lbl">{% trans "priced by hand" %}</span>
+    </div>
+  </div>
+
+  <p class="qs-ps__note">
+    <span class="qs-ps__lock">🔒</span>
     {% blocktrans trimmed %}
-    What each tariff costs us and what the customer pays, by destination. Cost
-    comes from whichever wholesaler is cheapest and is refreshed by the nightly
-    sync; the price is normally calculated from it by the pricing rules.
-    {% endblocktrans %}
-  </p>
-  <p class="qs-import__warn">
-    {% blocktrans trimmed %}
-    Typing a price locks that tariff. It has to: the price is recalculated from
-    cost on every save, so an unlocked hand-typed value would be overwritten
-    immediately. A locked tariff stops following the pricing rules and stops
-    reacting to a cost change — tick “automatic” to hand it back.
-    {% endblocktrans %}
-  </p>
-  <p class="qs-import__help">
-    {% blocktrans trimmed with locked=locked_count total=total_count %}
-    {{ locked }} of {{ total }} tariffs are priced by hand; the rest follow the
-    pricing rules.
+    Typing a price locks that tariff — it stops following the pricing rules and
+    stops reacting to cost changes. Tick <b>automatic</b> to hand it back.
     {% endblocktrans %}
   </p>
 
-  {# The whole catalogue is here, not just the page in front of you. Said out
-     loud because a paginated sheet reads as a partial one. #}
-  <p class="qs-ps__counts">
-    {% blocktrans trimmed with shown=matched_countries total=country_total tariffs=total_count %}
-    Showing {{ shown }} of {{ total }} destinations · {{ tariffs }} tariffs in the
-    catalogue
-    {% endblocktrans %}
-  </p>
-
-  {# Filters live in their own GET form: a search must not submit 1400 price
-     fields, and a price form must not lose its filters. #}
   <form method="get" id="qs-ps-search" class="qs-ps__bar">
     <input type="search" name="q" value="{{ query }}" class="qs-ps__search"
            placeholder="{% trans 'Search a destination…' %}">

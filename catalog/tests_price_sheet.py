@@ -259,3 +259,56 @@ class PriceSheetCoversEverythingTests(TestCase):
         # 15 of 22 — stated, because a paginated sheet reads as a partial one.
         self.assertIn("15", body)
         self.assertIn("22", body)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class PriceSheetRendersNoCommentaryTests(TestCase):
+    """Nothing meant for a developer may reach the screen.
+
+    Two {# … #} blocks spanning several lines shipped their own reasoning to the
+    page: Django only treats {# … #} as a comment when it closes on the same
+    line, so the explanation was printed above the numbers it explained.
+    """
+
+    def setUp(self):
+        PricingRule.objects.create(scope=PricingRule.Scope.GLOBAL, markup_percent=Decimal("50"))
+        country = Country.objects.create(name="Turkey", name_uz="Turkiya", slug="turkey", iso2="TR")
+        Plan.objects.create(
+            country=country,
+            title="Turkey 3 GB",
+            data_amount_mb=3072,
+            validity_days=15,
+            cost_usd=Decimal("1.39"),
+            price_usd=Decimal("0"),
+            provider="esimaccess",
+            provider_package_code="TR",
+        )
+        self.client.force_login(
+            get_user_model().objects.create_superuser("staff3", "s3@x.uz", "Pw-1234-abcd")
+        )
+
+    def test_no_template_commentary_is_rendered(self):
+        for url_name in (
+            "admin:catalog_plan_price_sheet",
+            "admin:catalog_country_board",
+            "admin:catalog_plan_import_prices",
+        ):
+            with self.subTest(page=url_name):
+                body = self.client.get(reverse(url_name)).content.decode()
+                self.assertNotIn("{#", body)
+                self.assertNotIn("#}", body)
+                # Phrases from the comments, in case the markers were stripped
+                # but the prose survived.
+                self.assertNotIn("paginated sheet reads as a partial", body)
+                self.assertNotIn("must not submit", body)
+                self.assertNotIn("Django", body)
+
+    def test_the_header_is_numbers_not_paragraphs(self):
+        body = self.client.get(reverse("admin:catalog_plan_price_sheet")).content.decode()
+        # The stat strip replaced three paragraphs of prose.
+        self.assertIn("qs-ps__stats", body)
+        self.assertEqual(body.count('class="qs-ps__stat"'), 3)
+        # The locking rule survives as one short note, because getting it wrong
+        # costs an operator their edit.
+        self.assertIn("qs-ps__note", body)
+        self.assertIn("qulflanadi", body)
