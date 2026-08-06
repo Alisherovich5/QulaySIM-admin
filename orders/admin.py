@@ -105,6 +105,12 @@ class PromoCodeAdmin(ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(ModelAdmin):
+
+    # Fifty rows, not Django's hundred. At 1377 tariffs a full page is 666 KB of
+    # HTML, most of it scrolled past unread, and this admin gets used over a phone
+    # tether where bytes are the slow part. Fifty still fills a screen several
+    # times over.
+    list_per_page = 50
     list_display = ("id", "customer", "status_badge", "total", "item_count", "created_at", "paid_at")
     list_filter = ("status", "created_at")
     search_fields = ("id", "customer__email")
@@ -145,6 +151,12 @@ class OrderAdmin(ModelAdmin):
 
 @admin.register(ESIM)
 class ESIMAdmin(ModelAdmin):
+
+    # Fifty rows, not Django's hundred. At 1377 tariffs a full page is 666 KB of
+    # HTML, most of it scrolled past unread, and this admin gets used over a phone
+    # tether where bytes are the slow part. Fifty still fills a screen several
+    # times over.
+    list_per_page = 50
     list_display = ("iccid", "customer", "plan", "status_badge", "usage_bar", "expires_at")
     list_filter = ("status", "plan__network_type")
     search_fields = ("iccid", "customer__email")
@@ -242,6 +254,12 @@ class AtmosTransactionAdmin(ModelAdmin):
     reconciles against these rows, and an edited or deleted one answers its
     retries and statements with a record it no longer recognises."""
 
+    # Fifty rows, not Django's hundred. At 1377 tariffs a full page is 666 KB of
+    # HTML, most of it scrolled past unread, and this admin gets used over a phone
+    # tether where bytes are the slow part. Fifty still fills a screen several
+    # times over.
+    list_per_page = 50
+
     list_display = ("transaction_id", "order", "amount_display", "status_badge", "created_at")
     list_filter = ("status", "created_at")
     search_fields = ("transaction_id", "order__id", "account")
@@ -290,6 +308,12 @@ class SupplierPurchaseAdmin(ModelAdmin):
     have left the account without an eSIM to show for it, and it needs checking
     against the supplier's own list rather than guessing.
     """
+
+    # Fifty rows, not Django's hundred. At 1377 tariffs a full page is 666 KB of
+    # HTML, most of it scrolled past unread, and this admin gets used over a phone
+    # tether where bytes are the slow part. Fifty still fills a screen several
+    # times over.
+    list_per_page = 50
 
     list_display = ("created_at", "order", "provider", "line_key", "state_badge", "supplier_ref")
     list_filter = ("provider", "state", "created_at")

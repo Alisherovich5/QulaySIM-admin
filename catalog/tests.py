@@ -1341,8 +1341,17 @@ class BrandAssetTests(TestCase):
         response = self.client.get(reverse("admin:index"))
         self.assertEqual(response.status_code, 200)
         body = response.content.decode()
-        self.assertIn("qulaysim-logo.svg", body)
-        self.assertIn("qulaysim-favicon.svg", body)
+        # Matched on stem and extension rather than the exact filename: static
+        # files carry a content hash, so the wordmark is served as
+        # "qulaysim-logo.<hash>.svg" and will change name on every edit to it.
+        import re
+
+        for stem in ("qulaysim-logo", "qulaysim-favicon"):
+            self.assertRegex(
+                body,
+                rf"{stem}(\.[0-9a-f]{{8,}})?\.svg",
+                f"the admin must reference {stem}.svg, hashed or not",
+            )
 
 
 class PriceCeilingTests(TestCase):

@@ -29,6 +29,12 @@ class GroupAdmin(BaseGroupAdmin, ModelAdmin):
 
 @admin.register(Customer)
 class CustomerAdmin(ModelAdmin):
+
+    # Fifty rows, not Django's hundred. At 1377 tariffs a full page is 666 KB of
+    # HTML, most of it scrolled past unread, and this admin gets used over a phone
+    # tether where bytes are the slow part. Fifty still fills a screen several
+    # times over.
+    list_per_page = 50
     list_display = ("email", "full_name", "order_count", "referral_code", "is_active", "created_at")
     list_filter = ("is_active", "created_at")
     search_fields = ("email", "full_name", "referral_code")

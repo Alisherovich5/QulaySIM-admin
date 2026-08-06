@@ -186,6 +186,12 @@ class CountryAdmin(ModelAdmin):
     with all three side by side.
     """
 
+    # Fifty rows, not Django's hundred. At 1377 tariffs a full page is 666 KB of
+    # HTML, most of it scrolled past unread, and this admin gets used over a phone
+    # tether where bytes are the slow part. Fifty still fills a screen several
+    # times over.
+    list_per_page = 50
+
     list_display = (
         "flag",
         "name",
@@ -547,6 +553,12 @@ class PlanAdmin(ModelAdmin):
     here: upload the wholesaler's export, see exactly what would change, then
     commit it.
     """
+
+    # Fifty rows, not Django's hundred. At 1377 tariffs a full page is 666 KB of
+    # HTML, most of it scrolled past unread, and this admin gets used over a phone
+    # tether where bytes are the slow part. Fifty still fills a screen several
+    # times over.
+    list_per_page = 50
 
     inlines = (SupplierOfferInline,)
     list_display = (
@@ -1490,6 +1502,12 @@ class SupplierOfferAdmin(ModelAdmin):
     sourcing decision, which is what answers "where are we overpaying?".
     """
 
+    # Fifty rows, not Django's hundred. At 1377 tariffs a full page is 666 KB of
+    # HTML, most of it scrolled past unread, and this admin gets used over a phone
+    # tether where bytes are the slow part. Fifty still fills a screen several
+    # times over.
+    list_per_page = 50
+
     list_display = (
         "plan_col",
         "provider",
@@ -1602,6 +1620,12 @@ class CatalogSyncRunAdmin(ModelAdmin):
     notices the prices are three weeks old, and by then the cheaper supplier has
     been losing us margin on every order.
     """
+
+    # Fifty rows, not Django's hundred. At 1377 tariffs a full page is 666 KB of
+    # HTML, most of it scrolled past unread, and this admin gets used over a phone
+    # tether where bytes are the slow part. Fifty still fills a screen several
+    # times over.
+    list_per_page = 50
 
     list_display = (
         "started_at",

@@ -259,11 +259,18 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 # hard failure at collectstatic time.
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
-# Static filenames are not hashed, so let the browser revalidate rather than
-# cache a stale stylesheet for a year.
-WHITENOISE_MAX_AGE = 3600
+# Hashed filenames, so a year of caching is safe: a changed file gets a new name
+# and the browser fetches it immediately, while an unchanged one is never asked
+# about again.
+#
+# The alternative — revalidating thirteen assets on every page load — costs a
+# round trip each, and this admin is used over a phone tether where a round trip
+# is 130 ms. WhiteNoise serves the hashed copies with `immutable` on its own; this
+# value covers the handful of files that keep their plain name.
+WHITENOISE_MAX_AGE = 31536000
+
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
