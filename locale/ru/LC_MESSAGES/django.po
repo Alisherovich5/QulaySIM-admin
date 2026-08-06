@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-06 04:05+0500\n"
+"POT-Creation-Date: 2026-08-06 12:37+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -35,6 +35,24 @@ msgstr "Не продвигается"
 
 msgid "Promoted with no plans"
 msgstr "Продвигается, но без тарифов"
+
+msgid "Tariffs sold here"
+msgstr "Тарифы, продаваемые здесь"
+
+msgid "Traffic"
+msgstr "Трафик"
+
+msgid "Unlimited"
+msgstr "Безлимит"
+
+msgid "Suppliers"
+msgstr "Поставщики"
+
+msgid "none"
+msgstr "нет"
+
+msgid "out"
+msgstr "выведен"
 
 msgid "On the site"
 msgstr "Место на сайте"
@@ -258,9 +276,6 @@ msgstr "Пересчитать все затронутые тарифы сейч
 
 msgid "Verdict"
 msgstr "Вывод"
-
-msgid "out"
-msgstr "выведен"
 
 msgid "cheapest"
 msgstr "самый дешёвый"
@@ -1652,6 +1667,27 @@ msgstr "использовано раз"
 msgid "valid until"
 msgstr "действует до"
 
+msgid "Created by staff"
+msgstr "Создан сотрудником"
+
+msgid "Referral cashback"
+msgstr "Кешбэк за приглашение"
+
+msgid "Repeat-purchase cashback"
+msgstr "Кешбэк за повторную покупку"
+
+msgid "Why this code exists. Left alone for codes staff create; the worker sets it for the two cashback schemes."
+msgstr "Почему этот код существует. Для кодов, созданных сотрудником, не трогается; для двух схем кешбэка его ставит воркер."
+
+msgid "reason"
+msgstr "причина"
+
+msgid "When set, only this customer can redeem the code. Cashback is earned by a person, so leaving it open would let a code posted in a group chat discount everyone's order."
+msgstr "Если задано, код может использовать только этот клиент. Кешбэк зарабатывает человек, а открытый код, выложенный в чат, даст скидку всем."
+
+msgid "issued to"
+msgstr "кому выдан"
+
 msgid "promo codes"
 msgstr "промокоды"
 
@@ -1772,9 +1808,6 @@ msgstr "состояние"
 msgid "Payme cancellation reason."
 msgstr "Причина отмены в Payme."
 
-msgid "reason"
-msgstr "причина"
-
 msgid "create time"
 msgstr "время создания в Payme"
 
@@ -1825,6 +1858,40 @@ msgstr "Транзакция ATMOS"
 
 msgid "ATMOS transactions"
 msgstr "Транзакции ATMOS"
+
+msgid "The catalogue as customers see it. A destination goes live the moment it is switched on, so the ones the sync found sit here switched off until somebody has looked at their prices and their name."
+msgstr "Каталог таким, каким его видит клиент. Направление появляется на сайте сразу после включения, поэтому найденные синхронизацией лежат выключенными, пока кто-нибудь не проверит их цены и название."
+
+msgid "Search a destination…"
+msgstr "Найти направление…"
+
+msgid "All"
+msgstr "Все"
+
+msgid "On sale"
+msgstr "В продаже"
+
+msgid "Waiting for review"
+msgstr "Ждёт проверки"
+
+msgid "%(n)s tariff"
+msgid_plural "%(n)s tariffs"
+msgstr[0] "%(n)s тариф"
+msgstr[1] "%(n)s тарифа"
+msgstr[2] "%(n)s тарифов"
+msgstr[3] "%(n)s тарифа"
+
+msgid "from"
+msgstr "от"
+
+msgid "no tariffs yet"
+msgstr "тарифов пока нет"
+
+msgid "off"
+msgstr "выключено"
+
+msgid "Nothing matches that search."
+msgstr "По этому запросу ничего нет."
 
 msgid "Where prices come from"
 msgstr "Откуда берутся цены"

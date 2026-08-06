@@ -35,6 +35,36 @@ class PromoCode(models.Model):
     used_count = models.PositiveIntegerField(default=0, verbose_name=_("used count"))
     valid_until = models.DateTimeField(null=True, blank=True, verbose_name=_("valid until"))
     is_active = models.BooleanField(default=True, verbose_name=_("is active"))
+
+    class Reason(models.TextChoices):
+        MANUAL = "manual", _("Created by staff")
+        REFERRAL = "referral", _("Referral cashback")
+        LOYALTY = "loyalty", _("Repeat-purchase cashback")
+
+    reason = models.CharField(
+        max_length=10,
+        choices=Reason.choices,
+        default=Reason.MANUAL,
+        blank=True,
+        help_text=_(
+            "Why this code exists. Left alone for codes staff create; the worker "
+            "sets it for the two cashback schemes."
+        ),
+        verbose_name=_("reason"),
+    )
+    issued_to = models.ForeignKey(
+        "customers.Customer",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="promo_codes",
+        help_text=_(
+            "When set, only this customer can redeem the code. Cashback is "
+            "earned by a person, so leaving it open would let a code posted in "
+            "a group chat discount everyone's order."
+        ),
+        verbose_name=_("issued to"),
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"))
 
     class Meta:
@@ -83,6 +113,10 @@ class PromoCode(models.Model):
     def save(self, *args, **kwargs):
         # Also normalised here (not only in clean) so existing lowercase rows
         # heal on their next programmatic save, not only through the admin form.
+        # blank=True on a choices field stores "" when the form omits it, and an
+        # empty reason would read as "we do not know where this code came from".
+        if not self.reason:
+            self.reason = self.Reason.MANUAL
         normalised = (self.code or "").strip().upper()
         if normalised != self.code:
             self.code = normalised

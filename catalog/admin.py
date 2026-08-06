@@ -115,6 +115,67 @@ class PromotionFilter(admin.SimpleListFilter):
         return queryset
 
 
+class CountryPlanInline(TabularInline):
+    """The tariffs sold for this destination, with both suppliers' costs.
+
+    Added because opening a destination showed its name and its flag and nothing
+    about what we actually sell there — the one question anyone opens a
+    destination to answer. Finding out meant leaving for the plans list and
+    filtering it by hand.
+
+    Read-only on purpose. These rows are written by the catalogue sync from the
+    wholesalers' APIs; editing a cost here would be overwritten on the next run,
+    and editing a price is what the pricing rules are for. Anything that needs
+    changing per tariff is on the tariff's own page, one click away.
+    """
+
+    model = Plan
+    extra = 0
+    can_delete = False
+    show_change_link = True
+    verbose_name_plural = _("Tariffs sold here")
+    fields = ("traffic", "validity_days", "network_type", "suppliers", "cost_usd", "price_usd", "is_active")
+    readonly_fields = ("traffic", "suppliers", "cost_usd", "price_usd", "validity_days", "network_type", "is_active")
+    ordering = ("sort_order", "data_amount_mb")
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def get_queryset(self, request):
+        # The supplier list is rendered per row; without this it is one query per
+        # tariff, and a destination with seven of them would issue eight.
+        return super().get_queryset(request).prefetch_related("offers")
+
+    @display(description=_("Traffic"))
+    def traffic(self, obj):
+        if obj.is_unlimited:
+            return _("Unlimited")
+        gb = obj.data_amount_mb / 1024
+        return f"{gb:g} GB" if gb >= 1 else f"{obj.data_amount_mb} MB"
+
+    @display(description=_("Suppliers"))
+    def suppliers(self, obj):
+        """Every wholesaler's price for this tariff, cheapest first.
+
+        The winner is what we pay and where a paid order goes; the rest are the
+        fallbacks. Showing them together is the point — it is how someone sees at
+        a glance that one supplier is consistently dearer.
+        """
+        offers = sorted(obj.offers.all(), key=lambda o: o.cost_usd)
+        if not offers:
+            return format_html('<span style="color:var(--qs-bad-text)">{}</span>', _("none"))
+        parts = []
+        for index, offer in enumerate(offers):
+            label = offer.get_provider_display()
+            if not offer.is_available:
+                parts.append(f"{label} ${offer.cost_usd} ({_('out')})")
+            elif index == 0:
+                parts.append(f"★ {label} ${offer.cost_usd}")
+            else:
+                parts.append(f"{label} ${offer.cost_usd}")
+        return " · ".join(parts)
+
+
 @admin.register(Country)
 class CountryAdmin(ModelAdmin):
     """Destinations, and the handful promoted on the landing page.
@@ -138,6 +199,72 @@ class CountryAdmin(ModelAdmin):
         "from_price",
     )
     list_display_links = ("flag", "name")
+    inlines = (CountryPlanInline,)
+
+    def get_urls(self):
+        from django.urls import path
+
+        return [
+            path(
+                "board/",
+                self.admin_site.admin_view(self.destination_board),
+                name="catalog_country_board",
+            ),
+            *super().get_urls(),
+        ]
+
+    def destination_board(self, request):
+        """The catalogue as cards, the way the site shows it.
+
+        A changelist answers "which row do I edit". It is the wrong tool for
+        "what does our catalogue look like", which is the question anyone asks
+        first and which a 207-row table cannot answer. The cards mirror the
+        storefront's own grid, so what staff see is what a customer sees.
+
+        Both wholesalers' costs are behind each card rather than on it. A
+        customer-facing view showing which supplier is cheaper would be leaking
+        our margins onto a screen that gets shared and screenshotted; the
+        comparison belongs on the destination page, one click away.
+        """
+        from django.db.models import Count, Min, Q
+        from django.shortcuts import render
+
+        countries = (
+            Country.objects.select_related("region")
+            .annotate(
+                live_plans=Count("plans", filter=Q(plans__is_active=True), distinct=True),
+                price_from=Min("plans__price_usd", filter=Q(plans__is_active=True)),
+            )
+            .order_by("-is_active", "sort_order", "name")
+        )
+        query = (request.GET.get("q") or "").strip()
+        if query:
+            countries = countries.filter(
+                Q(name__icontains=query)
+                | Q(name_uz__icontains=query)
+                | Q(name_ru__icontains=query)
+                | Q(iso2__iexact=query)
+            )
+        only = request.GET.get("show")
+        if only == "live":
+            countries = countries.filter(is_active=True)
+        elif only == "waiting":
+            # The ones the sync found and nobody has reviewed — the actual
+            # working queue, and impossible to see in a 207-row table.
+            countries = countries.filter(is_active=False)
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": _("Destinations"),
+            "opts": self.model._meta,
+            "countries": countries,
+            "query": query,
+            "show": only or "all",
+            "total": Country.objects.count(),
+            "live": Country.objects.filter(is_active=True).count(),
+            "waiting": Country.objects.filter(is_active=False).count(),
+        }
+        return render(request, "admin/catalog/destination_board.html", context)
     list_filter = (PromotionFilter, "region", "is_active")
     search_fields = ("name", "name_uz", "name_ru", "iso2")
     prepopulated_fields = {"slug": ("name",)}

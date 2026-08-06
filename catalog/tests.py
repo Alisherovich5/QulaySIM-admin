@@ -2056,6 +2056,13 @@ class SortOrderTieWarningTests(TestCase):
                 "is_popular": "on",
                 "is_active": "on",
                 "sort_order": str(sort_order),
+                # The destination page lists the tariffs sold there, and Django
+                # rejects a POST to a page with an inline unless its management
+                # form comes too. A browser always sends this; the helper has to.
+                "plans-TOTAL_FORMS": "0",
+                "plans-INITIAL_FORMS": "0",
+                "plans-MIN_NUM_FORMS": "0",
+                "plans-MAX_NUM_FORMS": "0",
                 "_save": "Save",
             },
             follow=True,

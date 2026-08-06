@@ -369,6 +369,11 @@ UNFOLD = {
                 "separator": True,
                 "items": [
                     {"title": _("Regions"), "icon": "public", "link": reverse_lazy("admin:catalog_region_changelist")},
+                    {
+                        "title": _("Destinations"),
+                        "icon": "grid_view",
+                        "link": reverse_lazy("admin:catalog_country_board"),
+                    },
                     {"title": _("Countries"), "icon": "flag", "link": reverse_lazy("admin:catalog_country_changelist")},
                     {"title": _("Plans"), "icon": "sim_card", "link": reverse_lazy("admin:catalog_plan_changelist")},
                     {

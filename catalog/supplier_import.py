@@ -169,6 +169,76 @@ def plan_changes(prices: ParsedPrices, provider: str, *, iso2: Iterable[str] | N
     return changes
 
 
+def apply_regional(
+    regional: dict, provider: str
+) -> dict[str, int]:
+    """Write the multi-country tariffs a supplier sells, one per region.
+
+    Separate from apply() because the shape is genuinely different: these hang
+    off a region rather than a country, and there is no per-country ladder to
+    match — a "Europe 5GB / 30 days" is the whole product.
+
+    Same ladder rule though. A wholesaler lists two dozen regional shapes and
+    putting all of them on one page gives a customer a wall of near-identical
+    choices; the rungs are the ones almost every destination already offers, so
+    the regional menu reads like the local one.
+
+    `coverage_count` goes into the title because it is the reason to buy: "41
+    countries" is the product, and a plan called just "Europe 5GB" makes a
+    customer guess whether their stop is included.
+    """
+    from catalog.models import Region
+
+    regions = {r.slug: r for r in Region.objects.all()}
+    ladder_index = {(mb, days): (order, network) for order, (mb, days, network) in enumerate(LADDER)}
+    made_plans = made_offers = 0
+
+    for (region_slug, gb, days), (code, cost, coverage) in sorted(regional.items()):
+        region = regions.get(region_slug)
+        if region is None:
+            continue
+        mb = int(round(gb * 1024))
+        rung = ladder_index.get((mb, days))
+        if rung is None:
+            continue
+        order, network = rung
+
+        plan, created = Plan.objects.get_or_create(
+            region=region,
+            country=None,
+            data_amount_mb=mb,
+            validity_days=days,
+            defaults={
+                "scope": Plan.Scope.GLOBAL if region_slug == "global" else Plan.Scope.REGIONAL,
+                "title": f"{region.name} {gb:g} GB · {days} days",
+                "network_type": network,
+                "price_usd": Decimal("0"),  # recalculated from cost on save
+                "cost_usd": cost,
+                "sort_order": order,
+                "is_popular": False,
+                # Off until someone looks at it, same as a new destination: a
+                # regional tariff appears on the site the moment it is active.
+                "is_active": False,
+            },
+        )
+        made_plans += int(created)
+        # The count can grow as a supplier adds countries to a bundle, so it is
+        # refreshed rather than frozen at creation.
+        note = f"{coverage} ta davlat"
+        if plan.price_note != note:
+            plan.price_note = note
+            plan.save(update_fields=["price_note"])
+
+        _, offer_created = SupplierOffer.objects.update_or_create(
+            plan=plan,
+            provider=provider,
+            defaults={"package_code": code, "cost_usd": cost, "is_available": True},
+        )
+        made_offers += int(offer_created)
+
+    return {"plans_created": made_plans, "offers_created": made_offers}
+
+
 def sourcing_after_uploads(plan: Plan, uploads: dict[str, Decimal]):
     """The (cost, provider) sourcing would settle on once these offers land.
 

@@ -1,0 +1,89 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% comment %}
+The catalogue as cards, mirroring the grid the storefront shows customers.
+
+A changelist answers "which row do I edit". It cannot answer "what does our
+catalogue look like", which is what anyone asks first, and after the sync brought
+the catalogue from 25 destinations to 207 a table stopped being readable at all.
+
+Supplier costs are deliberately absent. Which wholesaler is cheaper is our margin,
+and this is the screen that gets shown in a meeting and screenshotted; the
+comparison lives on the destination page, one click away.
+{% endcomment %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+  .qs-board__filters { display:flex; flex-wrap:wrap; gap:.75rem; align-items:center; margin:0 0 1.25rem; }
+  .qs-board__search { flex:1 1 16rem; min-width:12rem; padding:.55rem .8rem; border-radius:.6rem;
+    border:1px solid var(--qs-line, #d5dbe3); background:var(--qs-surface, #fff); color:inherit; }
+  .qs-board__tabs { display:flex; gap:.4rem; flex-wrap:wrap; }
+  .qs-board__tab { padding:.45rem .85rem; border-radius:999px; font-size:.8rem; font-weight:600;
+    text-decoration:none; border:1px solid var(--qs-line, #d5dbe3); color:inherit; white-space:nowrap; }
+  .qs-board__tab--on { background:var(--qs-good-wash, #e6f7f1); color:var(--qs-teal-text, #0d6b52);
+    border-color:transparent; }
+  .qs-board__grid { display:grid; gap:.9rem;
+    grid-template-columns:repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); }
+  .qs-board__card { display:flex; gap:.8rem; align-items:center; padding:.9rem 1rem;
+    border:1px solid var(--qs-line, #d5dbe3); border-radius:.9rem; text-decoration:none;
+    color:inherit; background:var(--qs-surface, #fff); transition:border-color .15s, transform .15s; }
+  .qs-board__card:hover { border-color:var(--qs-teal-text, #0d6b52); transform:translateY(-1px); }
+  .qs-board__card--off { opacity:.62; border-style:dashed; }
+  .qs-board__flag { font-size:1.6rem; line-height:1; flex:0 0 auto; }
+  .qs-board__body { min-width:0; flex:1 1 auto; }
+  .qs-board__name { font-weight:700; font-size:.95rem;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .qs-board__meta { font-size:.78rem; color:var(--qs-ink-soft, #64748b); margin-top:.15rem; }
+  .qs-board__price { font-weight:700; color:var(--qs-teal-text, #0d6b52); }
+  .qs-board__empty { padding:2rem; text-align:center; color:var(--qs-ink-soft, #64748b); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qs-board">
+  <p class="qs-import__help">
+    {% blocktrans trimmed %}
+    The catalogue as customers see it. A destination goes live the moment it is
+    switched on, so the ones the sync found sit here switched off until somebody
+    has looked at their prices and their name.
+    {% endblocktrans %}
+  </p>
+
+  <form method="get" class="qs-board__filters">
+    <input type="search" name="q" value="{{ query }}" class="qs-board__search"
+           placeholder="{% trans 'Search a destination…' %}">
+    <div class="qs-board__tabs">
+      <a class="qs-board__tab {% if show == 'all' %}qs-board__tab--on{% endif %}"
+         href="?{% if query %}q={{ query }}{% endif %}">{% trans "All" %} · {{ total }}</a>
+      <a class="qs-board__tab {% if show == 'live' %}qs-board__tab--on{% endif %}"
+         href="?show=live{% if query %}&q={{ query }}{% endif %}">{% trans "On sale" %} · {{ live }}</a>
+      <a class="qs-board__tab {% if show == 'waiting' %}qs-board__tab--on{% endif %}"
+         href="?show=waiting{% if query %}&q={{ query }}{% endif %}">{% trans "Waiting for review" %} · {{ waiting }}</a>
+    </div>
+  </form>
+
+  <div class="qs-board__grid">
+    {% for country in countries %}
+      <a class="qs-board__card {% if not country.is_active %}qs-board__card--off{% endif %}"
+         href="{% url 'admin:catalog_country_change' country.pk %}">
+        <span class="qs-board__flag">{{ country.flag_emoji|default:"🌐" }}</span>
+        <span class="qs-board__body">
+          <span class="qs-board__name">{{ country.name_uz|default:country.name }}</span>
+          <span class="qs-board__meta">
+            {% if country.live_plans %}
+              {% blocktrans count n=country.live_plans %}{{ n }} tariff{% plural %}{{ n }} tariffs{% endblocktrans %}
+              {% if country.price_from %}· <span class="qs-board__price">${{ country.price_from }}</span>{% trans "from" %}{% endif %}
+            {% else %}
+              {% trans "no tariffs yet" %}
+            {% endif %}
+            {% if not country.is_active %}· {% trans "off" %}{% endif %}
+          </span>
+        </span>
+      </a>
+    {% empty %}
+      <p class="qs-board__empty">{% trans "Nothing matches that search." %}</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

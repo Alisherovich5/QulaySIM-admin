@@ -134,7 +134,9 @@ class Command(BaseCommand):
                 f"  {provider}: {catalogue.packages_read} paket, "
                 f"{len(catalogue.countries)} davlat qamrovda, "
                 f"{len(catalogue.prices.best)} sotiladigan shakl, "
-                f"{catalogue.multi_country_skipped} ko‘p davlatli (hozircha o‘tkazildi)"
+                f"{catalogue.multi_country} ko‘p davlatli → "
+                f"{len(catalogue.regional)} hududiy tarif "
+                f"({catalogue.too_narrow} tasi juda tor)"
             )
 
         if not catalogues:
@@ -170,18 +172,15 @@ class Command(BaseCommand):
             f"\nYo‘nalishlar: {len(existing)} bor, {len(candidates)} API sotadi, "
             f"{len(missing)} yangi"
         )
+        self._ensure_regions(write=write)
         if not missing:
             return
 
-        regions_needed = {geo.region_slug_for(iso2) for iso2 in missing}
-        regions = {r.slug: r for r in Region.objects.filter(slug__in=regions_needed)}
-        for slug in sorted(regions_needed - set(regions)):
-            name, name_uz, name_ru, order = geo.REGION_NAMES[slug]
-            self.note(f"  + hudud: {name}")
-            if write:
-                regions[slug] = Region.objects.create(
-                    slug=slug, name=name, name_uz=name_uz, name_ru=name_ru, sort_order=order
-                )
+        # Every region in the map, not only the ones the new destinations need:
+        # regional tariffs attach to a region too, and "global" belongs to no
+        # country at all, so waiting for a country to conjure it would leave the
+        # 128-country bundle with nowhere to sit.
+        regions = {r.slug: r for r in Region.objects.all()}
 
         preview = sorted(missing.items())
         for iso2, supplier_name in preview[:12]:
@@ -217,6 +216,19 @@ class Command(BaseCommand):
             + ("" if activate else " (faol emas — ko‘rib chiqib yoqing)")
         )
 
+
+    def _ensure_regions(self, *, write: bool) -> dict:
+        """Create any region in the map that the database is missing."""
+        regions = {r.slug: r for r in Region.objects.all()}
+        for slug in sorted(set(geo.REGION_NAMES) - set(regions)):
+            name, name_uz, name_ru, order = geo.REGION_NAMES[slug]
+            self.note(f"  + hudud: {name}")
+            if write:
+                regions[slug] = Region.objects.create(
+                    slug=slug, name=name, name_uz=name_uz, name_ru=name_ru, sort_order=order
+                )
+        return regions
+
     # ----------------------------------------------------------------- prices #
 
     def _apply_prices(self, provider: str, catalogue, *, write: bool):
@@ -238,6 +250,15 @@ class Command(BaseCommand):
                     f"  + yangi yo‘nalishlar qo‘shilsa yana ~{projected} tarif "
                     "(hozir bazada yo‘q davlatlar uchun)"
                 )
+            if catalogue.regional:
+                on_rungs = sum(
+                    1
+                    for (_, gb, days) in catalogue.regional
+                    if supplier_import.on_ladder(int(round(gb * 1024)), days)
+                )
+                self.note(
+                    f"  + {on_rungs} hududiy tarif ({len(catalogue.regional)} shakldan)"
+                )
             if catalogue.prices.off_ladder:
                 worst = sorted(
                     catalogue.prices.off_ladder.items(), key=lambda kv: -kv[1]
@@ -249,16 +270,24 @@ class Command(BaseCommand):
                 )
             return
         result = supplier_import.apply(catalogue.prices, provider)
+        regional = supplier_import.apply_regional(catalogue.regional, provider)
         # Stamp the sync so the admin can show how fresh a price is, and so a
         # supplier that quietly stopped answering is visible as staleness rather
         # than as prices that merely look plausible.
         SupplierOffer.objects.filter(provider=provider).update(last_synced_at=timezone.now())
-        self.run.plans_created += result.get("plans_created", 0)
-        self.run.offers_written += result.get("offers_created", 0)
+        self.run.plans_created += result.get("plans_created", 0) + regional.get("plans_created", 0)
+        self.run.offers_written += result.get("offers_created", 0) + regional.get(
+            "offers_created", 0
+        )
         self.note(
             f"  {result.get('plans_created', 0)} yangi tarif, "
             f"{result.get('offers_created', 0)} yangi taklif"
         )
+        if regional.get("plans_created") or regional.get("offers_created"):
+            self.note(
+                f"  {regional.get('plans_created', 0)} hududiy tarif, "
+                f"{regional.get('offers_created', 0)} hududiy taklif (faol emas)"
+            )
 
 
     def _projected_new_plans(self, catalogue) -> int:

@@ -30,6 +30,10 @@ NORTH_AMERICA = "north-america"
 AFRICA = "africa"
 OCEANIA = "oceania"
 LATIN_AMERICA = "latin-america"
+# Not a continent — the bucket for a package that spans several of them. eSIM
+# Access sells "Global139 1GB 7Days" covering 128 countries, and it belongs
+# nowhere on the map but very much belongs in the catalogue.
+GLOBAL = "global"
 
 DEFAULT_REGION = ASIA
 
@@ -94,6 +98,7 @@ REGION_NAMES: dict[str, tuple[str, str, str, int]] = {
     AFRICA: ("Africa", "Afrika", "Африка", 5),
     OCEANIA: ("Oceania", "Okeaniya", "Океания", 6),
     LATIN_AMERICA: ("Latin America", "Lotin Amerikasi", "Латинская Америка", 7),
+    GLOBAL: ("Global", "Butun dunyo", "Весь мир", 8),
 }
 
 # Where CLDR's name is not the one the market uses. Kept as short as it can be —
@@ -155,3 +160,31 @@ def names_for(iso2: str, supplier_name: str = "") -> dict[str, str]:
         # Slugged from English so URLs stay stable when a translation changes.
         "slug": slugify(english) or code.lower(),
     }
+
+
+# How much of a package's coverage has to sit in one region before we call it
+# that region's package. Below this it is global.
+#
+# 0.7 rather than 1.0 because real regional packages are not tidy: eSIM Access's
+# "Europe 41 countries" includes Turkey and a couple of North African stops, and
+# demanding purity would file it as global — where a customer shopping for
+# Europe would never find it.
+REGION_MAJORITY = 0.7
+
+
+def region_for_coverage(iso2_codes) -> str:
+    """Which region a multi-country package belongs to, from what it covers.
+
+    Derived from the coverage list rather than the package's name. Names are the
+    supplier's marketing ("Global139", "Asia Pacific 12") and change without
+    notice; the countries are the product.
+    """
+    codes = [code.upper() for code in iso2_codes if code]
+    if not codes:
+        return GLOBAL
+    counts: dict[str, int] = {}
+    for code in codes:
+        slug = region_slug_for(code)
+        counts[slug] = counts.get(slug, 0) + 1
+    slug, hits = max(counts.items(), key=lambda kv: kv[1])
+    return slug if hits / len(codes) >= REGION_MAJORITY else GLOBAL

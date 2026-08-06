@@ -24,10 +24,12 @@ Both suppliers are read through their own paginated endpoints:
                and the host is portal.esimcard.com — esimcard.com answers every
                path with HTTP 410.
 
-Only single-country packages become destination plans here. Multi-country ones
-are counted and reported — they are a real product (a "Europe 30 countries"
-eSIM) but they need a region to hang off, not a country, and selling them is a
-separate piece of work rather than something to smuggle in through a price sync.
+Both kinds of package are read. A single-country one becomes a destination
+tariff; a multi-country one becomes a regional tariff attached to whichever
+region its coverage mostly falls in — a real product we were leaving on the
+table, since a traveller doing Vienna, Prague and Budapest wants one eSIM, not
+three. Which region is decided from the coverage list rather than the supplier's
+name for it, because "Global139" and "Asia Pacific 12" are marketing.
 """
 
 from __future__ import annotations
@@ -63,13 +65,63 @@ class FetchedCatalogue:
     prices: ParsedPrices = field(default_factory=ParsedPrices)
     # iso2 -> the supplier's English name for it.
     countries: dict[str, str] = field(default_factory=dict)
+    # (region slug, GB, days) -> (package code, cost, how many countries it
+    # covers). The cheapest wins, same rule as the per-country prices.
+    regional: dict[tuple[str, float, int], tuple[str, Decimal, int]] = field(
+        default_factory=dict
+    )
     packages_read: int = 0
-    multi_country_skipped: int = 0
+    multi_country: int = 0
+    # Multi-country packages too narrow to honestly call regional.
+    too_narrow: int = 0
     unusable: int = 0
 
 
 def _gb_from_mb(megabytes: float) -> float:
     return round(megabytes / 1024, 4)
+
+
+# A multi-country package has to cover at least this many countries before it is
+# sold as a regional tariff.
+#
+# Both suppliers list two- and three-country bundles, and the region rule files a
+# Poland+Czechia pair under "Europe". Sold as "Yevropa 5 GB" that is misleading
+# to the point of being a complaint: the customer buys a continent and lands in
+# the third country with no data. Below the floor the package is simply not a
+# regional product, and it is reported rather than sold.
+MIN_REGIONAL_COVERAGE = 8
+
+
+def _add_regional(
+    catalogue: FetchedCatalogue,
+    codes: list[str],
+    gb: float,
+    days: int,
+    code: str,
+    cost: Decimal,
+):
+    """Record one multi-country package against the region it mostly covers.
+
+    Ranked by coverage first and price second — the opposite of the per-country
+    rule, and deliberately. For a local tariff the product is fixed and the only
+    variable is what we pay; for a regional one the coverage IS the product, and
+    a cheaper bundle that drops half the continent is not the same thing sold
+    for less. Saving forty cents by shipping "Europe, 12 countries" instead of
+    "Europe, 41 countries" is not a saving.
+    """
+    from catalog.geo import region_for_coverage
+
+    if gb <= 0 or days <= 0 or cost <= 0 or not code:
+        catalogue.unusable += 1
+        return
+    if len(codes) < MIN_REGIONAL_COVERAGE:
+        catalogue.too_narrow += 1
+        return
+    key = (region_for_coverage(codes), gb, days)
+    existing = catalogue.regional.get(key)
+    # Widest first, then cheapest.
+    if existing is None or (-len(codes), cost) < (-existing[2], existing[1]):
+        catalogue.regional[key] = (code, cost, len(codes))
 
 
 def _add(catalogue: FetchedCatalogue, iso2: str, gb: float, days: int, code: str, cost: Decimal):
@@ -166,11 +218,6 @@ def fetch_esimaccess(*, max_pages: int | None = None) -> FetchedCatalogue:
             code = (location.get("locationCode") or "").upper()
             if code:
                 catalogue.countries.setdefault(code, location.get("locationName") or code)
-        if len(locations) != 1:
-            catalogue.multi_country_skipped += 1
-            continue
-
-        iso2 = (locations[0].get("locationCode") or "").upper()
         # volume is bytes; duration is in durationUnit, which is DAY in practice.
         gb = _gb_from_mb(int(package.get("volume") or 0) / (1024 * 1024))
         days = int(package.get("duration") or 0)
@@ -180,7 +227,21 @@ def fetch_esimaccess(*, max_pages: int | None = None) -> FetchedCatalogue:
         cost = (Decimal(str(package.get("price") or 0)) / ESIMACCESS_PRICE_DIVISOR).quantize(
             Decimal("0.01")
         )
-        _add(catalogue, iso2, gb, days, str(package.get("packageCode") or ""), cost)
+        code = str(package.get("packageCode") or "")
+
+        if len(locations) != 1:
+            catalogue.multi_country += 1
+            _add_regional(
+                catalogue,
+                [(loc.get("locationCode") or "").upper() for loc in locations],
+                gb,
+                days,
+                code,
+                cost,
+            )
+            continue
+
+        _add(catalogue, (locations[0].get("locationCode") or "").upper(), gb, days, code, cost)
 
     catalogue.prices.rows_read = catalogue.packages_read
     return catalogue
@@ -245,15 +306,24 @@ def fetch_esimcard(*, max_pages: int = 120) -> FetchedCatalogue:
                 code = (entry.get("code") or "").upper()
                 if len(code) == 2:
                     catalogue.countries.setdefault(code, entry.get("country_name") or code)
-            if len(coverage) != 1:
-                catalogue.multi_country_skipped += 1
-                continue
-
-            iso2 = (coverage[0].get("code") or "").upper()
             gb = _quantity_in_gb(package)
             days = _validity_in_days(package)
             cost = Decimal(str(package.get("price") or 0)).quantize(Decimal("0.01"))
-            _add(catalogue, iso2, gb, days, str(package.get("id") or ""), cost)
+            code = str(package.get("id") or "")
+
+            if len(coverage) != 1:
+                catalogue.multi_country += 1
+                _add_regional(
+                    catalogue,
+                    [(entry.get("code") or "").upper() for entry in coverage],
+                    gb,
+                    days,
+                    code,
+                    cost,
+                )
+                continue
+
+            _add(catalogue, (coverage[0].get("code") or "").upper(), gb, days, code, cost)
         page += 1
 
     catalogue.prices.rows_read = catalogue.packages_read

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-06 04:05+0500\n"
+"POT-Creation-Date: 2026-08-06 12:37+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -35,6 +35,24 @@ msgstr "Ko‘rsatilmaydi"
 
 msgid "Promoted with no plans"
 msgstr "Ko‘rsatiladi, lekin tarifi yo‘q"
+
+msgid "Tariffs sold here"
+msgstr "Bu yerda sotiladigan tariflar"
+
+msgid "Traffic"
+msgstr "Trafik"
+
+msgid "Unlimited"
+msgstr "Cheksiz"
+
+msgid "Suppliers"
+msgstr "Ta’minotchilar"
+
+msgid "none"
+msgstr "yo‘q"
+
+msgid "out"
+msgstr "chiqarilgan"
 
 msgid "On the site"
 msgstr "Saytdagi o‘rni"
@@ -258,9 +276,6 @@ msgstr "Ta’sirlangan barcha tariflarni hozir qayta hisoblash"
 
 msgid "Verdict"
 msgstr "Xulosa"
-
-msgid "out"
-msgstr "chiqarilgan"
 
 msgid "cheapest"
 msgstr "eng arzon"
@@ -1652,6 +1667,27 @@ msgstr "ishlatilgan soni"
 msgid "valid until"
 msgstr "amal qiladi"
 
+msgid "Created by staff"
+msgstr "Xodim yaratgan"
+
+msgid "Referral cashback"
+msgstr "Do‘st taklif qilgani uchun keshbek"
+
+msgid "Repeat-purchase cashback"
+msgstr "Takroriy xarid keshbegi"
+
+msgid "Why this code exists. Left alone for codes staff create; the worker sets it for the two cashback schemes."
+msgstr "Bu kod nima uchun mavjud. Xodim yaratgan kodlarda tegilmaydi; ikkala keshbek sxemasi uchun uni vazifa o‘zi qo‘yadi."
+
+msgid "reason"
+msgstr "sabab"
+
+msgid "When set, only this customer can redeem the code. Cashback is earned by a person, so leaving it open would let a code posted in a group chat discount everyone's order."
+msgstr "Belgilansa, kodni faqat shu mijoz ishlata oladi. Keshbekni odam ishlab topadi, ochiq qoldirilsa esa guruhga tashlangan kod hammaning buyurtmasiga chegirma beradi."
+
+msgid "issued to"
+msgstr "kimga berilgan"
+
 msgid "promo codes"
 msgstr "promokodlar"
 
@@ -1772,9 +1808,6 @@ msgstr "holati"
 msgid "Payme cancellation reason."
 msgstr "Payme bekor qilish sababi."
 
-msgid "reason"
-msgstr "sabab"
-
 msgid "create time"
 msgstr "Payme yaratgan vaqti"
 
@@ -1825,6 +1858,37 @@ msgstr "ATMOS tranzaksiyasi"
 
 msgid "ATMOS transactions"
 msgstr "ATMOS tranzaksiyalari"
+
+msgid "The catalogue as customers see it. A destination goes live the moment it is switched on, so the ones the sync found sit here switched off until somebody has looked at their prices and their name."
+msgstr "Katalog mijoz ko‘rgan holatda. Yo‘nalish yoqilgan zahoti saytda paydo bo‘ladi, shuning uchun sinxronizatsiya topganlari kimdir narxi va nomiga qaramaguncha o‘chiq turadi."
+
+msgid "Search a destination…"
+msgstr "Yo‘nalishni qidiring…"
+
+msgid "All"
+msgstr "Hammasi"
+
+msgid "On sale"
+msgstr "Sotuvda"
+
+msgid "Waiting for review"
+msgstr "Ko‘rib chiqishni kutmoqda"
+
+msgid "%(n)s tariff"
+msgid_plural "%(n)s tariffs"
+msgstr[0] "%(n)s ta tarif"
+
+msgid "from"
+msgstr "dan"
+
+msgid "no tariffs yet"
+msgstr "hali tarif yo‘q"
+
+msgid "off"
+msgstr "o‘chiq"
+
+msgid "Nothing matches that search."
+msgstr "Bu so‘rovga hech nima topilmadi."
 
 msgid "Where prices come from"
 msgstr "Narxlar qayerdan keladi"

@@ -69,6 +69,20 @@ class Country(models.Model):
     is_active = models.BooleanField(default=True, verbose_name=_("is active"))
     sort_order = models.PositiveIntegerField(default=0, verbose_name=_("sort order"))
 
+    @property
+    def flag_emoji(self) -> str:
+        """The country's flag, derived from its ISO code.
+
+        Regional indicator symbols: 'TR' becomes 🇹🇷 by shifting each letter into
+        the Unicode block that renders as a flag. No images to host, no file to
+        keep in step with 207 destinations, and it degrades to a globe for the
+        codes that have no flag rather than showing a broken image.
+        """
+        code = (self.iso2 or "").strip().upper()
+        if len(code) != 2 or not code.isalpha():
+            return "🌐"
+        return "".join(chr(ord(letter) - ord("A") + 0x1F1E6) for letter in code)
+
     class Meta:
         db_table = "catalog_country"
         verbose_name = _("country")
