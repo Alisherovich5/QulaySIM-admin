@@ -1,0 +1,236 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% comment %}
+Ta'minotchilar sahifasi: hisobda qancha pul bor, qancha ketgan, qaysi biri
+qayerda arzon, qaysidan ko'p sotilyapti.
+
+Bitta narsani ataylab qilmaydi: bu yerdan hisobni to'ldirib bo'lmaydi. Ikkala
+reseller API'da ham depozit endpointi yo'q — pul faqat ularning kabinetidan
+tushadi. Shuning uchun balans yonida to'ldirish havolasi turadi: mumkin
+bo'lmagan tugma qo'yishdan ko'ra, mumkin bo'lgan joyga yo'naltirish halolroq.
+
+O'qib bo'lmagan balans nol balans emas. Ikkisi to'lovni yoqish qarorida bir-biriga
+qarama-qarshi ma'no beradi, shuning uchun sahifa ularni hech qachon aralashtirmaydi.
+{% endcomment %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+  .qs-sb { max-width: 66rem; }
+  .qs-sb__bar { display:flex; flex-wrap:wrap; gap:.6rem; margin:0 0 1.3rem; }
+  .qs-sb__btn { padding:.5rem 1rem; border:1px solid var(--qs-line,#d5dbe3); border-radius:.5rem;
+    cursor:pointer; font-weight:700; font-size:.85rem; background:var(--qs-surface-2,#f6f8fa);
+    color:inherit; text-decoration:none; }
+  .qs-sb__btn--go { background:var(--qs-ink,#111827); color:#fff; border-color:var(--qs-ink,#111827); }
+
+  .qs-sb__wallets { display:grid; grid-template-columns:repeat(auto-fit,minmax(17rem,1fr));
+    gap:1rem; margin-bottom:1.6rem; }
+  .qs-sb__w { padding:1.1rem 1.2rem; border:1px solid var(--qs-line,#d5dbe3); border-radius:.8rem;
+    background:var(--qs-surface,#fff); }
+  .qs-sb__w--bad { border-color:var(--qs-bad-text,#b42318); }
+  .qs-sb__w--unknown { border-style:dashed; }
+  .qs-sb__wname { font-size:.72rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.05em; color:var(--qs-ink-soft,#64748b); }
+  .qs-sb__wamt { display:block; margin:.25rem 0 .1rem; font-size:2rem; font-weight:800;
+    letter-spacing:-.02em; font-variant-numeric:tabular-nums; line-height:1.15; }
+  .qs-sb__wamt--bad { color:var(--qs-bad-text,#b42318); }
+  .qs-sb__wamt--unknown { font-size:1.1rem; color:var(--qs-ink-soft,#64748b); }
+  .qs-sb__werr { font-size:.78rem; line-height:1.5; color:var(--qs-bad-text,#b42318);
+    word-break:break-word; }
+  .qs-sb__wmeta { margin-top:.5rem; padding-top:.5rem; font-size:.79rem; line-height:1.7;
+    border-top:1px solid var(--qs-line,#d5dbe3); color:var(--qs-ink-soft,#64748b); }
+  .qs-sb__wmeta b { color:var(--qs-ink,#111827); font-weight:700; }
+  .qs-sb__topup { display:inline-block; margin-top:.55rem; font-size:.79rem; font-weight:700; }
+
+  .qs-sb__warn { margin:0 0 1.4rem; padding:.85rem 1.05rem; border-radius:.6rem; font-size:.86rem;
+    line-height:1.65; background:var(--qs-bad-wash,#fef3f2); color:var(--qs-bad-text,#b42318); }
+  .qs-sb__note { margin:0 0 1.4rem; padding:.85rem 1.05rem; border-radius:.6rem; font-size:.85rem;
+    line-height:1.7; background:var(--qs-surface-2,#f6f8fa); }
+
+  .qs-sb__sec { margin-bottom:1.8rem; }
+  .qs-sb__h { margin:0 0 .15rem; font-size:1rem; font-weight:800; }
+  .qs-sb__hint { margin:0 0 .65rem; font-size:.8rem; line-height:1.6; color:var(--qs-ink-soft,#64748b); }
+
+  .qs-sb__t { width:100%; border-collapse:collapse; }
+  .qs-sb__t th, .qs-sb__t td { padding:.45rem .4rem; font-size:.84rem; text-align:left;
+    border-bottom:1px solid var(--qs-line,#d5dbe3); }
+  .qs-sb__t th { font-size:.68rem; text-transform:uppercase; letter-spacing:.04em;
+    font-weight:700; color:var(--qs-ink-soft,#64748b); }
+  .qs-sb__t .r { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .qs-sb__mute { color:var(--qs-ink-soft,#64748b); }
+  .qs-sb__tag { display:inline-block; padding:.1rem .45rem; border-radius:.3rem; font-size:.72rem;
+    font-weight:700; background:var(--qs-surface-2,#f6f8fa); color:var(--qs-ink-soft,#64748b); }
+  .qs-sb__scroll { max-height:30rem; overflow:auto; border:1px solid var(--qs-line,#d5dbe3);
+    border-radius:.6rem; }
+  .qs-sb__scroll table { margin:0; }
+  .qs-sb__scroll thead th { position:sticky; top:0; background:var(--qs-surface,#fff); z-index:1; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qs-sb">
+
+  <div class="qs-sb__bar">
+    <form method="post" style="display:inline">{% csrf_token %}
+      <button type="submit" name="refresh" value="1" class="qs-sb__btn qs-sb__btn--go">
+        ↻ {% trans "Re-read balances" %}
+      </button>
+    </form>
+    <a class="qs-sb__btn" href="{% url 'admin:catalog_supplieroffer_changelist' %}">{% trans "All supplier prices" %}</a>
+    <a class="qs-sb__btn" href="{% url 'admin:catalog_plan_margin_report' %}">{% trans "Margin report" %}</a>
+  </div>
+
+  <div class="qs-sb__wallets">
+    {% for w in balances %}
+      <div class="qs-sb__w {% if w.empty %}qs-sb__w--bad{% elif not w.known %}qs-sb__w--unknown{% endif %}">
+        <div class="qs-sb__wname">{{ w.label }}</div>
+        {% if w.known %}
+          <span class="qs-sb__wamt {% if w.empty %}qs-sb__wamt--bad{% endif %}">${{ w.amount|floatformat:2 }}</span>
+        {% else %}
+          <span class="qs-sb__wamt qs-sb__wamt--unknown">{% trans "could not read" %}</span>
+          <div class="qs-sb__werr">{{ w.error }}</div>
+        {% endif %}
+        {% for s in stats %}{% if s.provider == w.provider %}
+          <div class="qs-sb__wmeta">
+            {% blocktrans trimmed with n=s.sourced_plans %}<b>{{ n }}</b> tariffs bought from here{% endblocktrans %}<br>
+            {% blocktrans trimmed with n=s.exclusive_countries %}<b>{{ n }}</b> destinations only they have{% endblocktrans %}<br>
+            {% blocktrans trimmed with n=s.purchases %}<b>{{ n }}</b> purchases recorded{% endblocktrans %}
+            · {% blocktrans trimmed with n=s.sold_units %}<b>{{ n }}</b> sold{% endblocktrans %}
+          </div>
+        {% endif %}{% endfor %}
+        <a class="qs-sb__topup" href="{{ w.portal }}" target="_blank" rel="noopener">
+          {% trans "Top up in their portal" %} →
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if any_empty %}
+    <p class="qs-sb__warn" data-warn="empty-wallet">
+      {% blocktrans trimmed %}
+      A wallet is empty. A customer can be charged and still get no eSIM, because
+      the purchase from the wholesaler is refused. Card payments stay switched off
+      until at least one wallet is funded.
+      {% endblocktrans %}
+    </p>
+  {% endif %}
+
+  <p class="qs-sb__note">
+    {% blocktrans trimmed %}
+    <b>Topping up cannot be done from here.</b> Neither reseller API has a deposit
+    endpoint — they let us read the balance, list packages and buy an eSIM, and
+    nothing else. Money goes into a wallet through the supplier's own portal, by
+    bank transfer, card or USDT depending on the supplier. The links above go
+    straight there.
+    {% endblocktrans %}
+  </p>
+
+  <div class="qs-sb__sec">
+    <h2 class="qs-sb__h">{% trans "Who is cheaper" %}</h2>
+    <p class="qs-sb__hint">
+      {% blocktrans trimmed with both=cmp.both_plans %}
+      Counted over the {{ both }} tariffs both suppliers carry. This is not money
+      waiting to be saved — every tariff is already bought from whichever of the
+      two is cheaper. It is the answer to a different question: how much we lean
+      on each supplier, and which one it would hurt to lose.
+      {% endblocktrans %}
+    </p>
+    <table class="qs-sb__t">
+      <thead>
+        <tr>
+          <th>{% trans "Supplier" %}</th>
+          <th class="r">{% trans "Tariffs offered" %}</th>
+          <th class="r">{% trans "Cheaper on" %}</th>
+          <th class="r">{% trans "We buy from them" %}</th>
+          <th class="r">{% trans "Only they have" %}</th>
+          <th class="r">{% trans "Sold" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in cmp.stats %}
+          <tr>
+            <td><b>{{ s.label }}</b></td>
+            <td class="r">{{ s.plans }}</td>
+            <td class="r">{{ s.cheaper_on }}</td>
+            <td class="r">{{ s.sourced_plans }} · ${{ s.sourced_cost|floatformat:2 }}</td>
+            <td class="r">{% blocktrans trimmed with n=s.exclusive_countries %}{{ n }} destinations{% endblocktrans %}</td>
+            <td class="r">{% if s.sold_units %}{{ s.sold_units }} · ${{ s.sold_cost|floatformat:2 }}{% else %}<span class="qs-sb__mute">—</span>{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if cmp.mis_sourced %}
+      <p class="qs-sb__warn" data-warn="mis-sourced" style="margin-top:.8rem">
+        {% blocktrans trimmed with n=cmp.mis_sourced %}
+        {{ n }} tariffs are bought from the more expensive of the two. Re-run the
+        catalogue sync — sourcing picks the cheapest offer on save, so this means a
+        price moved without the plan being written.
+        {% endblocktrans %}
+      </p>
+    {% else %}
+      <p class="qs-sb__hint" style="margin-top:.5rem">
+        {% trans "Every tariff with two offers is bought from the cheaper one — checked, not assumed." %}
+      </p>
+    {% endif %}
+  </div>
+
+  <div class="qs-sb__sec">
+    <h2 class="qs-sb__h">{% trans "Destination by destination" %}</h2>
+    <p class="qs-sb__hint">
+      {% blocktrans trimmed with both=cmp.both_countries total=cmp.total_countries %}
+      Both suppliers sell in {{ both }} of {{ total }} destinations. Ordered by the
+      biggest price gap between them, which is where losing one supplier would cost
+      the most.
+      {% endblocktrans %}
+    </p>
+    <div class="qs-sb__scroll">
+      <table class="qs-sb__t">
+        <thead>
+          <tr>
+            <th>{% trans "Destination" %}</th>
+            <th class="r">{% trans "eSIM Access" %}</th>
+            <th class="r">{% trans "eSIMCard" %}</th>
+            <th class="r">{% trans "Cheaper" %}</th>
+            <th class="r">{% trans "Biggest gap" %}</th>
+            <th class="r">{% trans "Lowest cost" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in cmp.countries %}
+            <tr>
+              <td>{{ row.name }} <span class="qs-sb__mute">{{ row.iso2 }}</span></td>
+              <td class="r">{% if row.access_plans %}{{ row.access_plans }}{% else %}<span class="qs-sb__mute">—</span>{% endif %}</td>
+              <td class="r">{% if row.card_plans %}{{ row.card_plans }}{% else %}<span class="qs-sb__mute">—</span>{% endif %}</td>
+              <td class="r">
+                {% if row.only == "esimaccess" %}<span class="qs-sb__tag">{% trans "only Access" %}</span>
+                {% elif row.only == "esimcard" %}<span class="qs-sb__tag">{% trans "only Card" %}</span>
+                {% elif row.access_wins > row.card_wins %}Access {{ row.access_wins }}/{{ row.card_wins }}
+                {% elif row.card_wins > row.access_wins %}Card {{ row.card_wins }}/{{ row.access_wins }}
+                {% else %}<span class="qs-sb__mute">=</span>{% endif %}
+              </td>
+              <td class="r">{% if row.best_saving %}${{ row.best_saving|floatformat:2 }}{% else %}<span class="qs-sb__mute">—</span>{% endif %}</td>
+              <td class="r">
+                {% if row.cheapest %}${{ row.cheapest|floatformat:2 }}
+                  <span class="qs-sb__mute">{% if row.cheapest_provider == "esimaccess" %}A{% else %}C{% endif %}</span>
+                {% else %}<span class="qs-sb__mute">—</span>{% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="qs-sb__mute">{% trans "No supplier offers yet." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if not cmp.stats.0.sold_units and not cmp.stats.1.sold_units %}
+    <p class="qs-sb__hint">
+      {% blocktrans trimmed %}
+      Nothing has sold yet, so "sold" and "purchases recorded" are empty. They fill
+      in on their own from the first real order — the purchase ledger records every
+      wholesaler buy, so no figure here is ever typed by hand.
+      {% endblocktrans %}
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

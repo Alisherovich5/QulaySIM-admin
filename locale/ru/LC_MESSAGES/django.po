@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-07 10:57+0500\n"
+"POT-Creation-Date: 2026-08-07 19:15+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -58,7 +58,8 @@ msgstr "Трафик"
 msgid "Unlimited"
 msgstr "Безлимит"
 
-#: catalog/admin.py:157 templates/admin/catalog/price_sheet.html:153
+#: catalog/admin.py:157 catalog/admin.py:1780 config/settings.py:441
+#: templates/admin/catalog/price_sheet.html:153
 msgid "Suppliers"
 msgstr "Поставщики"
 
@@ -66,7 +67,7 @@ msgstr "Поставщики"
 msgid "none"
 msgstr "нет"
 
-#: catalog/admin.py:172 catalog/admin.py:1798
+#: catalog/admin.py:172 catalog/admin.py:1840
 msgid "out"
 msgstr "выведен"
 
@@ -135,7 +136,7 @@ msgstr ""
 "Пока нет активных тарифов: {names}. Пока тариф не добавлен, на сайте они "
 "будут пустыми карточками."
 
-#: catalog/admin.py:603 catalog/admin.py:1632 catalog/admin.py:1782
+#: catalog/admin.py:603 catalog/admin.py:1632 catalog/admin.py:1824
 msgid "Plan"
 msgstr "Тариф"
 
@@ -187,7 +188,7 @@ msgstr "Отображение"
 msgid "The assistant could not write the commentary: %(reason)s"
 msgstr "Ассистент не смог написать комментарий: %(reason)s"
 
-#: catalog/admin.py:737 config/settings.py:461
+#: catalog/admin.py:737 config/settings.py:466
 msgid "Cost and margin report"
 msgstr "Отчёт по себестоимости и марже"
 
@@ -234,7 +235,7 @@ msgstr "вручную"
 msgid "not connected"
 msgstr "не подключён"
 
-#: catalog/admin.py:1087 catalog/admin.py:1805
+#: catalog/admin.py:1087 catalog/admin.py:1847
 msgid "only source"
 msgstr "единственный источник"
 
@@ -265,7 +266,7 @@ msgstr ""
 "введена, а заказы идут в <b>{}</b>. Добавьте ниже два предложения, чтобы "
 "более дешёвое выбиралось автоматически."
 
-#: catalog/admin.py:1140 catalog/admin.py:1799
+#: catalog/admin.py:1140 catalog/admin.py:1841
 msgid "unavailable"
 msgstr "недоступен"
 
@@ -273,7 +274,7 @@ msgstr "недоступен"
 msgid "ordered from here"
 msgstr "заказ идёт отсюда"
 
-#: catalog/admin.py:1176 catalog/admin.py:1820
+#: catalog/admin.py:1176 catalog/admin.py:1862
 msgid "fallback"
 msgstr "резерв"
 
@@ -281,7 +282,7 @@ msgstr "резерв"
 msgid "Data"
 msgstr "Трафик"
 
-#: catalog/admin.py:1190 catalog/admin.py:1633 catalog/admin.py:1789
+#: catalog/admin.py:1190 catalog/admin.py:1633 catalog/admin.py:1831
 #: templates/admin/catalog/ai_pricing.html:229
 #: templates/admin/catalog/margin_report.html:157
 #: templates/admin/catalog/margin_report.html:204
@@ -369,7 +370,7 @@ msgstr "Ничего не сохранено — не осталось ни од
 msgid "The assistant's answer could not be read."
 msgstr "Ответ ассистента не удалось прочитать."
 
-#: catalog/admin.py:1386 config/settings.py:456
+#: catalog/admin.py:1386 config/settings.py:461
 #: templates/admin/catalog/margin_report.html:91
 msgid "Pricing assistant"
 msgstr "Ассистент цен"
@@ -527,41 +528,41 @@ msgstr "Охваченные тарифы"
 msgid "Recalculate every affected plan now"
 msgstr "Пересчитать все затронутые тарифы сейчас"
 
-#: catalog/admin.py:1793
+#: catalog/admin.py:1835
 msgid "Verdict"
 msgstr "Вывод"
 
-#: catalog/admin.py:1812
+#: catalog/admin.py:1854
 msgid "cheapest"
 msgstr "самый дешёвый"
 
-#: catalog/admin.py:1815
+#: catalog/admin.py:1857
 #, python-brace-format
 msgid "saves ${amount}"
 msgstr "экономит ${amount}"
 
-#: catalog/admin.py:1821
+#: catalog/admin.py:1863
 #, python-brace-format
 msgid "+${amount} vs {provider}"
 msgstr "+${amount} к {provider}"
 
-#: catalog/admin.py:1827
+#: catalog/admin.py:1869
 msgid "Mark available (put back in the running)"
 msgstr "Отметить доступным (вернуть в отбор)"
 
-#: catalog/admin.py:1839
+#: catalog/admin.py:1881
 msgid "Mark unavailable (take out of the running)"
 msgstr "Отметить недоступным (убрать из отбора)"
 
-#: catalog/admin.py:1886 templates/admin/catalog/import_prices.html:134
+#: catalog/admin.py:1928 templates/admin/catalog/import_prices.html:134
 msgid "Result"
 msgstr "Итог"
 
-#: catalog/admin.py:1896 templates/admin/catalog/import_prices.html:155
+#: catalog/admin.py:1938 templates/admin/catalog/import_prices.html:155
 msgid "Preview"
 msgstr "Предпросмотр выполнен"
 
-#: catalog/admin.py:1905
+#: catalog/admin.py:1947
 msgid "Took"
 msgstr "Длительность"
 
@@ -582,8 +583,8 @@ msgid ""
 "ANTHROPIC_API_KEY is not set on the server, so the assistant cannot be "
 "reached. Everything else on this page works without it."
 msgstr ""
-"На сервере не задан ANTHROPIC_API_KEY, поэтому ассистент недоступен. "
-"Всё остальное на этой странице работает и без него."
+"На сервере не задан ANTHROPIC_API_KEY, поэтому ассистент недоступен. Всё "
+"остальное на этой странице работает и без него."
 
 #: catalog/ai_pricing.py:438
 msgid "The assistant declined to answer this instruction. Rephrase it."
@@ -629,7 +630,7 @@ msgstr "Правило по объёму обязано указывать об�
 msgid "No tariff has a size of %(mb)s MB."
 msgstr "Ни у одного тарифа нет объёма %(mb)s МБ."
 
-#: catalog/ai_pricing.py:756
+#: catalog/ai_pricing.py:822
 msgid "The assistant declined to write the commentary."
 msgstr "Ассистент отказался писать комментарий."
 
@@ -2119,79 +2120,79 @@ msgstr "Страны"
 msgid "Plans"
 msgstr "Тарифы"
 
-#: config/settings.py:441
+#: config/settings.py:446
 msgid "Supplier prices"
 msgstr "Цены поставщиков"
 
-#: config/settings.py:446
+#: config/settings.py:451
 msgid "Sync prices"
 msgstr "Синхронизация цен"
 
-#: config/settings.py:451 templates/admin/index.html:244
+#: config/settings.py:456 templates/admin/index.html:244
 msgid "Pricing rules"
 msgstr "Правила ценообразования"
 
-#: config/settings.py:468 orders/apps.py:8
+#: config/settings.py:473 orders/apps.py:8
 msgid "Commerce"
 msgstr "Продажи"
 
-#: config/settings.py:472 customers/admin.py:48
+#: config/settings.py:477 customers/admin.py:48
 msgid "Orders"
 msgstr "Заказы"
 
-#: config/settings.py:477 orders/models.py:252 orders/models.py:255
+#: config/settings.py:482 orders/models.py:252 orders/models.py:255
 msgid "eSIMs"
 msgstr "eSIM"
 
-#: config/settings.py:478
+#: config/settings.py:483
 msgid "Payments"
 msgstr "Платежи"
 
-#: config/settings.py:480
+#: config/settings.py:485
 msgid "Card transactions"
 msgstr "Транзакции по картам"
 
-#: config/settings.py:485
+#: config/settings.py:490
 msgid "Supplier purchases"
 msgstr "Оптовые закупки"
 
-#: config/settings.py:489
+#: config/settings.py:494
 msgid "Promo codes"
 msgstr "Промокоды"
 
-#: config/settings.py:493 customers/apps.py:8
+#: config/settings.py:498 customers/apps.py:8
 msgid "People"
 msgstr "Люди"
 
-#: config/settings.py:496 templates/admin/index.html:48
+#: config/settings.py:501 templates/admin/index.html:48
 msgid "Customers"
 msgstr "Клиенты"
 
-#: config/settings.py:498
+#: config/settings.py:503
 msgid "Cashback & referrals"
 msgstr "Кешбэк и приглашения"
 
-#: config/settings.py:502
+#: config/settings.py:507
 msgid "Staff users"
 msgstr "Сотрудники"
 
-#: config/settings.py:504
+#: config/settings.py:509
 msgid "Social logins"
 msgstr "Входы через соцсети"
 
-#: config/settings.py:511 content/apps.py:8
+#: config/settings.py:516 content/apps.py:8
 msgid "Content"
 msgstr "Контент"
 
-#: config/settings.py:514 content/models.py:25 content/models.py:28
+#: config/settings.py:519 content/models.py:25 content/models.py:28
 msgid "FAQ"
 msgstr "Вопрос-ответ"
 
-#: config/settings.py:515
+#: config/settings.py:520
 msgid "Banners"
 msgstr "Баннеры"
 
-#: config/settings.py:516
+#: config/settings.py:521
 msgid "Testimonials"
 msgstr "Отзывы"
 
@@ -2966,21 +2967,19 @@ msgid ""
 "saved. Nothing is written until you approve it, and a tariff whose price you "
 "typed by hand is never touched."
 msgstr ""
-"Напишите, что нужно изменить, обычным языком. Ассистент превратит "
-"это в правила ценообразования, сервер тем же кодом, которым считает "
-"цены каталога, вычислит, какие цены изменятся <b>в точности</b>, и "
-"покажет это до сохранения. Ничего не записывается, пока вы не "
-"подтвердите, а тариф с ценой, введённой вручную, не трогается "
-"никогда."
+"Напишите, что нужно изменить, обычным языком. Ассистент превратит это в "
+"правила ценообразования, сервер тем же кодом, которым считает цены каталога, "
+"вычислит, какие цены изменятся <b>в точности</b>, и покажет это до "
+"сохранения. Ничего не записывается, пока вы не подтвердите, а тариф с ценой, "
+"введённой вручную, не трогается никогда."
 
 #: templates/admin/catalog/ai_pricing.html:105
 msgid ""
 "ANTHROPIC_API_KEY is not set on the server, so the assistant cannot be "
 "reached. Pricing rules can still be written by hand on the rules page."
 msgstr ""
-"На сервере не задан ANTHROPIC_API_KEY, поэтому ассистент недоступен. "
-"Правила ценообразования по-прежнему можно задать вручную на странице "
-"правил."
+"На сервере не задан ANTHROPIC_API_KEY, поэтому ассистент недоступен. Правила "
+"ценообразования по-прежнему можно задать вручную на странице правил."
 
 #: templates/admin/catalog/ai_pricing.html:114
 msgid "What should change?"
@@ -2992,14 +2991,15 @@ msgid ""
 "e.g. Every 1 GB tariff should earn 200%%, and nothing may make less than "
 "half a dollar."
 msgstr ""
-"например: Каждый тариф на 1 ГБ должен приносить 200%%, и ничто не "
-"должно давать меньше половины доллара."
+"например: Каждый тариф на 1 ГБ должен приносить 200%%, и ничто не должно "
+"давать меньше половины доллара."
 
 #: templates/admin/catalog/ai_pricing.html:120
 msgid "Show me what would change"
 msgstr "Показать, что изменится"
 
 #: templates/admin/catalog/ai_pricing.html:122
+#: templates/admin/catalog/supplier_board.html:80
 msgid "Margin report"
 msgstr "Отчёт по марже"
 
@@ -3024,8 +3024,8 @@ msgid ""
 "These were proposed and turned down by the server's own checks, not by the "
 "assistant. They will not be saved."
 msgstr ""
-"Это отклонили собственные проверки сервера, а не ассистент. Они не "
-"будут сохранены."
+"Это отклонили собственные проверки сервера, а не ассистент. Они не будут "
+"сохранены."
 
 #: templates/admin/catalog/ai_pricing.html:173
 msgid "Proposed rules"
@@ -3036,8 +3036,8 @@ msgid ""
 "The narrowest rule about a tariff wins. Saving one replaces any existing "
 "rule with the same target."
 msgstr ""
-"Побеждает самое узкое правило о тарифе. Сохранение заменяет "
-"существующее правило с той же целью."
+"Побеждает самое узкое правило о тарифе. Сохранение заменяет существующее "
+"правило с той же целью."
 
 #: templates/admin/catalog/ai_pricing.html:180
 msgid "Floor"
@@ -3091,9 +3091,7 @@ msgstr "прибыль за штуку, суммарно"
 #: templates/admin/catalog/ai_pricing.html:219
 #, python-format
 msgid "The %(shown)s biggest movers of %(total)s, largest change first."
-msgstr ""
-"%(shown)s самых крупных изменений из %(total)s, начиная с "
-"наибольшего."
+msgstr "%(shown)s самых крупных изменений из %(total)s, начиная с наибольшего."
 
 #: templates/admin/catalog/ai_pricing.html:227
 #: templates/admin/catalog/import_prices.html:231
@@ -3107,6 +3105,7 @@ msgstr "Тариф"
 #: templates/admin/catalog/import_prices.html:230
 #: templates/admin/catalog/margin_report.html:203
 #: templates/admin/catalog/margin_report.html:235
+#: templates/admin/catalog/supplier_board.html:190
 msgid "Destination"
 msgstr "Направление"
 
@@ -3123,8 +3122,8 @@ msgid ""
 "No price would move. Either the rules match what is already in force, or "
 "every tariff they cover has a hand-typed price."
 msgstr ""
-"Ни одна цена не изменится. Либо правила совпадают с действующими, "
-"либо у каждого охваченного тарифа цена введена вручную."
+"Ни одна цена не изменится. Либо правила совпадают с действующими, либо у "
+"каждого охваченного тарифа цена введена вручную."
 
 #: templates/admin/catalog/ai_pricing.html:267
 #, python-format
@@ -3135,14 +3134,17 @@ msgid_plural ""
 "Saving %(n)s rules. Prices are recalculated immediately and the site shows "
 "the new ones."
 msgstr[0] ""
-"Сохраняется %(n)s правило. Цены пересчитываются сразу, и на сайте "
-"появляются новые."msgstr[1] ""
-"Сохраняется %(n)s правила. Цены пересчитываются сразу, и на сайте "
-"появляются новые."msgstr[2] ""
-"Сохраняется %(n)s правил. Цены пересчитываются сразу, и на сайте "
-"появляются новые."msgstr[3] ""
-"Сохраняется %(n)s правил. Цены пересчитываются сразу, и на сайте "
-"появляются новые."
+"Сохраняется %(n)s правило. Цены пересчитываются сразу, и на сайте появляются "
+"новые."
+msgstr[1] ""
+"Сохраняется %(n)s правила. Цены пересчитываются сразу, и на сайте появляются "
+"новые."
+msgstr[2] ""
+"Сохраняется %(n)s правил. Цены пересчитываются сразу, и на сайте появляются "
+"новые."
+msgstr[3] ""
+"Сохраняется %(n)s правил. Цены пересчитываются сразу, и на сайте появляются "
+"новые."
 
 #: templates/admin/catalog/ai_pricing.html:275
 msgid ""
@@ -3276,6 +3278,7 @@ msgstr "Начата"
 
 #: templates/admin/catalog/import_prices.html:133
 #: templates/admin/catalog/margin_report.html:267
+#: templates/admin/catalog/supplier_board.html:141
 msgid "Supplier"
 msgstr "Поставщик"
 
@@ -3476,10 +3479,10 @@ msgid ""
 "catalogue whose costs run from cents to hundreds of dollars: the same markup "
 "that earns pennies on a 1 GB tariff earns tens of dollars on a 50 GB one."
 msgstr ""
-"Проблема маржи живёт именно на этой оси. Одним процентом нельзя "
-"оценить каталог, себестоимость которого идёт от центов до сотен "
-"долларов: та же наценка, что даёт копейки на тарифе в 1 ГБ, даёт "
-"десятки долларов на тарифе в 50 ГБ."
+"Проблема маржи живёт именно на этой оси. Одним процентом нельзя оценить "
+"каталог, себестоимость которого идёт от центов до сотен долларов: та же "
+"наценка, что даёт копейки на тарифе в 1 ГБ, даёт десятки долларов на тарифе "
+"в 50 ГБ."
 
 #: templates/admin/catalog/margin_report.html:155
 msgid "Size"
@@ -3520,10 +3523,10 @@ msgid ""
 "pricing assistant or the price sheet, by traffic size rather than one tariff "
 "at a time."
 msgstr ""
-"%(total)s тарифов приносят с продажи меньше $%(limit)s — примерно "
-"столько забирает комиссия карты. Перечислены %(shown)s самых слабых; "
-"наценка правится в ассистенте цен или в прайс-листе, по объёму "
-"трафика, а не по одному тарифу за раз."
+"%(total)s тарифов приносят с продажи меньше $%(limit)s — примерно столько "
+"забирает комиссия карты. Перечислены %(shown)s самых слабых; наценка "
+"правится в ассистенте цен или в прайс-листе, по объёму трафика, а не по "
+"одному тарифу за раз."
 
 #: templates/admin/catalog/margin_report.html:230
 msgid "Lowest-markup destinations"
@@ -3531,9 +3534,7 @@ msgstr "Направления с наименьшей наценкой"
 
 #: templates/admin/catalog/margin_report.html:231
 msgid "The twenty destinations we add least to, in order."
-msgstr ""
-"Двадцать направлений, к которым мы добавляем меньше всего, по "
-"порядку."
+msgstr "Двадцать направлений, к которым мы добавляем меньше всего, по порядку."
 
 #: templates/admin/catalog/margin_report.html:263
 msgid "By supplier"
@@ -3550,11 +3551,11 @@ msgid ""
 "cost moves with every nightly sync — so this is what those sales would earn "
 "at current costs, not a historical figure."
 msgstr ""
-"Измерено по сегодняшней себестоимости. Себестоимость на момент "
-"каждой продажи не сохраняется — цена, которую заплатил клиент, "
-"заморожена в заказе, а себестоимость меняется с каждой ночной "
-"синхронизацией — так что это то, сколько те продажи принесли бы при "
-"текущей себестоимости, а не историческая цифра."
+"Измерено по сегодняшней себестоимости. Себестоимость на момент каждой "
+"продажи не сохраняется — цена, которую заплатил клиент, заморожена в заказе, "
+"а себестоимость меняется с каждой ночной синхронизацией — так что это то, "
+"сколько те продажи принесли бы при текущей себестоимости, а не историческая "
+"цифра."
 
 #: templates/admin/catalog/margin_report.html:305
 msgid "eSIMs sold"
@@ -3567,8 +3568,7 @@ msgstr "Выручка"
 #: templates/admin/catalog/margin_report.html:313
 msgid "Nothing has been sold yet, so there is no realised margin to report."
 msgstr ""
-"Пока ничего не продано, поэтому о фактической прибыли отчитываться "
-"нечем."
+"Пока ничего не продано, поэтому о фактической прибыли отчитываться нечем."
 
 #: templates/admin/catalog/margin_report.html:318
 #, python-format
@@ -3578,19 +3578,18 @@ msgid ""
 "them, and %(off)s because they are switched off — counting either as zero "
 "margin would invent a problem that is really a missing number."
 msgstr ""
-"Каждая цифра выше вычислена из каталога, а не оценена. %(skipped)s "
-"тарифов не учтены, потому что для них не записана себестоимость "
-"поставщика, и %(off)s — потому что они выключены: счесть любой из "
-"них нулевой маржой значило бы выдумать проблему там, где просто нет "
-"числа."
+"Каждая цифра выше вычислена из каталога, а не оценена. %(skipped)s тарифов "
+"не учтены, потому что для них не записана себестоимость поставщика, и "
+"%(off)s — потому что они выключены: счесть любой из них нулевой маржой "
+"значило бы выдумать проблему там, где просто нет числа."
 
 #: templates/admin/catalog/margin_report.html:325
 msgid ""
 "The commentary near the top is written by the assistant over these same "
 "figures; it does not compute any of them."
 msgstr ""
-"Комментарий вверху ассистент пишет по этим же цифрам; ни одну из них "
-"он не вычисляет."
+"Комментарий вверху ассистент пишет по этим же цифрам; ни одну из них он не "
+"вычисляет."
 
 #: templates/admin/catalog/price_sheet.html:91
 msgid "destinations shown"
@@ -3682,6 +3681,185 @@ msgstr "Назад"
 #, python-format
 msgid "%(n)s / %(of)s"
 msgstr "%(n)s / %(of)s"
+
+#: templates/admin/catalog/supplier_board.html:76
+msgid "Re-read balances"
+msgstr "Перечитать балансы"
+
+#: templates/admin/catalog/supplier_board.html:79
+msgid "All supplier prices"
+msgstr "Все цены поставщиков"
+
+#: templates/admin/catalog/supplier_board.html:90
+msgid "could not read"
+msgstr "не удалось прочитать"
+
+#: templates/admin/catalog/supplier_board.html:95
+#, python-format
+msgid "<b>%(n)s</b> tariffs bought from here"
+msgstr "отсюда берём <b>%(n)s</b> тарифов"
+
+#: templates/admin/catalog/supplier_board.html:96
+#, python-format
+msgid "<b>%(n)s</b> destinations only they have"
+msgstr "только у них <b>%(n)s</b> направлений"
+
+#: templates/admin/catalog/supplier_board.html:97
+#, python-format
+msgid "<b>%(n)s</b> purchases recorded"
+msgstr "записано закупок: <b>%(n)s</b>"
+
+#: templates/admin/catalog/supplier_board.html:98
+#, python-format
+msgid "<b>%(n)s</b> sold"
+msgstr "продано: <b>%(n)s</b>"
+
+#: templates/admin/catalog/supplier_board.html:102
+msgid "Top up in their portal"
+msgstr "Пополнить в их кабинете"
+
+#: templates/admin/catalog/supplier_board.html:110
+msgid ""
+"A wallet is empty. A customer can be charged and still get no eSIM, because "
+"the purchase from the wholesaler is refused. Card payments stay switched off "
+"until at least one wallet is funded."
+msgstr ""
+"Кошелёк пуст. С клиента могут списать деньги, а eSIM он не получит — "
+"закупка у оптовика будет отклонена. Пока не пополнен хотя бы один "
+"кошелёк, приём карт остаётся выключенным."
+
+#: templates/admin/catalog/supplier_board.html:119
+msgid ""
+"<b>Topping up cannot be done from here.</b> Neither reseller API has a "
+"deposit endpoint — they let us read the balance, list packages and buy an "
+"eSIM, and nothing else. Money goes into a wallet through the supplier's own "
+"portal, by bank transfer, card or USDT depending on the supplier. The links "
+"above go straight there."
+msgstr ""
+"<b>Пополнить отсюда нельзя.</b> Ни в одном reseller API нет "
+"эндпоинта пополнения — они позволяют только читать баланс, получать "
+"список пакетов и покупать eSIM. Деньги поступают через кабинет "
+"самого поставщика: банковский перевод, карта или USDT — зависит от "
+"поставщика. Ссылки выше ведут прямо туда."
+
+#: templates/admin/catalog/supplier_board.html:129
+msgid "Who is cheaper"
+msgstr "Кто дешевле"
+
+#: templates/admin/catalog/supplier_board.html:131
+#, python-format
+msgid ""
+"Counted over the %(both)s tariffs both suppliers carry. This is not money "
+"waiting to be saved — every tariff is already bought from whichever of the "
+"two is cheaper. It is the answer to a different question: how much we lean "
+"on each supplier, and which one it would hurt to lose."
+msgstr ""
+"Посчитано по %(both)s тарифам, которые есть у обоих поставщиков. Это "
+"не деньги, которые можно сэкономить — каждый тариф уже покупается у "
+"того из двух, кто дешевле. Это ответ на другой вопрос: насколько мы "
+"зависим от каждого поставщика и потеря кого из них ударит сильнее."
+
+#: templates/admin/catalog/supplier_board.html:142
+msgid "Tariffs offered"
+msgstr "Предлагают тарифов"
+
+#: templates/admin/catalog/supplier_board.html:143
+msgid "Cheaper on"
+msgstr "Дешевле в"
+
+#: templates/admin/catalog/supplier_board.html:144
+msgid "We buy from them"
+msgstr "Покупаем у них"
+
+#: templates/admin/catalog/supplier_board.html:145
+msgid "Only they have"
+msgstr "Есть только у них"
+
+#: templates/admin/catalog/supplier_board.html:146
+msgid "Sold"
+msgstr "Продано"
+
+#: templates/admin/catalog/supplier_board.html:156
+#, python-format
+msgid "%(n)s destinations"
+msgstr "направлений: %(n)s"
+
+#: templates/admin/catalog/supplier_board.html:164
+#, python-format
+msgid ""
+"%(n)s tariffs are bought from the more expensive of the two. Re-run the "
+"catalogue sync — sourcing picks the cheapest offer on save, so this means a "
+"price moved without the plan being written."
+msgstr ""
+"%(n)s тарифов покупаются у более дорогого из двух. Перезапустите "
+"синхронизацию каталога — при сохранении выбирается самое дешёвое "
+"предложение, значит цена изменилась, а тариф не был перезаписан."
+
+#: templates/admin/catalog/supplier_board.html:172
+msgid ""
+"Every tariff with two offers is bought from the cheaper one — checked, not "
+"assumed."
+msgstr ""
+"Каждый тариф с двумя предложениями покупается у того, кто дешевле — "
+"проверено, а не предположено."
+
+#: templates/admin/catalog/supplier_board.html:178
+msgid "Destination by destination"
+msgstr "По направлениям"
+
+#: templates/admin/catalog/supplier_board.html:180
+#, python-format
+msgid ""
+"Both suppliers sell in %(both)s of %(total)s destinations. Ordered by the "
+"biggest price gap between them, which is where losing one supplier would "
+"cost the most."
+msgstr ""
+"Оба поставщика продают в %(both)s из %(total)s направлений. "
+"Отсортировано по наибольшей разнице в цене — там потеря одного "
+"поставщика обойдётся дороже всего."
+
+#: templates/admin/catalog/supplier_board.html:191
+msgid "eSIM Access"
+msgstr "eSIM Access"
+
+#: templates/admin/catalog/supplier_board.html:192
+msgid "eSIMCard"
+msgstr "eSIMCard"
+
+#: templates/admin/catalog/supplier_board.html:193
+msgid "Cheaper"
+msgstr "Дешевле"
+
+#: templates/admin/catalog/supplier_board.html:194
+msgid "Biggest gap"
+msgstr "Наибольшая разница"
+
+#: templates/admin/catalog/supplier_board.html:195
+msgid "Lowest cost"
+msgstr "Самая низкая себестоимость"
+
+#: templates/admin/catalog/supplier_board.html:205
+msgid "only Access"
+msgstr "только Access"
+
+#: templates/admin/catalog/supplier_board.html:206
+msgid "only Card"
+msgstr "только Card"
+
+#: templates/admin/catalog/supplier_board.html:219
+msgid "No supplier offers yet."
+msgstr "Предложений поставщиков пока нет."
+
+#: templates/admin/catalog/supplier_board.html:228
+msgid ""
+"Nothing has sold yet, so \"sold\" and \"purchases recorded\" are empty. They "
+"fill in on their own from the first real order — the purchase ledger records "
+"every wholesaler buy, so no figure here is ever typed by hand."
+msgstr ""
+"Пока ничего не продано, поэтому «продано» и «записано закупок» "
+"пусты. Они заполнятся сами с первого реального заказа — журнал "
+"закупок фиксирует каждую покупку у оптовика, так что ни одна цифра "
+"здесь не вводится вручную."
 
 #: templates/admin/index.html:10
 msgid "Live overview of QulaySIM sales, customers and eSIM activity."

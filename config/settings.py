@@ -438,6 +438,11 @@ UNFOLD = {
                         "link": reverse_lazy("admin:catalog_plan_price_sheet"),
                     },
                     {
+                        "title": _("Suppliers"),
+                        "icon": "account_balance_wallet",
+                        "link": reverse_lazy("admin:catalog_supplieroffer_board"),
+                    },
+                    {
                         "title": _("Supplier prices"),
                         "icon": "compare_arrows",
                         "link": reverse_lazy("admin:catalog_supplieroffer_changelist"),

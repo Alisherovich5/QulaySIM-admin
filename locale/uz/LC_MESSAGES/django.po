@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-07 10:57+0500\n"
+"POT-Creation-Date: 2026-08-07 19:15+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -56,7 +56,8 @@ msgstr "Trafik"
 msgid "Unlimited"
 msgstr "Cheksiz"
 
-#: catalog/admin.py:157 templates/admin/catalog/price_sheet.html:153
+#: catalog/admin.py:157 catalog/admin.py:1780 config/settings.py:441
+#: templates/admin/catalog/price_sheet.html:153
 msgid "Suppliers"
 msgstr "Ta’minotchilar"
 
@@ -64,7 +65,7 @@ msgstr "Ta’minotchilar"
 msgid "none"
 msgstr "yo‘q"
 
-#: catalog/admin.py:172 catalog/admin.py:1798
+#: catalog/admin.py:172 catalog/admin.py:1840
 msgid "out"
 msgstr "chiqarilgan"
 
@@ -134,7 +135,7 @@ msgstr ""
 "Hali faol tarifi yo‘q: {names}. Tarif qo‘shilmaguncha ular saytda bo‘sh "
 "karta bo‘lib turadi."
 
-#: catalog/admin.py:603 catalog/admin.py:1632 catalog/admin.py:1782
+#: catalog/admin.py:603 catalog/admin.py:1632 catalog/admin.py:1824
 msgid "Plan"
 msgstr "Tarif"
 
@@ -186,7 +187,7 @@ msgstr "Ko‘rinishi"
 msgid "The assistant could not write the commentary: %(reason)s"
 msgstr "Yordamchi izohni yoza olmadi: %(reason)s"
 
-#: catalog/admin.py:737 config/settings.py:461
+#: catalog/admin.py:737 config/settings.py:466
 msgid "Cost and margin report"
 msgstr "Tannarx va ustama hisoboti"
 
@@ -234,7 +235,7 @@ msgstr "qo‘lda"
 msgid "not connected"
 msgstr "ulanmagan"
 
-#: catalog/admin.py:1087 catalog/admin.py:1805
+#: catalog/admin.py:1087 catalog/admin.py:1847
 msgid "only source"
 msgstr "yagona manba"
 
@@ -268,7 +269,7 @@ msgstr ""
 "yo‘naltiriladi. Arzonrog‘i avtomatik tanlanishi uchun pastda ikkita taklif "
 "qo‘shing."
 
-#: catalog/admin.py:1140 catalog/admin.py:1799
+#: catalog/admin.py:1140 catalog/admin.py:1841
 msgid "unavailable"
 msgstr "mavjud emas"
 
@@ -276,7 +277,7 @@ msgstr "mavjud emas"
 msgid "ordered from here"
 msgstr "shu yerdan buyurtma qilinadi"
 
-#: catalog/admin.py:1176 catalog/admin.py:1820
+#: catalog/admin.py:1176 catalog/admin.py:1862
 msgid "fallback"
 msgstr "zaxira"
 
@@ -284,7 +285,7 @@ msgstr "zaxira"
 msgid "Data"
 msgstr "Trafik"
 
-#: catalog/admin.py:1190 catalog/admin.py:1633 catalog/admin.py:1789
+#: catalog/admin.py:1190 catalog/admin.py:1633 catalog/admin.py:1831
 #: templates/admin/catalog/ai_pricing.html:229
 #: templates/admin/catalog/margin_report.html:157
 #: templates/admin/catalog/margin_report.html:204
@@ -372,7 +373,7 @@ msgstr "Hech narsa saqlanmadi — yaroqli qoida qolmadi."
 msgid "The assistant's answer could not be read."
 msgstr "Yordamchining javobini o'qib bo'lmadi."
 
-#: catalog/admin.py:1386 config/settings.py:456
+#: catalog/admin.py:1386 config/settings.py:461
 #: templates/admin/catalog/margin_report.html:91
 msgid "Pricing assistant"
 msgstr "Narx yordamchisi"
@@ -530,41 +531,41 @@ msgstr "Qamrab olingan tariflar"
 msgid "Recalculate every affected plan now"
 msgstr "Ta’sirlangan barcha tariflarni hozir qayta hisoblash"
 
-#: catalog/admin.py:1793
+#: catalog/admin.py:1835
 msgid "Verdict"
 msgstr "Xulosa"
 
-#: catalog/admin.py:1812
+#: catalog/admin.py:1854
 msgid "cheapest"
 msgstr "eng arzon"
 
-#: catalog/admin.py:1815
+#: catalog/admin.py:1857
 #, python-brace-format
 msgid "saves ${amount}"
 msgstr "${amount} tejaydi"
 
-#: catalog/admin.py:1821
+#: catalog/admin.py:1863
 #, python-brace-format
 msgid "+${amount} vs {provider}"
 msgstr "+${amount}, {provider} ga nisbatan"
 
-#: catalog/admin.py:1827
+#: catalog/admin.py:1869
 msgid "Mark available (put back in the running)"
 msgstr "Mavjud deb belgilash (tanlovga qaytarish)"
 
-#: catalog/admin.py:1839
+#: catalog/admin.py:1881
 msgid "Mark unavailable (take out of the running)"
 msgstr "Mavjud emas deb belgilash (tanlovdan chiqarish)"
 
-#: catalog/admin.py:1886 templates/admin/catalog/import_prices.html:134
+#: catalog/admin.py:1928 templates/admin/catalog/import_prices.html:134
 msgid "Result"
 msgstr "Natija"
 
-#: catalog/admin.py:1896 templates/admin/catalog/import_prices.html:155
+#: catalog/admin.py:1938 templates/admin/catalog/import_prices.html:155
 msgid "Preview"
 msgstr "Ko‘rib chiqildi"
 
-#: catalog/admin.py:1905
+#: catalog/admin.py:1947
 msgid "Took"
 msgstr "Davom etdi"
 
@@ -585,15 +586,13 @@ msgid ""
 "ANTHROPIC_API_KEY is not set on the server, so the assistant cannot be "
 "reached. Everything else on this page works without it."
 msgstr ""
-"Serverda ANTHROPIC_API_KEY ko'rsatilmagan, shuning uchun yordamchiga "
-"ulanib bo'lmaydi. Bu sahifadagi qolgan hamma narsa usiz ham "
-"ishlaydi."
+"Serverda ANTHROPIC_API_KEY ko'rsatilmagan, shuning uchun yordamchiga ulanib "
+"bo'lmaydi. Bu sahifadagi qolgan hamma narsa usiz ham ishlaydi."
 
 #: catalog/ai_pricing.py:438
 msgid "The assistant declined to answer this instruction. Rephrase it."
 msgstr ""
-"Yordamchi bu ko'rsatmaga javob berishdan bosh tortdi. Boshqacha "
-"yozing."
+"Yordamchi bu ko'rsatmaga javob berishdan bosh tortdi. Boshqacha yozing."
 
 #: catalog/ai_pricing.py:443
 msgid "The assistant returned an empty answer."
@@ -606,9 +605,7 @@ msgstr "Noma'lum qoida turi."
 #: catalog/ai_pricing.py:499
 #, python-format
 msgid "Markup %(value)s%% is outside the allowed 0–%(max)s%%."
-msgstr ""
-"%(value)s%% ustama ruxsat etilgan 0–%(max)s%% oralig'idan "
-"tashqarida."
+msgstr "%(value)s%% ustama ruxsat etilgan 0–%(max)s%% oralig'idan tashqarida."
 
 #: catalog/ai_pricing.py:504
 msgid "Profit floor is outside the allowed range."
@@ -637,7 +634,7 @@ msgstr "O'lcham qoidasi o'lchamni ko'rsatishi shart."
 msgid "No tariff has a size of %(mb)s MB."
 msgstr "Hech bir tarifning o'lchami %(mb)s MB emas."
 
-#: catalog/ai_pricing.py:756
+#: catalog/ai_pricing.py:822
 msgid "The assistant declined to write the commentary."
 msgstr "Yordamchi izoh yozishdan bosh tortdi."
 
@@ -2137,79 +2134,79 @@ msgstr "Davlatlar"
 msgid "Plans"
 msgstr "Tariflar"
 
-#: config/settings.py:441
+#: config/settings.py:446
 msgid "Supplier prices"
 msgstr "Ta’minotchi narxlari"
 
-#: config/settings.py:446
+#: config/settings.py:451
 msgid "Sync prices"
 msgstr "Narxlarni sinxronlash"
 
-#: config/settings.py:451 templates/admin/index.html:244
+#: config/settings.py:456 templates/admin/index.html:244
 msgid "Pricing rules"
 msgstr "Narxlash qoidalari"
 
-#: config/settings.py:468 orders/apps.py:8
+#: config/settings.py:473 orders/apps.py:8
 msgid "Commerce"
 msgstr "Savdo"
 
-#: config/settings.py:472 customers/admin.py:48
+#: config/settings.py:477 customers/admin.py:48
 msgid "Orders"
 msgstr "Buyurtmalar"
 
-#: config/settings.py:477 orders/models.py:252 orders/models.py:255
+#: config/settings.py:482 orders/models.py:252 orders/models.py:255
 msgid "eSIMs"
 msgstr "eSIM’lar"
 
-#: config/settings.py:478
+#: config/settings.py:483
 msgid "Payments"
 msgstr "To‘lovlar"
 
-#: config/settings.py:480
+#: config/settings.py:485
 msgid "Card transactions"
 msgstr "Karta tranzaksiyalari"
 
-#: config/settings.py:485
+#: config/settings.py:490
 msgid "Supplier purchases"
 msgstr "Ulgurji xaridlar"
 
-#: config/settings.py:489
+#: config/settings.py:494
 msgid "Promo codes"
 msgstr "Promokodlar"
 
-#: config/settings.py:493 customers/apps.py:8
+#: config/settings.py:498 customers/apps.py:8
 msgid "People"
 msgstr "Odamlar"
 
-#: config/settings.py:496 templates/admin/index.html:48
+#: config/settings.py:501 templates/admin/index.html:48
 msgid "Customers"
 msgstr "Mijozlar"
 
-#: config/settings.py:498
+#: config/settings.py:503
 msgid "Cashback & referrals"
 msgstr "Keshbek va referallar"
 
-#: config/settings.py:502
+#: config/settings.py:507
 msgid "Staff users"
 msgstr "Xodimlar"
 
-#: config/settings.py:504
+#: config/settings.py:509
 msgid "Social logins"
 msgstr "Ijtimoiy tarmoq hisoblari"
 
-#: config/settings.py:511 content/apps.py:8
+#: config/settings.py:516 content/apps.py:8
 msgid "Content"
 msgstr "Kontent"
 
-#: config/settings.py:514 content/models.py:25 content/models.py:28
+#: config/settings.py:519 content/models.py:25 content/models.py:28
 msgid "FAQ"
 msgstr "Savol-javob"
 
-#: config/settings.py:515
+#: config/settings.py:520
 msgid "Banners"
 msgstr "Bannerlar"
 
-#: config/settings.py:516
+#: config/settings.py:521
 msgid "Testimonials"
 msgstr "Sharhlar"
 
@@ -2986,20 +2983,18 @@ msgid ""
 "typed by hand is never touched."
 msgstr ""
 "Nima xohlaganingizni oddiy o'zbekchada yozing. Yordamchi uni narx "
-"qoidalariga aylantiradi, server esa katalogni narxlaydigan o'sha "
-"kodning o'zi bilan qaysi narxlar <b>aynan</b> o'zgarishini hisoblab, "
-"saqlanishidan oldin ko'rsatadi. Siz tasdiqlamaguningizcha hech narsa "
-"yozilmaydi, va narxini qo'lda yozgan tarifingizga hech qachon "
-"tegilmaydi."
+"qoidalariga aylantiradi, server esa katalogni narxlaydigan o'sha kodning "
+"o'zi bilan qaysi narxlar <b>aynan</b> o'zgarishini hisoblab, saqlanishidan "
+"oldin ko'rsatadi. Siz tasdiqlamaguningizcha hech narsa yozilmaydi, va "
+"narxini qo'lda yozgan tarifingizga hech qachon tegilmaydi."
 
 #: templates/admin/catalog/ai_pricing.html:105
 msgid ""
 "ANTHROPIC_API_KEY is not set on the server, so the assistant cannot be "
 "reached. Pricing rules can still be written by hand on the rules page."
 msgstr ""
-"Serverda ANTHROPIC_API_KEY ko'rsatilmagan, shuning uchun yordamchiga "
-"ulanib bo'lmaydi. Narx qoidalarini qoidalar sahifasida qo'lda yozish "
-"mumkin."
+"Serverda ANTHROPIC_API_KEY ko'rsatilmagan, shuning uchun yordamchiga ulanib "
+"bo'lmaydi. Narx qoidalarini qoidalar sahifasida qo'lda yozish mumkin."
 
 #: templates/admin/catalog/ai_pricing.html:114
 msgid "What should change?"
@@ -3011,14 +3006,15 @@ msgid ""
 "e.g. Every 1 GB tariff should earn 200%%, and nothing may make less than "
 "half a dollar."
 msgstr ""
-"masalan: Har bir 1 GB tarif 200%% ustama bilan sotilsin va hech biri "
-"yarim dollardan kam foyda keltirmasin."
+"masalan: Har bir 1 GB tarif 200%% ustama bilan sotilsin va hech biri yarim "
+"dollardan kam foyda keltirmasin."
 
 #: templates/admin/catalog/ai_pricing.html:120
 msgid "Show me what would change"
 msgstr "Nima o'zgarishini ko'rsating"
 
 #: templates/admin/catalog/ai_pricing.html:122
+#: templates/admin/catalog/supplier_board.html:80
 msgid "Margin report"
 msgstr "Ustama hisoboti"
 
@@ -3055,8 +3051,8 @@ msgid ""
 "The narrowest rule about a tariff wins. Saving one replaces any existing "
 "rule with the same target."
 msgstr ""
-"Tarif haqidagi eng tor qoida g'olib. Bittasini saqlash o'sha "
-"nishonga tegishli mavjud qoidani almashtiradi."
+"Tarif haqidagi eng tor qoida g'olib. Bittasini saqlash o'sha nishonga "
+"tegishli mavjud qoidani almashtiradi."
 
 #: templates/admin/catalog/ai_pricing.html:180
 msgid "Floor"
@@ -3079,8 +3075,8 @@ msgid ""
 "Not an estimate. Every active tariff was run through the real pricing code "
 "against the rules above; these are the prices they become."
 msgstr ""
-"Bu taxmin emas. Har bir faol tarif yuqoridagi qoidalar bilan haqiqiy "
-"narx kodidan o'tkazildi; narxlar aynan shunday bo'ladi."
+"Bu taxmin emas. Har bir faol tarif yuqoridagi qoidalar bilan haqiqiy narx "
+"kodidan o'tkazildi; narxlar aynan shunday bo'ladi."
 
 #: templates/admin/catalog/ai_pricing.html:209
 msgid "tariffs move"
@@ -3110,9 +3106,7 @@ msgstr "donasiga foyda, jami"
 #: templates/admin/catalog/ai_pricing.html:219
 #, python-format
 msgid "The %(shown)s biggest movers of %(total)s, largest change first."
-msgstr ""
-"%(total)s tadan eng ko'p o'zgargan %(shown)s tasi, kattasidan "
-"boshlab."
+msgstr "%(total)s tadan eng ko'p o'zgargan %(shown)s tasi, kattasidan boshlab."
 
 #: templates/admin/catalog/ai_pricing.html:227
 #: templates/admin/catalog/import_prices.html:231
@@ -3126,6 +3120,7 @@ msgstr "Tarif"
 #: templates/admin/catalog/import_prices.html:230
 #: templates/admin/catalog/margin_report.html:203
 #: templates/admin/catalog/margin_report.html:235
+#: templates/admin/catalog/supplier_board.html:190
 msgid "Destination"
 msgstr "Yo‘nalish"
 
@@ -3142,9 +3137,8 @@ msgid ""
 "No price would move. Either the rules match what is already in force, or "
 "every tariff they cover has a hand-typed price."
 msgstr ""
-"Hech bir narx o'zgarmaydi. Yo qoidalar allaqachon kuchdagilarga mos "
-"keladi, yo ular qamrab olgan har bir tarifning narxi qo'lda "
-"yozilgan."
+"Hech bir narx o'zgarmaydi. Yo qoidalar allaqachon kuchdagilarga mos keladi, "
+"yo ular qamrab olgan har bir tarifning narxi qo'lda yozilgan."
 
 #: templates/admin/catalog/ai_pricing.html:267
 #, python-format
@@ -3155,16 +3149,15 @@ msgid_plural ""
 "Saving %(n)s rules. Prices are recalculated immediately and the site shows "
 "the new ones."
 msgstr[0] ""
-"%(n)s qoida saqlanadi. Narxlar darhol qayta hisoblanadi va saytda "
-"yangisi ko'rinadi."
+"%(n)s qoida saqlanadi. Narxlar darhol qayta hisoblanadi va saytda yangisi "
+"ko'rinadi."
 
 #: templates/admin/catalog/ai_pricing.html:275
 msgid ""
 "The assistant was not confident about this one — read the question above "
 "first."
 msgstr ""
-"Yordamchi bunga ishonchi komil emas edi — avval yuqoridagi savolni "
-"o'qing."
+"Yordamchi bunga ishonchi komil emas edi — avval yuqoridagi savolni o'qing."
 
 #: templates/admin/catalog/ai_pricing.html:279
 msgid "Approve and save"
@@ -3289,6 +3282,7 @@ msgstr "Boshlangan"
 
 #: templates/admin/catalog/import_prices.html:133
 #: templates/admin/catalog/margin_report.html:267
+#: templates/admin/catalog/supplier_board.html:141
 msgid "Supplier"
 msgstr "Ta’minotchi"
 
@@ -3485,9 +3479,9 @@ msgid ""
 "that earns pennies on a 1 GB tariff earns tens of dollars on a 50 GB one."
 msgstr ""
 "Ustama muammosi aynan shu o'qda yashaydi. Tannarxi sentlardan yuzlab "
-"dollargacha cho'ziladigan katalogni bitta foiz bilan narxlab "
-"bo'lmaydi: 1 GB tarifga sentlar keltiradigan o'sha ustama 50 GB "
-"likka o'nlab dollar keltiradi."
+"dollargacha cho'ziladigan katalogni bitta foiz bilan narxlab bo'lmaydi: 1 GB "
+"tarifga sentlar keltiradigan o'sha ustama 50 GB likka o'nlab dollar "
+"keltiradi."
 
 #: templates/admin/catalog/margin_report.html:155
 msgid "Size"
@@ -3528,10 +3522,10 @@ msgid ""
 "pricing assistant or the price sheet, by traffic size rather than one tariff "
 "at a time."
 msgstr ""
-"%(total)s ta tarif sotuvdan $%(limit)s dan kam foyda keltiradi — bu "
-"taxminan karta komissiyasi olib qoladigan miqdor. Eng kamlaridan "
-"%(shown)s tasi ro'yxatda; ustama narx yordamchisida yoki narxlar "
-"varag'ida, bitta tarif emas, trafik o'lchami bo'yicha tuzatiladi."
+"%(total)s ta tarif sotuvdan $%(limit)s dan kam foyda keltiradi — bu taxminan "
+"karta komissiyasi olib qoladigan miqdor. Eng kamlaridan %(shown)s tasi "
+"ro'yxatda; ustama narx yordamchisida yoki narxlar varag'ida, bitta tarif "
+"emas, trafik o'lchami bo'yicha tuzatiladi."
 
 #: templates/admin/catalog/margin_report.html:230
 msgid "Lowest-markup destinations"
@@ -3556,11 +3550,10 @@ msgid ""
 "cost moves with every nightly sync — so this is what those sales would earn "
 "at current costs, not a historical figure."
 msgstr ""
-"Bugungi tannarxga nisbatan o'lchandi. Har bir sotuv paytidagi "
-"tannarx saqlanmaydi — mijoz to'lagan narx buyurtmada muzlatilgan, "
-"tannarx esa har kechagi sinxronizatsiya bilan o'zgaradi — shuning "
-"uchun bu o'sha sotuvlar hozirgi tannarxda qancha foyda keltirishini "
-"bildiradi, tarixiy raqamni emas."
+"Bugungi tannarxga nisbatan o'lchandi. Har bir sotuv paytidagi tannarx "
+"saqlanmaydi — mijoz to'lagan narx buyurtmada muzlatilgan, tannarx esa har "
+"kechagi sinxronizatsiya bilan o'zgaradi — shuning uchun bu o'sha sotuvlar "
+"hozirgi tannarxda qancha foyda keltirishini bildiradi, tarixiy raqamni emas."
 
 #: templates/admin/catalog/margin_report.html:305
 msgid "eSIMs sold"
@@ -3573,8 +3566,7 @@ msgstr "Tushum"
 #: templates/admin/catalog/margin_report.html:313
 msgid "Nothing has been sold yet, so there is no realised margin to report."
 msgstr ""
-"Hali hech narsa sotilmagan, shuning uchun haqiqiy foyda haqida "
-"hisobot yo'q."
+"Hali hech narsa sotilmagan, shuning uchun haqiqiy foyda haqida hisobot yo'q."
 
 #: templates/admin/catalog/margin_report.html:318
 #, python-format
@@ -3585,18 +3577,17 @@ msgid ""
 "margin would invent a problem that is really a missing number."
 msgstr ""
 "Yuqoridagi har bir raqam katalogdan hisoblangan, taxmin qilinmagan. "
-"%(skipped)s ta tarif hisobga olinmadi, chunki ularning ta'minotchi "
-"tannarxi yozilmagan, %(off)s tasi esa o'chirilgan — ikkalasini ham "
-"nol foyda deb sanash aslida yetishmayotgan raqam bo'lgan muammoni "
-"o'ylab topgan bo'lardi."
+"%(skipped)s ta tarif hisobga olinmadi, chunki ularning ta'minotchi tannarxi "
+"yozilmagan, %(off)s tasi esa o'chirilgan — ikkalasini ham nol foyda deb "
+"sanash aslida yetishmayotgan raqam bo'lgan muammoni o'ylab topgan bo'lardi."
 
 #: templates/admin/catalog/margin_report.html:325
 msgid ""
 "The commentary near the top is written by the assistant over these same "
 "figures; it does not compute any of them."
 msgstr ""
-"Tepadagi izohni yordamchi shu raqamlar ustida yozadi; ularning hech "
-"birini o'zi hisoblamaydi."
+"Tepadagi izohni yordamchi shu raqamlar ustida yozadi; ularning hech birini "
+"o'zi hisoblamaydi."
 
 #: templates/admin/catalog/price_sheet.html:91
 msgid "destinations shown"
@@ -3688,6 +3679,188 @@ msgstr "Orqaga"
 #, python-format
 msgid "%(n)s / %(of)s"
 msgstr "%(n)s / %(of)s"
+
+#: templates/admin/catalog/supplier_board.html:76
+msgid "Re-read balances"
+msgstr "Balansni qayta o'qish"
+
+#: templates/admin/catalog/supplier_board.html:79
+msgid "All supplier prices"
+msgstr "Barcha ta'minotchi narxlari"
+
+#: templates/admin/catalog/supplier_board.html:90
+msgid "could not read"
+msgstr "o'qib bo'lmadi"
+
+#: templates/admin/catalog/supplier_board.html:95
+#, python-format
+msgid "<b>%(n)s</b> tariffs bought from here"
+msgstr "bu yerdan olinadigan <b>%(n)s</b> tarif"
+
+#: templates/admin/catalog/supplier_board.html:96
+#, python-format
+msgid "<b>%(n)s</b> destinations only they have"
+msgstr "faqat ularda bor <b>%(n)s</b> yo'nalish"
+
+#: templates/admin/catalog/supplier_board.html:97
+#, python-format
+msgid "<b>%(n)s</b> purchases recorded"
+msgstr "<b>%(n)s</b> xarid yozilgan"
+
+#: templates/admin/catalog/supplier_board.html:98
+#, python-format
+msgid "<b>%(n)s</b> sold"
+msgstr "<b>%(n)s</b> sotilgan"
+
+#: templates/admin/catalog/supplier_board.html:102
+msgid "Top up in their portal"
+msgstr "Ularning kabinetida to'ldirish"
+
+#: templates/admin/catalog/supplier_board.html:110
+msgid ""
+"A wallet is empty. A customer can be charged and still get no eSIM, because "
+"the purchase from the wholesaler is refused. Card payments stay switched off "
+"until at least one wallet is funded."
+msgstr ""
+"Hisob bo'sh. Mijozdan pul olinib, eSIM berilmasligi mumkin — chunki "
+"ulgurjidan sotib olish rad etiladi. Kamida bitta hisob to'lmaguncha "
+"karta to'lovi o'chirilgan holda qoladi."
+
+#: templates/admin/catalog/supplier_board.html:119
+msgid ""
+"<b>Topping up cannot be done from here.</b> Neither reseller API has a "
+"deposit endpoint — they let us read the balance, list packages and buy an "
+"eSIM, and nothing else. Money goes into a wallet through the supplier's own "
+"portal, by bank transfer, card or USDT depending on the supplier. The links "
+"above go straight there."
+msgstr ""
+"<b>Bu yerdan to'ldirib bo'lmaydi.</b> Ikkala reseller API'da ham "
+"depozit endpointi yo'q — ular faqat balansni o'qish, paketlar "
+"ro'yxatini olish va eSIM sotib olishga ruxsat beradi. Pul "
+"ta'minotchining o'z kabinetidan tushadi: bank o'tkazmasi, karta yoki "
+"USDT — ta'minotchiga qarab. Yuqoridagi havolalar to'g'ridan-to'g'ri "
+"o'sha yerga olib boradi."
+
+#: templates/admin/catalog/supplier_board.html:129
+msgid "Who is cheaper"
+msgstr "Qaysi biri arzon"
+
+#: templates/admin/catalog/supplier_board.html:131
+#, python-format
+msgid ""
+"Counted over the %(both)s tariffs both suppliers carry. This is not money "
+"waiting to be saved — every tariff is already bought from whichever of the "
+"two is cheaper. It is the answer to a different question: how much we lean "
+"on each supplier, and which one it would hurt to lose."
+msgstr ""
+"Ikkala ta'minotchi ham sotadigan %(both)s tarif bo'yicha "
+"hisoblangan. Bu tejash mumkin bo'lgan pul emas — har bir tarif "
+"allaqachon ikkisining arzonrog'idan olinadi. Bu boshqa savolga "
+"javob: har bir ta'minotchiga qanchalik bog'liqmiz va qaysi birini "
+"yo'qotish og'irroq tegadi."
+
+#: templates/admin/catalog/supplier_board.html:142
+msgid "Tariffs offered"
+msgstr "Taklif qiladigan tariflari"
+
+#: templates/admin/catalog/supplier_board.html:143
+msgid "Cheaper on"
+msgstr "Arzonroq"
+
+#: templates/admin/catalog/supplier_board.html:144
+msgid "We buy from them"
+msgstr "Biz ulardan olamiz"
+
+#: templates/admin/catalog/supplier_board.html:145
+msgid "Only they have"
+msgstr "Faqat ularda bor"
+
+#: templates/admin/catalog/supplier_board.html:146
+msgid "Sold"
+msgstr "Sotilgan"
+
+#: templates/admin/catalog/supplier_board.html:156
+#, python-format
+msgid "%(n)s destinations"
+msgstr "%(n)s yo'nalish"
+
+#: templates/admin/catalog/supplier_board.html:164
+#, python-format
+msgid ""
+"%(n)s tariffs are bought from the more expensive of the two. Re-run the "
+"catalogue sync — sourcing picks the cheapest offer on save, so this means a "
+"price moved without the plan being written."
+msgstr ""
+"%(n)s tarif ikkisining qimmatrog'idan olinyapti. Katalog "
+"sinxronizatsiyasini qayta ishga tushiring — manba saqlanganda eng "
+"arzon taklif tanlanadi, ya'ni bu narx o'zgargani, lekin tarif qayta "
+"yozilmaganini bildiradi."
+
+#: templates/admin/catalog/supplier_board.html:172
+msgid ""
+"Every tariff with two offers is bought from the cheaper one — checked, not "
+"assumed."
+msgstr ""
+"Ikki taklifi bor har bir tarif arzonrog'idan olinadi — tekshirildi, "
+"taxmin qilinmadi."
+
+#: templates/admin/catalog/supplier_board.html:178
+msgid "Destination by destination"
+msgstr "Yo'nalish bo'yicha"
+
+#: templates/admin/catalog/supplier_board.html:180
+#, python-format
+msgid ""
+"Both suppliers sell in %(both)s of %(total)s destinations. Ordered by the "
+"biggest price gap between them, which is where losing one supplier would "
+"cost the most."
+msgstr ""
+"%(total)s yo'nalishdan %(both)s tasida ikkala ta'minotchi ham "
+"sotadi. Eng katta narx farqi bo'yicha tartiblangan — bitta "
+"ta'minotchini yo'qotish eng qimmatga tushadigan joylar."
+
+#: templates/admin/catalog/supplier_board.html:191
+msgid "eSIM Access"
+msgstr "eSIM Access"
+
+#: templates/admin/catalog/supplier_board.html:192
+msgid "eSIMCard"
+msgstr "eSIMCard"
+
+#: templates/admin/catalog/supplier_board.html:193
+msgid "Cheaper"
+msgstr "Arzonroq"
+
+#: templates/admin/catalog/supplier_board.html:194
+msgid "Biggest gap"
+msgstr "Eng katta farq"
+
+#: templates/admin/catalog/supplier_board.html:195
+msgid "Lowest cost"
+msgstr "Eng past tannarx"
+
+#: templates/admin/catalog/supplier_board.html:205
+msgid "only Access"
+msgstr "faqat Access"
+
+#: templates/admin/catalog/supplier_board.html:206
+msgid "only Card"
+msgstr "faqat Card"
+
+#: templates/admin/catalog/supplier_board.html:219
+msgid "No supplier offers yet."
+msgstr "Hali ta'minotchi taklifi yo'q."
+
+#: templates/admin/catalog/supplier_board.html:228
+msgid ""
+"Nothing has sold yet, so \"sold\" and \"purchases recorded\" are empty. They "
+"fill in on their own from the first real order — the purchase ledger records "
+"every wholesaler buy, so no figure here is ever typed by hand."
+msgstr ""
+"Hali hech narsa sotilmagan, shuning uchun «sotilgan» va «xarid "
+"yozilgan» bo'sh. Ular birinchi real buyurtmadan o'zi to'ladi — "
+"xaridlar daftari har bir ulgurji xaridni yozib boradi, ya'ni bu "
+"yerdagi hech bir raqam qo'lda kiritilmaydi."
 
 #: templates/admin/index.html:10
 msgid "Live overview of QulaySIM sales, customers and eSIM activity."

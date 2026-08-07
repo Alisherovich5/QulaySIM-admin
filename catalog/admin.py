@@ -1744,6 +1744,48 @@ class SupplierOfferAdmin(ModelAdmin):
     # times over.
     list_per_page = 50
 
+    def get_urls(self):
+        from django.urls import path
+
+        return [
+            path(
+                "board/",
+                self.admin_site.admin_view(self.supplier_board),
+                name="catalog_supplieroffer_board",
+            ),
+            *super().get_urls(),
+        ]
+
+    def supplier_board(self, request):
+        """How much is with each wholesaler, what has gone out, and who is cheaper.
+
+        The balances are live HTTP calls, cached for a minute so a refresh is not
+        two round trips to Hong Kong. A supplier that cannot be reached shows as
+        "could not read" rather than as zero: those two mean opposite things when
+        deciding whether it is safe to switch card payments on, and a page that
+        conflated them would be worse than no page at all.
+
+        There is deliberately no top-up button. Neither reseller API has a deposit
+        endpoint, so the page puts the balance next to a link to the portal where
+        money can actually be added.
+        """
+        from django.shortcuts import render
+
+        from catalog import suppliers
+
+        balances = suppliers.balances(refresh=request.method == "POST")
+        comparison = suppliers.comparison()
+        context = {
+            **self.admin_site.each_context(request),
+            "title": _("Suppliers"),
+            "opts": self.model._meta,
+            "balances": balances,
+            "stats": comparison["stats"],
+            "cmp": comparison,
+            "any_empty": any(b.empty for b in balances),
+        }
+        return render(request, "admin/catalog/supplier_board.html", context)
+
     list_display = (
         "plan_col",
         "provider",
