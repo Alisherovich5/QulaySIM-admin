@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-07 19:15+0500\n"
+"POT-Creation-Date: 2026-08-07 19:30+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: catalog/admin.py:71 catalog/admin.py:265 config/settings.py:429
+#: catalog/admin.py:71 catalog/admin.py:265 config/settings.py:454
 msgid "Destinations"
 msgstr "Yo‘nalishlar soni"
 
@@ -56,7 +56,7 @@ msgstr "Trafik"
 msgid "Unlimited"
 msgstr "Cheksiz"
 
-#: catalog/admin.py:157 catalog/admin.py:1780 config/settings.py:441
+#: catalog/admin.py:157 catalog/admin.py:1780 config/settings.py:466
 #: templates/admin/catalog/price_sheet.html:153
 msgid "Suppliers"
 msgstr "Ta’minotchilar"
@@ -187,7 +187,7 @@ msgstr "Ko‘rinishi"
 msgid "The assistant could not write the commentary: %(reason)s"
 msgstr "Yordamchi izohni yoza olmadi: %(reason)s"
 
-#: catalog/admin.py:737 config/settings.py:466
+#: catalog/admin.py:737 config/settings.py:491
 msgid "Cost and margin report"
 msgstr "Tannarx va ustama hisoboti"
 
@@ -195,7 +195,7 @@ msgstr "Tannarx va ustama hisoboti"
 msgid "You do not have permission to change tariffs."
 msgstr "Tariflarni o‘zgartirishga ruxsatingiz yo‘q."
 
-#: catalog/admin.py:823 config/settings.py:436
+#: catalog/admin.py:823 config/settings.py:461
 msgid "Cost and price sheet"
 msgstr "Tannarx va narxlar"
 
@@ -373,7 +373,7 @@ msgstr "Hech narsa saqlanmadi — yaroqli qoida qolmadi."
 msgid "The assistant's answer could not be read."
 msgstr "Yordamchining javobini o'qib bo'lmadi."
 
-#: catalog/admin.py:1386 config/settings.py:461
+#: catalog/admin.py:1386 config/settings.py:486
 #: templates/admin/catalog/margin_report.html:91
 msgid "Pricing assistant"
 msgstr "Narx yordamchisi"
@@ -638,7 +638,7 @@ msgstr "Hech bir tarifning o'lchami %(mb)s MB emas."
 msgid "The assistant declined to write the commentary."
 msgstr "Yordamchi izoh yozishdan bosh tortdi."
 
-#: catalog/apps.py:8 config/settings.py:424
+#: catalog/apps.py:8 config/settings.py:449
 msgid "Catalog"
 msgstr "Katalog"
 
@@ -1178,7 +1178,7 @@ msgstr "Yo‘q"
 msgid "Filters"
 msgstr "Filtrlar"
 
-#: config/i18n_extra.py:48
+#: config/i18n_extra.py:48 templates/admin/otp_login.html:77
 msgid "Forgotten your password or username?"
 msgstr "Parol yoki foydalanuvchi nomini eslay olmadingizmi?"
 
@@ -1210,7 +1210,7 @@ msgstr "Rasmni ko‘rish"
 msgid "Light"
 msgstr "Kunduzgi"
 
-#: config/i18n_extra.py:57
+#: config/i18n_extra.py:57 templates/admin/otp_login.html:69
 msgid "Log in"
 msgstr "Kirish"
 
@@ -1923,7 +1923,7 @@ msgstr ""
 "Kiritgan manzilda hisob mavjud bo‘lsa, parol o‘rnatish bo‘yicha ko‘rsatmalar "
 "emailingizga yuborildi. Tez orada yetib boradi."
 
-#: config/i18n_extra.py:202
+#: config/i18n_extra.py:202 templates/admin/otp_login.html:46
 #, python-format
 msgid ""
 "You are authenticated as %(username)s, but are not authorized to access this "
@@ -2098,115 +2098,136 @@ msgstr "%(name)s “%(obj)s” muvaffaqiyatli o‘chirildi."
 msgid "Changed “%(object)s” — %(changes)s"
 msgstr "“%(object)s” o‘zgartirildi — %(changes)s"
 
-#: config/i18n_extra.py:249
+#: config/i18n_extra.py:249 templates/admin/otp_login.html:35
 msgid "Welcome back to"
 msgstr "Xush kelibsiz —"
 
-#: config/settings.py:335
+#: config/otp.py:72
+msgid "Authenticator code"
+msgstr "Autentifikator kodi"
+
+#: config/otp.py:83
+msgid "The six digits from your authenticator app."
+msgstr "Autentifikator ilovasidagi olti xona raqam."
+
+#: config/otp.py:98
+msgid ""
+"Two-factor authentication is required and this account has no authenticator "
+"enrolled. Ask an administrator to run `manage.py setup_totp <username>`."
+msgstr ""
+"Ikki faktorli autentifikatsiya majburiy, bu akkauntda esa "
+"autentifikator ulanmagan. Administratordan `manage.py setup_totp "
+"<username>` ni ishga tushirishni so'rang."
+
+#: config/otp.py:111
+msgid "Please enter the correct username, password and authenticator code."
+msgstr "To'g'ri foydalanuvchi nomi, parol va autentifikator kodini kiriting."
+
+#: config/settings.py:360
 msgid "QulaySIM Admin"
 msgstr "QulaySIM boshqaruvi"
 
-#: config/settings.py:336
+#: config/settings.py:361
 msgid "QulaySIM"
 msgstr "QulaySIM"
 
-#: config/settings.py:337
+#: config/settings.py:362
 msgid "eSIM commerce control panel"
 msgstr "eSIM savdosi boshqaruv paneli"
 
-#: config/settings.py:413
+#: config/settings.py:438
 msgid "Overview"
 msgstr "Umumiy ko‘rinish"
 
-#: config/settings.py:417 templates/admin/index.html:8
+#: config/settings.py:442 templates/admin/index.html:8
 msgid "Dashboard"
 msgstr "Boshqaruv paneli"
 
-#: config/settings.py:427
+#: config/settings.py:452
 msgid "Regions"
 msgstr "Hududlar"
 
-#: config/settings.py:433
+#: config/settings.py:458
 msgid "Countries"
 msgstr "Davlatlar"
 
-#: config/settings.py:434
+#: config/settings.py:459
 msgid "Plans"
 msgstr "Tariflar"
 
-#: config/settings.py:446
+#: config/settings.py:471
 msgid "Supplier prices"
 msgstr "Ta’minotchi narxlari"
 
-#: config/settings.py:451
+#: config/settings.py:476
 msgid "Sync prices"
 msgstr "Narxlarni sinxronlash"
 
-#: config/settings.py:456 templates/admin/index.html:244
+#: config/settings.py:481 templates/admin/index.html:244
 msgid "Pricing rules"
 msgstr "Narxlash qoidalari"
 
-#: config/settings.py:473 orders/apps.py:8
+#: config/settings.py:498 orders/apps.py:8
 msgid "Commerce"
 msgstr "Savdo"
 
-#: config/settings.py:477 customers/admin.py:48
+#: config/settings.py:502 customers/admin.py:48
 msgid "Orders"
 msgstr "Buyurtmalar"
 
-#: config/settings.py:482 orders/models.py:252 orders/models.py:255
+#: config/settings.py:507 orders/models.py:252 orders/models.py:255
 msgid "eSIMs"
 msgstr "eSIM’lar"
 
-#: config/settings.py:483
+#: config/settings.py:508
 msgid "Payments"
 msgstr "To‘lovlar"
 
-#: config/settings.py:485
+#: config/settings.py:510
 msgid "Card transactions"
 msgstr "Karta tranzaksiyalari"
 
-#: config/settings.py:490
+#: config/settings.py:515
 msgid "Supplier purchases"
 msgstr "Ulgurji xaridlar"
 
-#: config/settings.py:494
+#: config/settings.py:519
 msgid "Promo codes"
 msgstr "Promokodlar"
 
-#: config/settings.py:498 customers/apps.py:8
+#: config/settings.py:523 customers/apps.py:8
 msgid "People"
 msgstr "Odamlar"
 
-#: config/settings.py:501 templates/admin/index.html:48
+#: config/settings.py:526 templates/admin/index.html:48
 msgid "Customers"
 msgstr "Mijozlar"
 
-#: config/settings.py:503
+#: config/settings.py:528
 msgid "Cashback & referrals"
 msgstr "Keshbek va referallar"
 
-#: config/settings.py:507
+#: config/settings.py:532
 msgid "Staff users"
 msgstr "Xodimlar"
 
-#: config/settings.py:509
+#: config/settings.py:534
 msgid "Social logins"
 msgstr "Ijtimoiy tarmoq hisoblari"
 
-#: config/settings.py:516 content/apps.py:8
+#: config/settings.py:541 content/apps.py:8
 msgid "Content"
 msgstr "Kontent"
 
-#: config/settings.py:519 content/models.py:25 content/models.py:28
+#: config/settings.py:544 content/models.py:25 content/models.py:28
 msgid "FAQ"
 msgstr "Savol-javob"
 
-#: config/settings.py:520
+#: config/settings.py:545
 msgid "Banners"
 msgstr "Bannerlar"
 
-#: config/settings.py:521
+#: config/settings.py:546
 msgid "Testimonials"
 msgstr "Sharhlar"
 
@@ -3723,8 +3744,8 @@ msgid ""
 "until at least one wallet is funded."
 msgstr ""
 "Hisob bo'sh. Mijozdan pul olinib, eSIM berilmasligi mumkin — chunki "
-"ulgurjidan sotib olish rad etiladi. Kamida bitta hisob to'lmaguncha "
-"karta to'lovi o'chirilgan holda qoladi."
+"ulgurjidan sotib olish rad etiladi. Kamida bitta hisob to'lmaguncha karta "
+"to'lovi o'chirilgan holda qoladi."
 
 #: templates/admin/catalog/supplier_board.html:119
 msgid ""
@@ -3734,12 +3755,11 @@ msgid ""
 "portal, by bank transfer, card or USDT depending on the supplier. The links "
 "above go straight there."
 msgstr ""
-"<b>Bu yerdan to'ldirib bo'lmaydi.</b> Ikkala reseller API'da ham "
-"depozit endpointi yo'q — ular faqat balansni o'qish, paketlar "
-"ro'yxatini olish va eSIM sotib olishga ruxsat beradi. Pul "
-"ta'minotchining o'z kabinetidan tushadi: bank o'tkazmasi, karta yoki "
-"USDT — ta'minotchiga qarab. Yuqoridagi havolalar to'g'ridan-to'g'ri "
-"o'sha yerga olib boradi."
+"<b>Bu yerdan to'ldirib bo'lmaydi.</b> Ikkala reseller API'da ham depozit "
+"endpointi yo'q — ular faqat balansni o'qish, paketlar ro'yxatini olish va "
+"eSIM sotib olishga ruxsat beradi. Pul ta'minotchining o'z kabinetidan "
+"tushadi: bank o'tkazmasi, karta yoki USDT — ta'minotchiga qarab. Yuqoridagi "
+"havolalar to'g'ridan-to'g'ri o'sha yerga olib boradi."
 
 #: templates/admin/catalog/supplier_board.html:129
 msgid "Who is cheaper"
@@ -3753,11 +3773,10 @@ msgid ""
 "two is cheaper. It is the answer to a different question: how much we lean "
 "on each supplier, and which one it would hurt to lose."
 msgstr ""
-"Ikkala ta'minotchi ham sotadigan %(both)s tarif bo'yicha "
-"hisoblangan. Bu tejash mumkin bo'lgan pul emas — har bir tarif "
-"allaqachon ikkisining arzonrog'idan olinadi. Bu boshqa savolga "
-"javob: har bir ta'minotchiga qanchalik bog'liqmiz va qaysi birini "
-"yo'qotish og'irroq tegadi."
+"Ikkala ta'minotchi ham sotadigan %(both)s tarif bo'yicha hisoblangan. Bu "
+"tejash mumkin bo'lgan pul emas — har bir tarif allaqachon ikkisining "
+"arzonrog'idan olinadi. Bu boshqa savolga javob: har bir ta'minotchiga "
+"qanchalik bog'liqmiz va qaysi birini yo'qotish og'irroq tegadi."
 
 #: templates/admin/catalog/supplier_board.html:142
 msgid "Tariffs offered"
@@ -3791,18 +3810,17 @@ msgid ""
 "catalogue sync — sourcing picks the cheapest offer on save, so this means a "
 "price moved without the plan being written."
 msgstr ""
-"%(n)s tarif ikkisining qimmatrog'idan olinyapti. Katalog "
-"sinxronizatsiyasini qayta ishga tushiring — manba saqlanganda eng "
-"arzon taklif tanlanadi, ya'ni bu narx o'zgargani, lekin tarif qayta "
-"yozilmaganini bildiradi."
+"%(n)s tarif ikkisining qimmatrog'idan olinyapti. Katalog sinxronizatsiyasini "
+"qayta ishga tushiring — manba saqlanganda eng arzon taklif tanlanadi, ya'ni "
+"bu narx o'zgargani, lekin tarif qayta yozilmaganini bildiradi."
 
 #: templates/admin/catalog/supplier_board.html:172
 msgid ""
 "Every tariff with two offers is bought from the cheaper one — checked, not "
 "assumed."
 msgstr ""
-"Ikki taklifi bor har bir tarif arzonrog'idan olinadi — tekshirildi, "
-"taxmin qilinmadi."
+"Ikki taklifi bor har bir tarif arzonrog'idan olinadi — tekshirildi, taxmin "
+"qilinmadi."
 
 #: templates/admin/catalog/supplier_board.html:178
 msgid "Destination by destination"
@@ -3815,9 +3833,9 @@ msgid ""
 "biggest price gap between them, which is where losing one supplier would "
 "cost the most."
 msgstr ""
-"%(total)s yo'nalishdan %(both)s tasida ikkala ta'minotchi ham "
-"sotadi. Eng katta narx farqi bo'yicha tartiblangan — bitta "
-"ta'minotchini yo'qotish eng qimmatga tushadigan joylar."
+"%(total)s yo'nalishdan %(both)s tasida ikkala ta'minotchi ham sotadi. Eng "
+"katta narx farqi bo'yicha tartiblangan — bitta ta'minotchini yo'qotish eng "
+"qimmatga tushadigan joylar."
 
 #: templates/admin/catalog/supplier_board.html:191
 msgid "eSIM Access"
@@ -3857,10 +3875,10 @@ msgid ""
 "fill in on their own from the first real order — the purchase ledger records "
 "every wholesaler buy, so no figure here is ever typed by hand."
 msgstr ""
-"Hali hech narsa sotilmagan, shuning uchun «sotilgan» va «xarid "
-"yozilgan» bo'sh. Ular birinchi real buyurtmadan o'zi to'ladi — "
-"xaridlar daftari har bir ulgurji xaridni yozib boradi, ya'ni bu "
-"yerdagi hech bir raqam qo'lda kiritilmaydi."
+"Hali hech narsa sotilmagan, shuning uchun «sotilgan» va «xarid yozilgan» "
+"bo'sh. Ular birinchi real buyurtmadan o'zi to'ladi — xaridlar daftari har "
+"bir ulgurji xaridni yozib boradi, ya'ni bu yerdagi hech bir raqam qo'lda "
+"kiritilmaydi."
 
 #: templates/admin/index.html:10
 msgid "Live overview of QulaySIM sales, customers and eSIM activity."
@@ -4148,3 +4166,7 @@ msgid ""
 msgstr ""
 "So‘mdagi summa — kartadan haqiqatan yechilgan miqdor, buyurtma berilgan "
 "paytdagi kurs bo‘yicha qotirilgan."
+
+#: templates/admin/otp_login.html:35
+msgid "Django site admin"
+msgstr "Django boshqaruv paneli"

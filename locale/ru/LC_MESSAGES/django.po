@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-07 19:15+0500\n"
+"POT-Creation-Date: 2026-08-07 19:30+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -18,7 +18,7 @@ msgstr ""
 "n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
 "(n%100>=11 && n%100<=14)? 2 : 3);\n"
 
-#: catalog/admin.py:71 catalog/admin.py:265 config/settings.py:429
+#: catalog/admin.py:71 catalog/admin.py:265 config/settings.py:454
 msgid "Destinations"
 msgstr "Число направлений"
 
@@ -58,7 +58,7 @@ msgstr "Трафик"
 msgid "Unlimited"
 msgstr "Безлимит"
 
-#: catalog/admin.py:157 catalog/admin.py:1780 config/settings.py:441
+#: catalog/admin.py:157 catalog/admin.py:1780 config/settings.py:466
 #: templates/admin/catalog/price_sheet.html:153
 msgid "Suppliers"
 msgstr "Поставщики"
@@ -188,7 +188,7 @@ msgstr "Отображение"
 msgid "The assistant could not write the commentary: %(reason)s"
 msgstr "Ассистент не смог написать комментарий: %(reason)s"
 
-#: catalog/admin.py:737 config/settings.py:466
+#: catalog/admin.py:737 config/settings.py:491
 msgid "Cost and margin report"
 msgstr "Отчёт по себестоимости и марже"
 
@@ -196,7 +196,7 @@ msgstr "Отчёт по себестоимости и марже"
 msgid "You do not have permission to change tariffs."
 msgstr "У вас нет прав изменять тарифы."
 
-#: catalog/admin.py:823 config/settings.py:436
+#: catalog/admin.py:823 config/settings.py:461
 msgid "Cost and price sheet"
 msgstr "Себестоимость и цены"
 
@@ -370,7 +370,7 @@ msgstr "Ничего не сохранено — не осталось ни од
 msgid "The assistant's answer could not be read."
 msgstr "Ответ ассистента не удалось прочитать."
 
-#: catalog/admin.py:1386 config/settings.py:461
+#: catalog/admin.py:1386 config/settings.py:486
 #: templates/admin/catalog/margin_report.html:91
 msgid "Pricing assistant"
 msgstr "Ассистент цен"
@@ -634,7 +634,7 @@ msgstr "Ни у одного тарифа нет объёма %(mb)s МБ."
 msgid "The assistant declined to write the commentary."
 msgstr "Ассистент отказался писать комментарий."
 
-#: catalog/apps.py:8 config/settings.py:424
+#: catalog/apps.py:8 config/settings.py:449
 msgid "Catalog"
 msgstr "Каталог"
 
@@ -1168,7 +1168,7 @@ msgstr "Нет"
 msgid "Filters"
 msgstr "Фильтры"
 
-#: config/i18n_extra.py:48
+#: config/i18n_extra.py:48 templates/admin/otp_login.html:77
 msgid "Forgotten your password or username?"
 msgstr "Забыли пароль или имя пользователя?"
 
@@ -1200,7 +1200,7 @@ msgstr "Просмотр изображения"
 msgid "Light"
 msgstr "Светлая"
 
-#: config/i18n_extra.py:57
+#: config/i18n_extra.py:57 templates/admin/otp_login.html:69
 msgid "Log in"
 msgstr "Войти"
 
@@ -1908,7 +1908,7 @@ msgstr ""
 "электронной почты (если в нашей базе данных есть такой адрес). Вы должны "
 "получить ее в ближайшее время."
 
-#: config/i18n_extra.py:202
+#: config/i18n_extra.py:202 templates/admin/otp_login.html:46
 #, python-format
 msgid ""
 "You are authenticated as %(username)s, but are not authorized to access this "
@@ -2084,115 +2084,136 @@ msgstr "%(name)s «%(obj)s» успешно удалён."
 msgid "Changed “%(object)s” — %(changes)s"
 msgstr "«%(object)s» изменён — %(changes)s"
 
-#: config/i18n_extra.py:249
+#: config/i18n_extra.py:249 templates/admin/otp_login.html:35
 msgid "Welcome back to"
 msgstr "С возвращением —"
 
-#: config/settings.py:335
+#: config/otp.py:72
+msgid "Authenticator code"
+msgstr "Код аутентификатора"
+
+#: config/otp.py:83
+msgid "The six digits from your authenticator app."
+msgstr "Шесть цифр из приложения-аутентификатора."
+
+#: config/otp.py:98
+msgid ""
+"Two-factor authentication is required and this account has no authenticator "
+"enrolled. Ask an administrator to run `manage.py setup_totp <username>`."
+msgstr ""
+"Двухфакторная аутентификация обязательна, а у этой учётной записи "
+"аутентификатор не подключён. Попросите администратора запустить "
+"`manage.py setup_totp <username>`."
+
+#: config/otp.py:111
+msgid "Please enter the correct username, password and authenticator code."
+msgstr "Введите правильные имя пользователя, пароль и код аутентификатора."
+
+#: config/settings.py:360
 msgid "QulaySIM Admin"
 msgstr "Панель QulaySIM"
 
-#: config/settings.py:336
+#: config/settings.py:361
 msgid "QulaySIM"
 msgstr "QulaySIM"
 
-#: config/settings.py:337
+#: config/settings.py:362
 msgid "eSIM commerce control panel"
 msgstr "Панель управления продажами eSIM"
 
-#: config/settings.py:413
+#: config/settings.py:438
 msgid "Overview"
 msgstr "Обзор"
 
-#: config/settings.py:417 templates/admin/index.html:8
+#: config/settings.py:442 templates/admin/index.html:8
 msgid "Dashboard"
 msgstr "Панель"
 
-#: config/settings.py:427
+#: config/settings.py:452
 msgid "Regions"
 msgstr "Регионы"
 
-#: config/settings.py:433
+#: config/settings.py:458
 msgid "Countries"
 msgstr "Страны"
 
-#: config/settings.py:434
+#: config/settings.py:459
 msgid "Plans"
 msgstr "Тарифы"
 
-#: config/settings.py:446
+#: config/settings.py:471
 msgid "Supplier prices"
 msgstr "Цены поставщиков"
 
-#: config/settings.py:451
+#: config/settings.py:476
 msgid "Sync prices"
 msgstr "Синхронизация цен"
 
-#: config/settings.py:456 templates/admin/index.html:244
+#: config/settings.py:481 templates/admin/index.html:244
 msgid "Pricing rules"
 msgstr "Правила ценообразования"
 
-#: config/settings.py:473 orders/apps.py:8
+#: config/settings.py:498 orders/apps.py:8
 msgid "Commerce"
 msgstr "Продажи"
 
-#: config/settings.py:477 customers/admin.py:48
+#: config/settings.py:502 customers/admin.py:48
 msgid "Orders"
 msgstr "Заказы"
 
-#: config/settings.py:482 orders/models.py:252 orders/models.py:255
+#: config/settings.py:507 orders/models.py:252 orders/models.py:255
 msgid "eSIMs"
 msgstr "eSIM"
 
-#: config/settings.py:483
+#: config/settings.py:508
 msgid "Payments"
 msgstr "Платежи"
 
-#: config/settings.py:485
+#: config/settings.py:510
 msgid "Card transactions"
 msgstr "Транзакции по картам"
 
-#: config/settings.py:490
+#: config/settings.py:515
 msgid "Supplier purchases"
 msgstr "Оптовые закупки"
 
-#: config/settings.py:494
+#: config/settings.py:519
 msgid "Promo codes"
 msgstr "Промокоды"
 
-#: config/settings.py:498 customers/apps.py:8
+#: config/settings.py:523 customers/apps.py:8
 msgid "People"
 msgstr "Люди"
 
-#: config/settings.py:501 templates/admin/index.html:48
+#: config/settings.py:526 templates/admin/index.html:48
 msgid "Customers"
 msgstr "Клиенты"
 
-#: config/settings.py:503
+#: config/settings.py:528
 msgid "Cashback & referrals"
 msgstr "Кешбэк и приглашения"
 
-#: config/settings.py:507
+#: config/settings.py:532
 msgid "Staff users"
 msgstr "Сотрудники"
 
-#: config/settings.py:509
+#: config/settings.py:534
 msgid "Social logins"
 msgstr "Входы через соцсети"
 
-#: config/settings.py:516 content/apps.py:8
+#: config/settings.py:541 content/apps.py:8
 msgid "Content"
 msgstr "Контент"
 
-#: config/settings.py:519 content/models.py:25 content/models.py:28
+#: config/settings.py:544 content/models.py:25 content/models.py:28
 msgid "FAQ"
 msgstr "Вопрос-ответ"
 
-#: config/settings.py:520
+#: config/settings.py:545
 msgid "Banners"
 msgstr "Баннеры"
 
-#: config/settings.py:521
+#: config/settings.py:546
 msgid "Testimonials"
 msgstr "Отзывы"
 
@@ -3724,9 +3745,9 @@ msgid ""
 "the purchase from the wholesaler is refused. Card payments stay switched off "
 "until at least one wallet is funded."
 msgstr ""
-"Кошелёк пуст. С клиента могут списать деньги, а eSIM он не получит — "
-"закупка у оптовика будет отклонена. Пока не пополнен хотя бы один "
-"кошелёк, приём карт остаётся выключенным."
+"Кошелёк пуст. С клиента могут списать деньги, а eSIM он не получит — закупка "
+"у оптовика будет отклонена. Пока не пополнен хотя бы один кошелёк, приём "
+"карт остаётся выключенным."
 
 #: templates/admin/catalog/supplier_board.html:119
 msgid ""
@@ -3736,11 +3757,11 @@ msgid ""
 "portal, by bank transfer, card or USDT depending on the supplier. The links "
 "above go straight there."
 msgstr ""
-"<b>Пополнить отсюда нельзя.</b> Ни в одном reseller API нет "
-"эндпоинта пополнения — они позволяют только читать баланс, получать "
-"список пакетов и покупать eSIM. Деньги поступают через кабинет "
-"самого поставщика: банковский перевод, карта или USDT — зависит от "
-"поставщика. Ссылки выше ведут прямо туда."
+"<b>Пополнить отсюда нельзя.</b> Ни в одном reseller API нет эндпоинта "
+"пополнения — они позволяют только читать баланс, получать список пакетов и "
+"покупать eSIM. Деньги поступают через кабинет самого поставщика: банковский "
+"перевод, карта или USDT — зависит от поставщика. Ссылки выше ведут прямо "
+"туда."
 
 #: templates/admin/catalog/supplier_board.html:129
 msgid "Who is cheaper"
@@ -3754,10 +3775,10 @@ msgid ""
 "two is cheaper. It is the answer to a different question: how much we lean "
 "on each supplier, and which one it would hurt to lose."
 msgstr ""
-"Посчитано по %(both)s тарифам, которые есть у обоих поставщиков. Это "
-"не деньги, которые можно сэкономить — каждый тариф уже покупается у "
-"того из двух, кто дешевле. Это ответ на другой вопрос: насколько мы "
-"зависим от каждого поставщика и потеря кого из них ударит сильнее."
+"Посчитано по %(both)s тарифам, которые есть у обоих поставщиков. Это не "
+"деньги, которые можно сэкономить — каждый тариф уже покупается у того из "
+"двух, кто дешевле. Это ответ на другой вопрос: насколько мы зависим от "
+"каждого поставщика и потеря кого из них ударит сильнее."
 
 #: templates/admin/catalog/supplier_board.html:142
 msgid "Tariffs offered"
@@ -3814,9 +3835,9 @@ msgid ""
 "biggest price gap between them, which is where losing one supplier would "
 "cost the most."
 msgstr ""
-"Оба поставщика продают в %(both)s из %(total)s направлений. "
-"Отсортировано по наибольшей разнице в цене — там потеря одного "
-"поставщика обойдётся дороже всего."
+"Оба поставщика продают в %(both)s из %(total)s направлений. Отсортировано по "
+"наибольшей разнице в цене — там потеря одного поставщика обойдётся дороже "
+"всего."
 
 #: templates/admin/catalog/supplier_board.html:191
 msgid "eSIM Access"
@@ -3856,10 +3877,9 @@ msgid ""
 "fill in on their own from the first real order — the purchase ledger records "
 "every wholesaler buy, so no figure here is ever typed by hand."
 msgstr ""
-"Пока ничего не продано, поэтому «продано» и «записано закупок» "
-"пусты. Они заполнятся сами с первого реального заказа — журнал "
-"закупок фиксирует каждую покупку у оптовика, так что ни одна цифра "
-"здесь не вводится вручную."
+"Пока ничего не продано, поэтому «продано» и «записано закупок» пусты. Они "
+"заполнятся сами с первого реального заказа — журнал закупок фиксирует каждую "
+"покупку у оптовика, так что ни одна цифра здесь не вводится вручную."
 
 #: templates/admin/index.html:10
 msgid "Live overview of QulaySIM sales, customers and eSIM activity."
@@ -4166,3 +4186,7 @@ msgid ""
 msgstr ""
 "Сумма в сумах — это то, что фактически списано с карты, зафиксировано по "
 "курсу на момент оформления заказа."
+
+#: templates/admin/otp_login.html:35
+msgid "Django site admin"
+msgstr "Панель администрирования Django"
