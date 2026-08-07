@@ -570,27 +570,15 @@ def _as_rule(proposal: Proposal):
     )
 
 
-def preview(proposals: list[Proposal], *, sample_limit: int = 60) -> Preview:
-    """What the catalogue's prices become if these rules are approved.
+def _priceable_plans():
+    """Every plan a rule could reprice, with the columns pricing reads.
 
-    Runs `calculate_price` — the same function `Plan.save()` calls — over every
-    active plan against the rule set that would exist afterwards. Nothing is
-    written and nothing is approximated.
+    One queryset used by both the preview and the save, so the two can never
+    disagree about which tariffs are in scope.
     """
-    from catalog.models import Plan, PricingRule
-    from catalog.pricing import calculate_price
+    from catalog.models import Plan
 
-    result = Preview(proposals=proposals, sample_limit=sample_limit)
-    usable = result.usable
-    if not usable:
-        return result
-
-    existing = list(PricingRule.objects.filter(is_active=True))
-    proposed = [_as_rule(p) for p in usable]
-    replaced = {_identity(rule) for rule in proposed}
-    after = [rule for rule in existing if _identity(rule) not in replaced] + proposed
-
-    plans = (
+    return (
         Plan.objects.filter(is_active=True, cost_usd__isnull=False)
         .select_related("country", "region")
         .only(
@@ -610,46 +598,103 @@ def preview(proposals: list[Proposal], *, sample_limit: int = 60) -> Preview:
         )
     )
 
-    for plan in plans:
-        if plan.price_locked:
-            # A hand-typed price outranks every rule, so it is not a change the
-            # operator is being asked to approve.
-            result.locked_skipped += 1
-            continue
-        new_price = calculate_price(plan, after)
-        if new_price is None or new_price == plan.price_usd:
-            result.unchanged += 1
-            continue
-        destination = (
-            (plan.country.name_uz or plan.country.name)
-            if plan.country_id
-            else (plan.region.name_uz or plan.region.name)
-            if plan.region_id
-            else "—"
-        )
-        result.changes.append(
-            Change(
-                plan_id=plan.id,
-                title=plan.title,
-                destination=destination,
-                cost=plan.cost_usd,
-                before=plan.price_usd,
-                after=new_price,
-            )
-        )
 
+def _movements(rules: list) -> tuple[list, int, int]:
+    """Which plans the rule set moves, and to what. Writes nothing.
+
+    Returns `(moved, unchanged, locked_skipped)` where `moved` is a list of
+    `(plan, new_price)` — the plan objects carry the new price on `price_usd`
+    already, so the caller can bulk-update them directly.
+
+    This function is the single definition of "what these rules do", called by
+    the preview to render and by the save to persist. That is not tidiness: when
+    the two were separate, the preview priced every plan while the save only
+    repriced the ones its rule's scope selected, so a tariff whose stored price
+    was stale for any other reason was promised a new price the approval never
+    delivered. Sharing the computation makes the promise true by construction.
+    """
+    from catalog.pricing import calculate_price
+
+    moved: list = []
+    unchanged = 0
+    locked = 0
+
+    for plan in _priceable_plans():
+        if plan.price_locked:
+            # A hand-typed price outranks every rule, so it is neither a change
+            # to approve nor a row to write.
+            locked += 1
+            continue
+        new_price = calculate_price(plan, rules)
+        if new_price is None or new_price == plan.price_usd:
+            unchanged += 1
+            continue
+        moved.append((plan, new_price))
+
+    return moved, unchanged, locked
+
+
+def _destination(plan) -> str:
+    if plan.country_id:
+        return plan.country.name_uz or plan.country.name
+    if plan.region_id:
+        return plan.region.name_uz or plan.region.name
+    return "—"
+
+
+def _rules_after(usable: list[Proposal]) -> list:
+    """The active rule set as it would be once these proposals are saved."""
+    from catalog.models import PricingRule
+
+    existing = list(PricingRule.objects.filter(is_active=True))
+    proposed = [_as_rule(p) for p in usable]
+    replaced = {_identity(rule) for rule in proposed}
+    return [rule for rule in existing if _identity(rule) not in replaced] + proposed
+
+
+def preview(proposals: list[Proposal], *, sample_limit: int = 60) -> Preview:
+    """What the catalogue's prices become if these rules are approved.
+
+    Runs `calculate_price` — the same function `Plan.save()` calls — over every
+    active plan against the rule set that would exist afterwards. Nothing is
+    written and nothing is approximated.
+    """
+    result = Preview(proposals=proposals, sample_limit=sample_limit)
+    usable = result.usable
+    if not usable:
+        return result
+
+    moved, result.unchanged, result.locked_skipped = _movements(_rules_after(usable))
+    result.changes = [
+        Change(
+            plan_id=plan.id,
+            title=plan.title,
+            destination=_destination(plan),
+            cost=plan.cost_usd,
+            before=plan.price_usd,
+            after=new_price,
+        )
+        for plan, new_price in moved
+    ]
     return result
 
 
 def apply(proposals: list[Proposal], *, actor: str = "") -> int:
-    """Write the approved rules. Saving each one reprices the plans it governs.
+    """Write the approved rules and every price the preview promised.
+
+    Two steps, and the second is the one that makes this feature honest. Saving
+    a rule reprices the plans that rule's own scope selects — which is right for
+    the admin's rule form and not enough here, because the operator approved a
+    list of prices, not a rule. So after the rules are written the movements are
+    recomputed with `_movements` (the same function that drew the preview) and
+    persisted, so every price shown is a price delivered.
 
     One transaction: a half-applied instruction would leave the catalogue in a
     state nobody asked for and nobody could describe.
     """
     from django.db import transaction
 
-    from catalog.models import PricingRule
+    from catalog.models import Plan, PricingRule
 
     usable = [p for p in proposals if p.ok]
     if not usable:
@@ -679,10 +724,31 @@ def apply(proposals: list[Proposal], *, actor: str = "") -> int:
                 },
             )
 
+        # Read the rules back rather than reusing the proposed ones: saving may
+        # have replaced an existing row, and what has to be applied now is the
+        # catalogue's real rule set, not the request's idea of it.
+        moved, _unchanged, _locked = _movements(
+            list(PricingRule.objects.filter(is_active=True))
+        )
+        if moved:
+            for plan, new_price in moved:
+                plan.price_usd = new_price
+            Plan.objects.bulk_update(
+                [plan for plan, _ in moved], ["price_usd"], batch_size=500
+            )
+            # bulk_update fires no post_save, so the cache signal never sees
+            # these moves and the storefront would serve the old prices for the
+            # whole TTL. on_commit, so the keys clear only once the new prices
+            # are actually visible to the API.
+            from config.cache import invalidate_catalogue
+
+            transaction.on_commit(invalidate_catalogue)
+
     logger.info(
-        "AI pricing applied by %s: %s",
+        "AI pricing applied by %s: %s (%s prices moved)",
         actor or "unknown",
         "; ".join(f"{p.scope}:{p.target}={p.markup_percent}%" for p in usable),
+        len(moved),
     )
     return len(usable)
 

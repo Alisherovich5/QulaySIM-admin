@@ -186,6 +186,38 @@ class PreviewTests(TestCase):
         for plan_id, price in promised.items():
             self.assertEqual(Plan.objects.get(pk=plan_id).price_usd, price)
 
+    def test_a_promised_price_is_delivered_even_outside_the_new_rule_s_scope(self):
+        """The bug this feature exists to prevent, found by a load check.
+
+        Saving a rule reprices only the plans that rule's own scope selects. The
+        preview prices every plan. So a tariff whose stored price was stale for
+        some other reason — a cost that moved, a rule that was deleted, a legacy
+        row — was shown a new price that approving a 1 GB rule never delivered.
+
+        Here the 5 GB tariff is deliberately left one cent off what the house
+        rule says, and the instruction is about 1 GB. Approving must still land
+        every price the preview promised.
+        """
+        stale = Decimal("14.99")
+        Plan.objects.filter(pk=self.big.pk).update(price_usd=stale)
+        self.big.refresh_from_db()
+        self.assertEqual(self.big.price_usd, stale)
+
+        proposals = self._proposals(
+            [{"scope": "tier", "tier_data_mb": 1024, "markup_percent": 200}]
+        )
+        promised = {c.plan_id: c.after for c in ai_pricing.preview(proposals).changes}
+        # The preview has to notice the stale row, or there is nothing to deliver.
+        self.assertIn(self.big.id, promised)
+
+        ai_pricing.apply(proposals, actor="test")
+        for plan_id, price in promised.items():
+            self.assertEqual(
+                Plan.objects.get(pk=plan_id).price_usd,
+                price,
+                msg=f"plan {plan_id} was promised {price} and did not get it",
+            )
+
     def test_previewing_writes_nothing(self):
         before = self.tr.price_usd
         ai_pricing.preview(
