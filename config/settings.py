@@ -187,6 +187,26 @@ FULFILLABLE_PROVIDERS = config(
 )
 
 # ---------------------------------------------------------------------------
+# The pricing assistant (catalog/ai_pricing.py).
+#
+# An operator writes an instruction in Uzbek; Claude proposes pricing *rules*;
+# the server prices the catalogue with them and shows what moves; a person
+# approves. Claude never computes a price and never writes one.
+#
+# Without a key the assistant page says so and the rest of the admin is
+# unaffected — nothing else in the project calls the API.
+#
+# The two limits below are the rails the model cannot argue past, because they
+# are checked after it has answered: a markup outside the band is refused
+# outright, and one instruction can never produce more rules than the cap. They
+# exist so a single confused answer cannot reprice a live catalogue in one click.
+# ---------------------------------------------------------------------------
+ANTHROPIC_API_KEY = config("ANTHROPIC_API_KEY", default="")
+ANTHROPIC_MODEL = config("ANTHROPIC_MODEL", default="claude-opus-5")
+AI_PRICING_MAX_MARKUP = config("AI_PRICING_MAX_MARKUP", default=1000, cast=int)
+AI_PRICING_MAX_RULES = config("AI_PRICING_MAX_RULES", default=25, cast=int)
+
+# ---------------------------------------------------------------------------
 # Wholesaler API credentials, read by `manage.py sync_catalog`.
 #
 # The catalogue is supposed to come from these, not from a CSV somebody
@@ -431,6 +451,16 @@ UNFOLD = {
                         "title": _("Pricing rules"),
                         "icon": "percent",
                         "link": reverse_lazy("admin:catalog_pricingrule_changelist"),
+                    },
+                    {
+                        "title": _("Pricing assistant"),
+                        "icon": "auto_awesome",
+                        "link": reverse_lazy("admin:catalog_pricingrule_assistant"),
+                    },
+                    {
+                        "title": _("Cost and margin report"),
+                        "icon": "lab_profile",
+                        "link": reverse_lazy("admin:catalog_plan_margin_report"),
                     },
                 ],
             },

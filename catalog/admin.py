@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib import admin, messages
 from django import forms
 from django.db import models
@@ -690,8 +691,59 @@ class PlanAdmin(ModelAdmin):
                 self.admin_site.admin_view(self.price_sheet),
                 name="catalog_plan_price_sheet",
             ),
+            path(
+                "margin-report/",
+                self.admin_site.admin_view(self.margin_report),
+                name="catalog_plan_margin_report",
+            ),
             *super().get_urls(),
         ]
+
+    def margin_report(self, request):
+        """How much we add on top of supplier cost, across the whole catalogue.
+
+        Printable: the browser's Save as PDF turns this page into the document
+        the owner asked for, which is why the layout is a document rather than a
+        dashboard. Adding a PDF library would mean shipping Cairo and Pango into
+        the image to produce a worse-looking file.
+
+        Every figure is computed in catalog/margin.py from rows we hold. The one
+        optional AI part is a paragraph of commentary over those figures, asked
+        for by a button and clearly labelled as commentary, so a wrong sentence
+        is a wrong sentence and never a wrong price.
+        """
+        from django.contrib import messages
+        from django.shortcuts import render
+
+        from catalog import margin as margin_report
+
+        report = margin_report.build_report()
+        commentary = ""
+
+        if request.method == "POST" and "explain" in request.POST:
+            from catalog.ai_pricing import AiUnavailable, explain
+
+            try:
+                commentary = explain(report)
+            except AiUnavailable as exc:
+                messages.warning(
+                    request,
+                    _("The assistant could not write the commentary: %(reason)s")
+                    % {"reason": exc},
+                )
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": _("Cost and margin report"),
+            "opts": self.model._meta,
+            "report": report,
+            "commentary": commentary,
+            "company": {
+                "name": getattr(settings, "COMPANY_NAME", ""),
+                "inn": getattr(settings, "COMPANY_INN", ""),
+            },
+        }
+        return render(request, "admin/catalog/margin_report.html", context)
 
     def price_sheet(self, request):
         """Every tariff's cost and price, by destination, editable in place.
@@ -1244,6 +1296,109 @@ class PricingRuleAdmin(ModelAdmin):
         (_("What this does"), {"fields": ("plain_summary", "effective_reach", "price_preview")}),
         (_("Admin"), {"fields": ("is_active", "note")}),
     )
+
+    # --- Plain-language rule assistant --------------------------------------
+
+    def get_urls(self):
+        from django.urls import path
+
+        return [
+            path(
+                "assistant/",
+                self.admin_site.admin_view(self.assistant),
+                name="catalog_pricingrule_assistant",
+            ),
+            *super().get_urls(),
+        ]
+
+    def assistant(self, request):
+        """Say what you want in Uzbek; see every price it would move; approve it.
+
+        Three steps, and the middle one is the reason this is safe to have. The
+        model reads the sentence and proposes rules. This view then runs the real
+        pricing code over the real catalogue to work out what those rules would
+        do, and shows it. Nothing is written until a second POST carrying the
+        approved proposals arrives.
+
+        The model's answer is round-tripped through the form as JSON rather than
+        held in the session, so approving is always approving the thing on the
+        screen — there is no window in which a stale proposal from another tab
+        could be the one that gets saved.
+        """
+        import json
+
+        from django.contrib import messages
+        from django.shortcuts import redirect, render
+        from django.urls import reverse
+
+        from catalog import ai_pricing
+
+        if not self.has_add_permission(request):
+            messages.error(request, _("You do not have permission to change pricing rules."))
+            return redirect(reverse("admin:catalog_pricingrule_changelist"))
+
+        instruction = (request.POST.get("instruction") or "").strip()
+        result = None
+        payload_json = ""
+
+        if request.method == "POST" and request.POST.get("step") == "apply":
+            # Approving re-validates from scratch. The hidden field is operator
+            # input like any other, and a rule that was refused when it was
+            # proposed has to stay refused when it comes back.
+            try:
+                payload = json.loads(request.POST.get("payload") or "{}")
+            except json.JSONDecodeError:
+                messages.error(request, _("The proposal could not be read. Ask again."))
+                return redirect(request.path)
+
+            proposals = ai_pricing.validate(payload)
+            written = ai_pricing.apply(proposals, actor=request.user.get_username())
+            if written:
+                messages.success(
+                    request,
+                    _("%(count)s rule(s) saved. Prices have been recalculated.")
+                    % {"count": written},
+                )
+                return redirect(reverse("admin:catalog_pricingrule_changelist"))
+            messages.error(request, _("Nothing was saved — no usable rule remained."))
+            return redirect(request.path)
+
+        if request.method == "POST" and instruction:
+            try:
+                payload = ai_pricing.ask(instruction)
+            except ai_pricing.AiUnavailable as exc:
+                messages.error(request, str(exc))
+                payload = None
+            except ValueError:
+                messages.error(request, _("The assistant's answer could not be read."))
+                payload = None
+
+            if payload is not None:
+                proposals = ai_pricing.validate(payload)
+                result = ai_pricing.preview(proposals)
+                result.understood = str(payload.get("understood") or "")
+                result.question = str(payload.get("question") or "")
+                result.confident = bool(payload.get("confident", True))
+                payload_json = json.dumps(payload, ensure_ascii=False)
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": _("Pricing assistant"),
+            "opts": self.model._meta,
+            "instruction": instruction,
+            "result": result,
+            "payload_json": payload_json,
+            "configured": bool(getattr(settings, "ANTHROPIC_API_KEY", "")),
+            "max_markup": ai_pricing.MAX_MARKUP,
+            "max_rules": ai_pricing.MAX_RULES,
+            "examples": [
+                _("Every 1 GB tariff earns 200%."),
+                _("Turkey and Georgia at 60%, everything else stays."),
+                _("Nothing may earn less than half a dollar."),
+                _("Prices should end in .99."),
+            ],
+        }
+        return render(request, "admin/catalog/ai_pricing.html", context)
 
     @display(description=_("Traffic size"), ordering="tier_data_mb")
     def tier_col(self, obj):

@@ -1,0 +1,288 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% comment %}
+Narx yordamchisi — o'zbekcha bitta jumla, keyin nima o'zgarishini ko'rish, keyin
+tasdiqlash.
+
+Uch qadam, va o'rtadagisi butun xavfsizlik shu yerda. Model jumlani o'qib qoida
+taklif qiladi. Server o'sha qoidalarni haqiqiy katalogga haqiqiy narx kodi bilan
+qo'llab ko'radi va nima o'zgarishini ko'rsatadi. Odam tasdiqlamaguncha bazaga
+hech narsa yozilmaydi.
+
+Modelning javobi sessiyada emas, formada JSON bo'lib qaytadi — shuning uchun
+tasdiqlash doim ekrandagi narsani tasdiqlash bo'ladi, boshqa oynadagi eski
+taklif emas.
+{% endcomment %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+  .qs-ai { max-width: 62rem; }
+  .qs-ai__intro { margin:0 0 1.2rem; padding:.9rem 1.1rem; border-radius:.6rem;
+    background:var(--qs-surface-2,#f6f8fa); font-size:.86rem; line-height:1.7; }
+  .qs-ai__intro b { font-weight:800; }
+
+  .qs-ai__box { padding:1.1rem; border:1px solid var(--qs-line,#d5dbe3); border-radius:.8rem;
+    background:var(--qs-surface,#fff); margin-bottom:1.4rem; }
+  .qs-ai__lbl { display:block; margin-bottom:.4rem; font-size:.72rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.04em; color:var(--qs-ink-soft,#64748b); }
+  .qs-ai__ta { width:100%; min-height:5.5rem; padding:.7rem .85rem; font:inherit; font-size:.95rem;
+    line-height:1.6; border:1px solid var(--qs-line,#d5dbe3); border-radius:.55rem;
+    background:var(--qs-surface,#fff); color:inherit; resize:vertical; box-sizing:border-box; }
+  .qs-ai__ta:focus { outline:2px solid var(--qs-accent,#2563eb); outline-offset:1px; }
+  .qs-ai__row { display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; margin-top:.8rem; }
+  .qs-ai__btn { padding:.55rem 1.15rem; border:1px solid var(--qs-line,#d5dbe3); border-radius:.5rem;
+    cursor:pointer; font-weight:700; font-size:.88rem; background:var(--qs-surface-2,#f6f8fa);
+    color:inherit; text-decoration:none; }
+  .qs-ai__btn--go { background:var(--qs-ink,#111827); color:#fff; border-color:var(--qs-ink,#111827); }
+  .qs-ai__btn--ok { background:var(--qs-good,#15803d); color:#fff; border-color:var(--qs-good,#15803d); }
+  .qs-ai__btn[disabled] { opacity:.5; cursor:not-allowed; }
+
+  .qs-ai__chips { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.8rem; }
+  .qs-ai__chip { padding:.3rem .7rem; font-size:.78rem; border-radius:1rem; cursor:pointer;
+    border:1px solid var(--qs-line,#d5dbe3); background:transparent; color:var(--qs-ink-soft,#64748b); }
+  .qs-ai__chip:hover { color:inherit; border-color:var(--qs-accent,#2563eb); }
+
+  .qs-ai__said { margin:0 0 1.2rem; padding:.9rem 1.1rem; border-radius:.6rem;
+    border-left:3px solid var(--qs-accent,#2563eb); background:var(--qs-surface-2,#f6f8fa);
+    font-size:.9rem; line-height:1.65; }
+  .qs-ai__said em { display:block; margin-bottom:.3rem; font-style:normal; font-size:.7rem;
+    font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--qs-ink-soft,#64748b); }
+  .qs-ai__ask { border-left-color:var(--qs-accent-text,#a16207);
+    background:var(--qs-warn-wash,#fef6e7); color:var(--qs-accent-text,#a16207); }
+
+  .qs-ai__sec { margin-bottom:1.5rem; }
+  .qs-ai__h { margin:0 0 .15rem; font-size:1rem; font-weight:800; }
+  .qs-ai__hint { margin:0 0 .6rem; font-size:.8rem; line-height:1.55; color:var(--qs-ink-soft,#64748b); }
+
+  .qs-ai__t { width:100%; border-collapse:collapse; }
+  .qs-ai__t th, .qs-ai__t td { padding:.45rem .4rem; font-size:.84rem; text-align:left;
+    border-bottom:1px solid var(--qs-line,#d5dbe3); }
+  .qs-ai__t th { font-size:.68rem; text-transform:uppercase; letter-spacing:.04em;
+    font-weight:700; color:var(--qs-ink-soft,#64748b); }
+  .qs-ai__t .r { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .qs-ai__mute { color:var(--qs-ink-soft,#64748b); }
+  .qs-ai__up { color:var(--qs-good-text,#15803d); font-weight:700; }
+  .qs-ai__down { color:var(--qs-bad-text,#b42318); font-weight:700; }
+  .qs-ai__bad { padding:.5rem .7rem; border-radius:.45rem; font-size:.82rem;
+    background:var(--qs-bad-wash,#fef3f2); color:var(--qs-bad-text,#b42318); }
+
+  .qs-ai__tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));
+    gap:.7rem; margin:.6rem 0 1rem; }
+  .qs-ai__tile { padding:.75rem .9rem; border:1px solid var(--qs-line,#d5dbe3);
+    border-radius:.6rem; background:var(--qs-surface,#fff); }
+  .qs-ai__tile b { display:block; font-size:1.35rem; font-weight:800; letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums; line-height:1.25; }
+  .qs-ai__tile span { display:block; margin-top:.1rem; font-size:.7rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.04em; color:var(--qs-ink-soft,#64748b); }
+
+  .qs-ai__scroll { max-height:26rem; overflow:auto; border:1px solid var(--qs-line,#d5dbe3);
+    border-radius:.6rem; }
+  .qs-ai__scroll table { margin:0; }
+  .qs-ai__scroll thead th { position:sticky; top:0; z-index:1;
+    background:var(--qs-surface,#fff); }
+  .qs-ai__approve { padding:1rem 1.1rem; border:1px solid var(--qs-line,#d5dbe3);
+    border-radius:.7rem; background:var(--qs-surface-2,#f6f8fa); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qs-ai">
+
+  <p class="qs-ai__intro">
+    {% blocktrans trimmed %}
+    Write what you want in plain Uzbek. The assistant turns it into pricing rules,
+    the server works out <b>exactly</b> which prices would move — using the same
+    code that prices the catalogue — and shows you before anything is saved.
+    Nothing is written until you approve it, and a tariff whose price you typed by
+    hand is never touched.
+    {% endblocktrans %}
+  </p>
+
+  {% if not configured %}
+    <p class="qs-ai__bad">
+      {% blocktrans trimmed %}
+      ANTHROPIC_API_KEY is not set on the server, so the assistant cannot be
+      reached. Pricing rules can still be written by hand on the rules page.
+      {% endblocktrans %}
+    </p>
+  {% endif %}
+
+  <form method="post" class="qs-ai__box">
+    {% csrf_token %}
+    <label class="qs-ai__lbl" for="qs-ai-instruction">{% trans "What should change?" %}</label>
+    <textarea class="qs-ai__ta" id="qs-ai-instruction" name="instruction"
+      placeholder="{% trans 'e.g. Every 1 GB tariff should earn 200%, and nothing may make less than half a dollar.' %}"
+      {% if not configured %}disabled{% endif %}>{{ instruction }}</textarea>
+    <div class="qs-ai__row">
+      <button type="submit" class="qs-ai__btn qs-ai__btn--go" {% if not configured %}disabled{% endif %}>
+        {% trans "Show me what would change" %}
+      </button>
+      <a class="qs-ai__btn" href="{% url 'admin:catalog_plan_margin_report' %}">{% trans "Margin report" %}</a>
+      <a class="qs-ai__btn" href="{% url 'admin:catalog_pricingrule_changelist' %}">{% trans "Rules by hand" %}</a>
+    </div>
+    <div class="qs-ai__chips">
+      {% for example in examples %}
+        <button type="button" class="qs-ai__chip"
+          onclick="document.getElementById('qs-ai-instruction').value=this.textContent.trim();">{{ example }}</button>
+      {% endfor %}
+    </div>
+  </form>
+
+  {% if result %}
+
+    {% if result.understood %}
+      <div class="qs-ai__said">
+        <em>{% trans "Understood as" %}</em>
+        {{ result.understood }}
+      </div>
+    {% endif %}
+
+    {% if not result.confident and result.question %}
+      <div class="qs-ai__said qs-ai__ask">
+        <em>{% trans "Needs clarifying before this is safe to apply" %}</em>
+        {{ result.question }}
+      </div>
+    {% endif %}
+
+    {% if result.rejected %}
+      <div class="qs-ai__sec">
+        <h2 class="qs-ai__h">{% trans "Refused" %}</h2>
+        <p class="qs-ai__hint">
+          {% blocktrans trimmed %}
+          These were proposed and turned down by the server's own checks, not by
+          the assistant. They will not be saved.
+          {% endblocktrans %}
+        </p>
+        <table class="qs-ai__t">
+          <tbody>
+            {% for item in result.rejected %}
+              <tr>
+                <td>{{ item.target }} · +{{ item.markup_percent }}%</td>
+                <td class="qs-ai__down">{{ item.problem }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+    {% if result.usable %}
+      <div class="qs-ai__sec">
+        <h2 class="qs-ai__h">{% trans "Proposed rules" %}</h2>
+        <p class="qs-ai__hint">{% trans "The narrowest rule about a tariff wins. Saving one replaces any existing rule with the same target." %}</p>
+        <table class="qs-ai__t">
+          <thead>
+            <tr>
+              <th>{% trans "Applies to" %}</th>
+              <th class="r">{% trans "Markup" %}</th>
+              <th class="r">{% trans "Floor" %}</th>
+              <th>{% trans "Rounding" %}</th>
+              <th>{% trans "Why" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in result.usable %}
+              <tr>
+                <td><b>{{ item.target }}</b></td>
+                <td class="r">+{{ item.markup_percent }}%</td>
+                <td class="r">{% if item.min_margin_usd %}${{ item.min_margin_usd }}{% else %}<span class="qs-ai__mute">—</span>{% endif %}</td>
+                <td class="qs-ai__mute">{{ item.rounding }}</td>
+                <td class="qs-ai__mute">{{ item.reason }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="qs-ai__sec">
+        <h2 class="qs-ai__h">{% trans "What that does to prices" %}</h2>
+        <p class="qs-ai__hint">
+          {% blocktrans trimmed %}
+          Not an estimate. Every active tariff was run through the real pricing
+          code against the rules above; these are the prices they become.
+          {% endblocktrans %}
+        </p>
+
+        <div class="qs-ai__tiles">
+          <div class="qs-ai__tile"><b>{{ result.moved }}</b><span>{% trans "tariffs move" %}</span></div>
+          <div class="qs-ai__tile"><b class="qs-ai__up">↑ {{ result.raised }}</b><span>{% trans "go up" %}</span></div>
+          <div class="qs-ai__tile"><b class="qs-ai__down">↓ {{ result.lowered }}</b><span>{% trans "go down" %}</span></div>
+          <div class="qs-ai__tile"><b>{{ result.unchanged }}</b><span>{% trans "unchanged" %}</span></div>
+          <div class="qs-ai__tile"><b>{{ result.locked_skipped }}</b><span>{% trans "hand-priced, untouched" %}</span></div>
+          <div class="qs-ai__tile"><b>${{ result.margin_delta|floatformat:2 }}</b><span>{% trans "profit per unit, summed" %}</span></div>
+        </div>
+
+        {% if result.changes %}
+          <p class="qs-ai__hint">
+            {% blocktrans trimmed with shown=result.sample|length total=result.moved %}
+            The {{ shown }} biggest movers of {{ total }}, largest change first.
+            {% endblocktrans %}
+          </p>
+          <div class="qs-ai__scroll">
+            <table class="qs-ai__t">
+              <thead>
+                <tr>
+                  <th>{% trans "Tariff" %}</th>
+                  <th>{% trans "Destination" %}</th>
+                  <th class="r">{% trans "Cost" %}</th>
+                  <th class="r">{% trans "Now" %}</th>
+                  <th class="r">{% trans "Becomes" %}</th>
+                  <th class="r">{% trans "Profit" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for change in result.sample %}
+                  <tr>
+                    <td>{{ change.title }}</td>
+                    <td class="qs-ai__mute">{{ change.destination }}</td>
+                    <td class="r qs-ai__mute">${{ change.cost|floatformat:2 }}</td>
+                    <td class="r qs-ai__mute">${{ change.before|floatformat:2 }}</td>
+                    <td class="r"><b>${{ change.after|floatformat:2 }}</b></td>
+                    <td class="r {% if change.delta > 0 %}qs-ai__up{% else %}qs-ai__down{% endif %}">
+                      ${{ change.margin_before|floatformat:2 }} → ${{ change.margin_after|floatformat:2 }}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="qs-ai__hint">
+            {% blocktrans trimmed %}
+            No price would move. Either the rules match what is already in force,
+            or every tariff they cover has a hand-typed price.
+            {% endblocktrans %}
+          </p>
+        {% endif %}
+      </div>
+
+      <form method="post" class="qs-ai__approve">
+        {% csrf_token %}
+        <input type="hidden" name="step" value="apply">
+        <input type="hidden" name="payload" value="{{ payload_json }}">
+        <input type="hidden" name="instruction" value="{{ instruction }}">
+        <p style="margin:0 0 .7rem;font-size:.86rem;line-height:1.6;">
+          {% blocktrans trimmed count n=result.usable|length %}
+          Saving {{ n }} rule. Prices are recalculated immediately and the site
+          shows the new ones.
+          {% plural %}
+          Saving {{ n }} rules. Prices are recalculated immediately and the site
+          shows the new ones.
+          {% endblocktrans %}
+          {% if not result.confident %}
+            <br><b>{% trans "The assistant was not confident about this one — read the question above first." %}</b>
+          {% endif %}
+        </p>
+        <button type="submit" class="qs-ai__btn qs-ai__btn--ok">
+          {% trans "Approve and save" %}
+        </button>
+      </form>
+    {% elif not result.rejected %}
+      <p class="qs-ai__hint">{% trans "The assistant proposed no rule for this instruction." %}</p>
+    {% endif %}
+
+  {% endif %}
+</div>
+{% endblock %}

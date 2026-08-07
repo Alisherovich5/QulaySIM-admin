@@ -15,3 +15,8 @@ django-ipware>=7.0
 # and Russian so 193 destinations do not have to be translated by hand.
 requests>=2.32
 Babel>=2.14
+
+# The pricing assistant: an operator's sentence in Uzbek becomes pricing-rule
+# proposals a human previews and approves. Claude never computes a price and
+# never writes one — see catalog/ai_pricing.py.
+anthropic>=0.60

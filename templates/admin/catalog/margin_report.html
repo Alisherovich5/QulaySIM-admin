@@ -1,0 +1,332 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% comment %}
+Tannarx va ustama hisoboti — bosib chiqarish uchun.
+
+Brauzerning "Save as PDF" tugmasi bu sahifani PDF qiladi, shuning uchun tartibi
+dashboard emas, hujjat. PDF kutubxonasi qo'shish Docker imijiga Cairo va Pango
+olib kirar va natijasi shundan yomonroq chiqar edi.
+
+Har bir raqam catalog/margin.py da bazadagi qatorlardan hisoblanadi. AI faqat
+tepadagi izohni yozadi va u alohida belgilangan — noto'g'ri jumla noto'g'ri
+jumla bo'lib qoladi, hech qachon noto'g'ri narx emas.
+{% endcomment %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+  .qs-mr { max-width: 64rem; }
+  .qs-mr__bar { display:flex; flex-wrap:wrap; gap:.6rem; margin:0 0 1.2rem; }
+  .qs-mr__btn { padding:.5rem 1rem; border:1px solid var(--qs-line,#d5dbe3); border-radius:.5rem;
+    cursor:pointer; font-weight:700; background:var(--qs-surface-2,#f6f8fa); color:inherit;
+    text-decoration:none; font-size:.85rem; }
+  .qs-mr__btn--go { background:var(--qs-ink,#111827); color:#fff; border-color:var(--qs-ink,#111827); }
+
+  .qs-mr__head { padding-bottom:1rem; margin-bottom:1.4rem;
+    border-bottom:2px solid var(--qs-line,#d5dbe3); display:flex; flex-wrap:wrap;
+    gap:1rem; justify-content:space-between; align-items:flex-start; }
+  .qs-mr__title { font-size:1.35rem; font-weight:800; letter-spacing:-.01em; }
+  .qs-mr__sub { margin-top:.2rem; font-size:.82rem; color:var(--qs-ink-soft,#64748b); }
+  .qs-mr__when { text-align:right; font-size:.8rem; color:var(--qs-ink-soft,#64748b); line-height:1.6; }
+
+  .qs-mr__tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));
+    gap:.8rem; margin-bottom:1.6rem; }
+  .qs-mr__tile { padding:.85rem 1rem; border:1px solid var(--qs-line,#d5dbe3); border-radius:.7rem;
+    background:var(--qs-surface,#fff); }
+  .qs-mr__tile b { display:block; font-size:1.5rem; font-weight:800; letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums; line-height:1.2; }
+  .qs-mr__tile span { display:block; margin-top:.15rem; font-size:.72rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.04em; color:var(--qs-ink-soft,#64748b); }
+  .qs-mr__tile--warn b { color:var(--qs-bad-text,#b42318); }
+
+  .qs-mr__note { margin:0 0 1.6rem; padding:.9rem 1.1rem; border-radius:.6rem;
+    border-left:3px solid var(--qs-accent,#2563eb); background:var(--qs-surface-2,#f6f8fa);
+    font-size:.88rem; line-height:1.65; }
+  .qs-mr__note em { display:block; margin-bottom:.35rem; font-style:normal; font-size:.7rem;
+    font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--qs-ink-soft,#64748b); }
+
+  .qs-mr__sec { margin-bottom:1.8rem; break-inside:avoid; }
+  .qs-mr__h { margin:0 0 .15rem; font-size:1rem; font-weight:800; }
+  .qs-mr__hint { margin:0 0 .6rem; font-size:.8rem; line-height:1.55;
+    color:var(--qs-ink-soft,#64748b); }
+
+  .qs-mr__t { width:100%; border-collapse:collapse; }
+  .qs-mr__t th, .qs-mr__t td { padding:.45rem .4rem; font-size:.84rem; text-align:left;
+    border-bottom:1px solid var(--qs-line,#d5dbe3); }
+  .qs-mr__t th { font-size:.68rem; text-transform:uppercase; letter-spacing:.04em;
+    font-weight:700; color:var(--qs-ink-soft,#64748b); }
+  .qs-mr__t .r { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .qs-mr__t tbody tr:last-child td { border-bottom:0; }
+  .qs-mr__bad { color:var(--qs-bad-text,#b42318); font-weight:700; }
+  .qs-mr__mute { color:var(--qs-ink-soft,#64748b); }
+
+  /* Magnitude, one hue — the bar is the same number as the column beside it. */
+  .qs-mr__meter { display:block; height:.5rem; min-width:2px; border-radius:0 4px 4px 0;
+    background:var(--qs-accent,#2563eb); }
+  .qs-mr__meterwrap { width:7rem; }
+
+  .qs-mr__foot { margin-top:2rem; padding-top:.9rem; font-size:.76rem; line-height:1.65;
+    color:var(--qs-ink-soft,#64748b); border-top:1px solid var(--qs-line,#d5dbe3); }
+
+  @media print {
+    .qs-mr__bar, #nav-sidebar, header, nav, .qs-mr__noprint, .messagelist { display:none !important; }
+    body { background:#fff !important; }
+    .qs-mr { max-width:none; }
+    .qs-mr__tile, .qs-mr__t { break-inside:avoid; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qs-mr">
+
+  <div class="qs-mr__bar qs-mr__noprint">
+    <button type="button" class="qs-mr__btn" onclick="window.print()">🖨 {% trans "Save as PDF" %}</button>
+    <form method="post" style="display:inline">{% csrf_token %}
+      <button type="submit" name="explain" value="1" class="qs-mr__btn qs-mr__btn--go">
+        {% if commentary %}↻ {% trans "Rewrite the commentary" %}{% else %}✨ {% trans "Ask for a commentary" %}{% endif %}
+      </button>
+    </form>
+    <a class="qs-mr__btn" href="{% url 'admin:catalog_pricingrule_assistant' %}">{% trans "Pricing assistant" %}</a>
+    <a class="qs-mr__btn" href="{% url 'admin:catalog_plan_price_sheet' %}">{% trans "Price sheet" %}</a>
+  </div>
+
+  <div class="qs-mr__head">
+    <div>
+      <div class="qs-mr__title">{% trans "Cost and margin" %}</div>
+      <div class="qs-mr__sub">
+        {% if company.name %}{{ company.name }}{% if company.inn %} · {% trans "INN" %} {{ company.inn }}{% endif %}
+        {% else %}QulaySIM{% endif %}
+      </div>
+    </div>
+    <div class="qs-mr__when">
+      {{ report.generated_at|date:"d.m.Y, H:i" }}<br>
+      {% blocktrans trimmed with n=report.counted %}{{ n }} active tariffs counted{% endblocktrans %}
+    </div>
+  </div>
+
+  <div class="qs-mr__tiles">
+    <div class="qs-mr__tile">
+      <b>{{ report.overall.markup_percent|default:"—" }}%</b>
+      <span>{% trans "Blended markup" %}</span>
+    </div>
+    <div class="qs-mr__tile">
+      <b>${{ report.overall.cost_total|floatformat:2 }}</b>
+      <span>{% trans "Total cost" %}</span>
+    </div>
+    <div class="qs-mr__tile">
+      <b>${{ report.overall.price_total|floatformat:2 }}</b>
+      <span>{% trans "Total price" %}</span>
+    </div>
+    <div class="qs-mr__tile">
+      <b>${{ report.overall.margin_total|floatformat:2 }}</b>
+      <span>{% trans "Added on top" %}</span>
+    </div>
+    <div class="qs-mr__tile {% if report.thin_total %}qs-mr__tile--warn{% endif %}">
+      <b>{{ report.thin_total }}</b>
+      <span>{% blocktrans trimmed with limit=report.thin_margin_usd %}under ${{ limit }} profit{% endblocktrans %}</span>
+    </div>
+    <div class="qs-mr__tile">
+      <b>{{ report.overall.locked }}</b>
+      <span>{% trans "Hand-priced" %}</span>
+    </div>
+  </div>
+
+  {% if commentary %}
+    <div class="qs-mr__note">
+      <em>{% trans "Assistant's reading of the figures above" %}</em>
+      {{ commentary|linebreaksbr }}
+    </div>
+  {% endif %}
+
+  <div class="qs-mr__sec">
+    <h2 class="qs-mr__h">{% trans "By traffic size" %}</h2>
+    <p class="qs-mr__hint">
+      {% blocktrans trimmed %}
+      This is the axis the margin problem lives on. One percentage cannot price a
+      catalogue whose costs run from cents to hundreds of dollars: the same markup
+      that earns pennies on a 1 GB tariff earns tens of dollars on a 50 GB one.
+      {% endblocktrans %}
+    </p>
+    <table class="qs-mr__t">
+      <thead>
+        <tr>
+          <th>{% trans "Size" %}</th>
+          <th class="r">{% trans "Tariffs" %}</th>
+          <th class="r">{% trans "Cost" %}</th>
+          <th class="r">{% trans "Price" %}</th>
+          <th class="r">{% trans "Markup" %}</th>
+          <th class="qs-mr__noprint"></th>
+          <th class="r">{% trans "Profit each" %}</th>
+          <th class="r">{% trans "Thin" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in report.sizes %}
+          <tr>
+            <td><b>{{ row.label }}</b></td>
+            <td class="r">{{ row.count }}</td>
+            <td class="r">${{ row.cost_total|floatformat:2 }}</td>
+            <td class="r">${{ row.price_total|floatformat:2 }}</td>
+            <td class="r">{% if row.markup_percent %}{{ row.markup_percent|floatformat:0 }}%{% else %}—{% endif %}</td>
+            <td class="qs-mr__noprint qs-mr__meterwrap">
+              {% if row.markup_percent %}
+                <span class="qs-mr__meter" style="width:{% widthratio row.markup_percent 400 100 %}%"></span>
+              {% endif %}
+            </td>
+            <td class="r {% if row.thin %}qs-mr__bad{% endif %}">${{ row.margin_each|floatformat:2 }}</td>
+            <td class="r">{% if row.thin %}<span class="qs-mr__bad">{{ row.thin }}</span>{% else %}<span class="qs-mr__mute">0</span>{% endif %}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="8" class="qs-mr__mute">{% trans "No priced tariffs yet." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if report.thin %}
+    <div class="qs-mr__sec">
+      <h2 class="qs-mr__h">{% trans "Earning too little" %}</h2>
+      <p class="qs-mr__hint">
+        {% blocktrans trimmed with limit=report.thin_margin_usd total=report.thin_total shown=report.thin|length %}
+        {{ total }} tariffs earn less than ${{ limit }} on a sale — roughly what a
+        card fee takes. The {{ shown }} thinnest are listed; the markup is fixed on
+        the pricing assistant or the price sheet, by traffic size rather than one
+        tariff at a time.
+        {% endblocktrans %}
+      </p>
+      <table class="qs-mr__t">
+        <thead>
+          <tr>
+            <th>{% trans "Tariff" %}</th>
+            <th>{% trans "Destination" %}</th>
+            <th class="r">{% trans "Cost" %}</th>
+            <th class="r">{% trans "Price" %}</th>
+            <th class="r">{% trans "Profit" %}</th>
+            <th class="r">{% trans "Markup" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in report.thin %}
+            <tr>
+              <td>
+                <a href="{% url 'admin:catalog_plan_change' item.plan_id %}">{{ item.title }}</a>
+                {% if item.locked %}<span class="qs-mr__mute" title="{% trans 'Hand-priced' %}"> 🔒</span>{% endif %}
+              </td>
+              <td class="qs-mr__mute">{{ item.destination }}</td>
+              <td class="r">${{ item.cost|floatformat:2 }}</td>
+              <td class="r">${{ item.price|floatformat:2 }}</td>
+              <td class="r qs-mr__bad">${{ item.margin|floatformat:2 }}</td>
+              <td class="r">{% if item.markup_percent %}{{ item.markup_percent|floatformat:0 }}%{% else %}—{% endif %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+  <div class="qs-mr__sec">
+    <h2 class="qs-mr__h">{% trans "Lowest-markup destinations" %}</h2>
+    <p class="qs-mr__hint">{% trans "The twenty destinations we add least to, in order." %}</p>
+    <table class="qs-mr__t">
+      <thead>
+        <tr>
+          <th>{% trans "Destination" %}</th>
+          <th class="r">{% trans "Tariffs" %}</th>
+          <th class="r">{% trans "Cost" %}</th>
+          <th class="r">{% trans "Price" %}</th>
+          <th class="r">{% trans "Markup" %}</th>
+          <th class="r">{% trans "Profit each" %}</th>
+          <th class="r">{% trans "Thin" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in report.destinations|slice:":20" %}
+          <tr>
+            <td>{{ row.label }}</td>
+            <td class="r">{{ row.count }}</td>
+            <td class="r">${{ row.cost_total|floatformat:2 }}</td>
+            <td class="r">${{ row.price_total|floatformat:2 }}</td>
+            <td class="r">{% if row.markup_percent %}{{ row.markup_percent|floatformat:0 }}%{% else %}—{% endif %}</td>
+            <td class="r">${{ row.margin_each|floatformat:2 }}</td>
+            <td class="r">{% if row.thin %}<span class="qs-mr__bad">{{ row.thin }}</span>{% else %}<span class="qs-mr__mute">0</span>{% endif %}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7" class="qs-mr__mute">{% trans "No priced tariffs yet." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="qs-mr__sec">
+    <h2 class="qs-mr__h">{% trans "By supplier" %}</h2>
+    <table class="qs-mr__t">
+      <thead>
+        <tr>
+          <th>{% trans "Supplier" %}</th>
+          <th class="r">{% trans "Tariffs" %}</th>
+          <th class="r">{% trans "Cost" %}</th>
+          <th class="r">{% trans "Price" %}</th>
+          <th class="r">{% trans "Markup" %}</th>
+          <th class="r">{% trans "Profit each" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in report.providers %}
+          <tr>
+            <td>{{ row.label }}</td>
+            <td class="r">{{ row.count }}</td>
+            <td class="r">${{ row.cost_total|floatformat:2 }}</td>
+            <td class="r">${{ row.price_total|floatformat:2 }}</td>
+            <td class="r">{% if row.markup_percent %}{{ row.markup_percent|floatformat:0 }}%{% else %}—{% endif %}</td>
+            <td class="r">${{ row.margin_each|floatformat:2 }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="qs-mr__mute">{% trans "No priced tariffs yet." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="qs-mr__sec">
+    <h2 class="qs-mr__h">{% trans "What actually sold" %}</h2>
+    {% if report.sales.units %}
+      <p class="qs-mr__hint">
+        {% blocktrans trimmed %}
+        Measured against today's supplier cost. The cost at the moment of each
+        sale is not stored — the price the customer paid is frozen on the order,
+        but the cost moves with every nightly sync — so this is what those sales
+        would earn at current costs, not a historical figure.
+        {% endblocktrans %}
+      </p>
+      <table class="qs-mr__t">
+        <tbody>
+          <tr><td>{% trans "eSIMs sold" %}</td><td class="r">{{ report.sales.units }}</td></tr>
+          <tr><td>{% trans "Revenue" %}</td><td class="r">${{ report.sales.revenue|floatformat:2 }}</td></tr>
+          <tr><td>{% trans "Supplier cost" %}</td><td class="r">${{ report.sales.cost|floatformat:2 }}</td></tr>
+          <tr><td><b>{% trans "Profit" %}</b></td><td class="r"><b>${{ report.sales.margin|floatformat:2 }}</b></td></tr>
+          <tr><td>{% trans "Markup" %}</td><td class="r">{% if report.sales.markup_percent %}{{ report.sales.markup_percent|floatformat:1 }}%{% else %}—{% endif %}</td></tr>
+        </tbody>
+      </table>
+    {% else %}
+      <p class="qs-mr__hint">{% trans "Nothing has been sold yet, so there is no realised margin to report." %}</p>
+    {% endif %}
+  </div>
+
+  <div class="qs-mr__foot">
+    {% blocktrans trimmed with skipped=report.no_cost off=report.inactive %}
+    Every figure above is computed from the catalogue, not estimated. {{ skipped }}
+    tariffs are left out because no supplier cost is recorded for them, and
+    {{ off }} because they are switched off — counting either as zero margin would
+    invent a problem that is really a missing number.
+    {% endblocktrans %}
+    {% if commentary %}
+      {% blocktrans trimmed %}
+      The commentary near the top is written by the assistant over these same
+      figures; it does not compute any of them.
+      {% endblocktrans %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
