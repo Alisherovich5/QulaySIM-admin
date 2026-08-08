@@ -36,6 +36,8 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.cache import cache
 
+from catalog.supplier_api import ESIMACCESS_PRICE_DIVISOR
+
 REQUEST_TIMEOUT = 20
 BALANCE_CACHE_SECONDS = 60
 
@@ -128,10 +130,15 @@ def _esimaccess_balance() -> Balance:
     if raw is None:
         result.error = "no balance in the response"
         return result
-    # eSIM Access quotes money in 1/10000 USD everywhere else in its API; the
-    # balance endpoint answers in whole dollars, so it is taken as given rather
-    # than scaled on a guess.
-    result.amount = Decimal(str(raw)).quantize(Decimal("0.01"))
+    # eSIM Access quotes money in 1/10000 USD across its API — the same divisor
+    # the package sync already applies to every cost it imports. The balance is
+    # no exception: a wallet holding $50 answers 500000. Reading it as dollars
+    # showed a $500 000 float on the supplier page, which is not an amount this
+    # shop has ever held, and would have made an empty-wallet check pass on a
+    # number four orders of magnitude wrong.
+    result.amount = (Decimal(str(raw)) / ESIMACCESS_PRICE_DIVISOR).quantize(
+        Decimal("0.01")
+    )
     return result
 
 

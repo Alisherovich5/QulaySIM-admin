@@ -65,6 +65,30 @@ class BalanceTests(TestCase):
         self.assertEqual(balance.error, "bad signature")
 
     @override_settings(ESIMACCESS_ACCESS_CODE="code", ESIMACCESS_SECRET_KEY="s")
+    def test_the_balance_is_scaled_out_of_ten_thousandths(self):
+        """A $50 wallet answers 500000, not 50.
+
+        eSIM Access quotes money in 1/10000 USD across its API — the same
+        divisor the package sync applies to every imported cost. Reading the
+        balance as dollars put $500 000 on the supplier page, an amount this
+        shop has never held, and would have let an empty-wallet check pass on a
+        figure four orders of magnitude wrong.
+        """
+
+        class Response:
+            status_code = 200
+
+            def json(self):
+                return {"success": True, "obj": {"balance": 500000}}
+
+        with patch("requests.post", return_value=Response()):
+            balance = suppliers._esimaccess_balance()
+
+        self.assertTrue(balance.known)
+        self.assertFalse(balance.empty)
+        self.assertEqual(balance.amount, Decimal("50.00"))
+
+    @override_settings(ESIMACCESS_ACCESS_CODE="code", ESIMACCESS_SECRET_KEY="s")
     def test_a_real_zero_is_reported_as_empty(self):
         class Response:
             status_code = 200
@@ -84,7 +108,8 @@ class BalanceTests(TestCase):
             status_code = 200
 
             def json(self):
-                return {"success": True, "obj": {"balance": 250.5}}
+                # 1/10000 USD, the unit this API uses for money: $250.50.
+                return {"success": True, "obj": {"balance": 2505000}}
 
         with patch("requests.post", return_value=Response()):
             balance = suppliers._esimaccess_balance()
