@@ -563,3 +563,23 @@ input[type="submit"] {
 body:not(:has(#modal-content:not(:empty))) #modal-overlay {
   display: none !important;
 }
+/* And the wrapper it sits in, which is the one that actually costs something.
+ * It is `fixed inset-0 z-70`, so hiding only the white box inside it leaves a
+ * full-screen transparent sheet on top of the page: everything still looks
+ * right and nothing can be clicked or typed into. Reported, accurately, as the
+ * admin having turned into a picture. */
+div:has(> #modal-content:empty) {
+  display: none !important;
+}
+
+/* The command palette's own full-screen backdrop, same story. Its wrapper is
+ * hidden by x-show, so when Alpine gives up the backdrop covers the dashboard
+ * and swallows every click — the login page looked fine and the admin behind it
+ * did not respond to anything.
+ *
+ * Hidden outright rather than conditionally: with Alpine not evaluating, the
+ * palette cannot open anyway, so this removes a blocker and no working feature.
+ * One line to restore once Alpine is fixed. */
+[x-data="searchCommand()"] {
+  display: none !important;
+}

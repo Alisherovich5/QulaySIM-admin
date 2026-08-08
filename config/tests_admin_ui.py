@@ -118,6 +118,43 @@ class ModalOverlayTests(TestCase):
         block = css[css.index("#modal-content:empty"):]
         self.assertNotIn("x-cloak", block)
 
+    def test_the_full_screen_wrapper_is_hidden_too(self):
+        """Hiding only the white box leaves an invisible sheet over the page.
+
+        The box sits inside a `fixed inset-0 z-70` wrapper. Hide the box alone
+        and the page looks correct while nothing can be clicked or typed into —
+        reported, accurately, as the admin having turned into a picture.
+        """
+        from django.conf import settings
+
+        css = (settings.BASE_DIR / "static" / "admin" / "qulaysim-admin.css").read_text()
+        self.assertIn("div:has(> #modal-content:empty)", css)
+
+    def test_every_full_screen_overlay_on_the_page_is_covered_by_a_rule(self):
+        # If Unfold adds a third overlay, this catches it before an operator
+        # discovers it as an unclickable page.
+        import re
+
+        user = get_user_model().objects.create_superuser("ovl", "o@x.uz", PASSWORD)
+        self.client.force_login(user)
+        body = self.client.get(reverse("admin:index")).content.decode()
+        overlays = [
+            m.group(1)
+            for m in re.finditer(r'<div[^>]*class="([^"]*)"[^>]*>', body)
+            if "fixed" in m.group(1) and "bottom-0" in m.group(1) and "top-0" in m.group(1)
+        ]
+        from django.conf import settings
+
+        css = (settings.BASE_DIR / "static" / "admin" / "qulaysim-admin.css").read_text()
+        # Every full-screen overlay on the page must be answered by a rule, or it
+        # sits invisibly on top and swallows clicks.
+        self.assertIn("div:has(> #modal-content:empty)", css)
+        self.assertIn("#modal-overlay", css)
+        self.assertIn('[x-data="searchCommand()"]', css)
+        self.assertLessEqual(
+            len(overlays), 4, f"a new full-screen overlay appeared: {overlays}"
+        )
+
     def test_the_admin_page_still_carries_the_modal_markup(self):
         # Hidden, not deleted: a real modal must still be able to open.
         user = get_user_model().objects.create_superuser("modal", "m@x.uz", PASSWORD)
