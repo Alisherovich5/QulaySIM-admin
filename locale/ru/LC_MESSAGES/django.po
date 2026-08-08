@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-07 19:30+0500\n"
+"POT-Creation-Date: 2026-08-08 14:43+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -91,7 +91,7 @@ msgstr "пустая карточка на сайте"
 msgid "no active plans"
 msgstr "нет активных тарифов"
 
-#: catalog/admin.py:391 config/i18n_extra.py:49
+#: catalog/admin.py:391 config/i18n_extra.py:69
 msgid "From"
 msgstr "От"
 
@@ -687,7 +687,7 @@ msgstr ""
 msgid "Not a destination we have: %(codes)s"
 msgstr "Такого направления нет: %(codes)s"
 
-#: catalog/models.py:19 catalog/models.py:49 config/i18n_extra.py:224
+#: catalog/models.py:19 catalog/models.py:49 config/i18n_extra.py:244
 #: content/models.py:99 content/models.py:130
 msgid "name"
 msgstr "название"
@@ -1072,179 +1072,231 @@ msgstr "Возвращён"
 msgid "Loss"
 msgstr "Убыток"
 
-#: config/i18n_extra.py:24
+#: config/i18n_extra.py:30
+msgid "Available shortcuts"
+msgstr "Доступные сочетания клавиш"
+
+#: config/i18n_extra.py:31
+msgid "Changelist shortcuts"
+msgstr "Сочетания в списке записей"
+
+#: config/i18n_extra.py:32
+msgid "Clear"
+msgstr "Очистить"
+
+#: config/i18n_extra.py:33
+msgid "Command tool shortcuts"
+msgstr "Сочетания командной строки"
+
+#: config/i18n_extra.py:34
+msgid "Create new record"
+msgstr "Создать запись"
+
+#: config/i18n_extra.py:35
+msgid "Global shortcuts"
+msgstr "Общие сочетания"
+
+#: config/i18n_extra.py:36
+msgid "Open command tool"
+msgstr "Открыть командную строку"
+
+#: config/i18n_extra.py:37
+msgid "Open selection"
+msgstr "Открыть выбранное"
+
+#: config/i18n_extra.py:38
+msgid "Open selection in new tab"
+msgstr "Открыть выбранное в новой вкладке"
+
+#: config/i18n_extra.py:39
+msgid "Open shortcuts list"
+msgstr "Открыть список сочетаний"
+
+#: config/i18n_extra.py:40
+msgid "Toggle dark/light mode"
+msgstr "Тёмная/светлая тема"
+
+#: config/i18n_extra.py:41
+msgid "Toggle filter"
+msgstr "Показать/скрыть фильтр"
+
+#: config/i18n_extra.py:42
+msgid "Toggle sidebar"
+msgstr "Свернуть/развернуть боковую панель"
+
+#: config/i18n_extra.py:44
 msgid "Action"
 msgstr "Действие"
 
-#: config/i18n_extra.py:25
+#: config/i18n_extra.py:45
 msgid "Add another"
 msgstr "Добавить ещё"
 
-#: config/i18n_extra.py:26
+#: config/i18n_extra.py:46
 msgid "Add row"
 msgstr "Добавить строку"
 
-#: config/i18n_extra.py:27
+#: config/i18n_extra.py:47
 msgid "All applications"
 msgstr "Все разделы"
 
-#: config/i18n_extra.py:28
+#: config/i18n_extra.py:48
 msgid "Apply Filters"
 msgstr "Применить фильтры"
 
-#: config/i18n_extra.py:29
+#: config/i18n_extra.py:49
 msgid "Cancel"
 msgstr "Отмена"
 
-#: config/i18n_extra.py:30
+#: config/i18n_extra.py:50
 msgid "Change selected"
 msgstr "Изменить выбранные"
 
-#: config/i18n_extra.py:31
+#: config/i18n_extra.py:51
 msgid "Choose file to upload"
 msgstr "Выберите файл для загрузки"
 
-#: config/i18n_extra.py:32
+#: config/i18n_extra.py:52
 msgid "Clear all filters"
 msgstr "Сбросить все фильтры"
 
-#: config/i18n_extra.py:33
+#: config/i18n_extra.py:53
 msgid "Clear selection"
 msgstr "Снять выделение"
 
-#: config/i18n_extra.py:34
+#: config/i18n_extra.py:54
 msgid "Click here to select the objects across all pages"
 msgstr "Нажмите, чтобы выбрать объекты на всех страницах"
 
-#: config/i18n_extra.py:35
+#: config/i18n_extra.py:55
 msgid "Click to cancel"
 msgstr "Нажмите, чтобы отменить"
 
-#: config/i18n_extra.py:36
+#: config/i18n_extra.py:56
 msgid "Click to download"
 msgstr "Нажмите, чтобы скачать"
 
-#: config/i18n_extra.py:37
+#: config/i18n_extra.py:57
 msgid "Close"
 msgstr "Закрыть"
 
-#: config/i18n_extra.py:38
+#: config/i18n_extra.py:58
 msgid "Dark"
 msgstr "Тёмная"
 
-#: config/i18n_extra.py:39
+#: config/i18n_extra.py:59
 msgid "Dataset not found. No action performed."
 msgstr "Набор данных не найден. Действие не выполнено."
 
-#: config/i18n_extra.py:40 templates/admin/index.html:289
+#: config/i18n_extra.py:60 templates/admin/index.html:289
 msgid "Date"
 msgstr "Дата"
 
-#: config/i18n_extra.py:41
+#: config/i18n_extra.py:61
 msgid "Date from"
 msgstr "Дата с"
 
-#: config/i18n_extra.py:42
+#: config/i18n_extra.py:62
 msgid "Date to"
 msgstr "Дата по"
 
-#: config/i18n_extra.py:43
+#: config/i18n_extra.py:63
 msgid "Date/time"
 msgstr "Дата/время"
 
-#: config/i18n_extra.py:44
+#: config/i18n_extra.py:64
 msgid "Delete selected"
 msgstr "Удалить выбранные"
 
-#: config/i18n_extra.py:45
+#: config/i18n_extra.py:65
 msgid "Expand row"
 msgstr "Раскрыть строку"
 
-#: config/i18n_extra.py:46
+#: config/i18n_extra.py:66
 msgid "False"
 msgstr "Нет"
 
-#: config/i18n_extra.py:47
+#: config/i18n_extra.py:67
 msgid "Filters"
 msgstr "Фильтры"
 
-#: config/i18n_extra.py:48 templates/admin/otp_login.html:77
+#: config/i18n_extra.py:68 templates/admin/otp_login.html:77
 msgid "Forgotten your password or username?"
 msgstr "Забыли пароль или имя пользователя?"
 
-#: config/i18n_extra.py:50
+#: config/i18n_extra.py:70
 msgid "General"
 msgstr "Общее"
 
-#: config/i18n_extra.py:51
+#: config/i18n_extra.py:71
 msgid "Go back"
 msgstr "Назад"
 
-#: config/i18n_extra.py:52
+#: config/i18n_extra.py:72
 msgid "Hide counts"
 msgstr "Скрыть счётчики"
 
-#: config/i18n_extra.py:53
+#: config/i18n_extra.py:73
 msgid "History"
 msgstr "История"
 
-#: config/i18n_extra.py:54
+#: config/i18n_extra.py:74
 msgid "Home"
 msgstr "Главная"
 
-#: config/i18n_extra.py:55
+#: config/i18n_extra.py:75
 msgid "Image preview"
 msgstr "Просмотр изображения"
 
-#: config/i18n_extra.py:56
+#: config/i18n_extra.py:76
 msgid "Light"
 msgstr "Светлая"
 
-#: config/i18n_extra.py:57 templates/admin/otp_login.html:69
+#: config/i18n_extra.py:77 templates/admin/otp_login.html:69
 msgid "Log in"
 msgstr "Войти"
 
-#: config/i18n_extra.py:58
+#: config/i18n_extra.py:78
 msgid "Log in again"
 msgstr "Войти снова"
 
-#: config/i18n_extra.py:59
+#: config/i18n_extra.py:79
 msgid "More actions"
 msgstr "Другие действия"
 
-#: config/i18n_extra.py:60
+#: config/i18n_extra.py:80
 msgid "Navigate"
 msgstr "Перейти"
 
-#: config/i18n_extra.py:61 templates/admin/catalog/price_sheet.html:261
+#: config/i18n_extra.py:81 templates/admin/catalog/price_sheet.html:261
 msgid "Next"
 msgstr "Далее"
 
-#: config/i18n_extra.py:62
+#: config/i18n_extra.py:82
 msgid "No data"
 msgstr "Нет данных"
 
-#: config/i18n_extra.py:63
+#: config/i18n_extra.py:83
 msgid "No results found"
 msgstr "Ничего не найдено"
 
-#: config/i18n_extra.py:64
+#: config/i18n_extra.py:84
 msgid "No, take me back"
 msgstr "Нет, вернуться"
 
-#: config/i18n_extra.py:65
+#: config/i18n_extra.py:85
 msgid "Nothing matched your search"
 msgstr "По вашему запросу ничего не найдено"
 
-#: config/i18n_extra.py:66
+#: config/i18n_extra.py:86
 msgid "Objects"
 msgstr "Объекты"
 
-#: config/i18n_extra.py:67
+#: config/i18n_extra.py:87
 msgid "Please correct the error below."
 msgstr "Исправьте ошибку ниже."
 
-#: config/i18n_extra.py:68
+#: config/i18n_extra.py:88
 msgid ""
 "Please enter your old password, for security’s sake, and then enter your new "
 "password twice so we can verify you typed it in correctly."
@@ -1252,115 +1304,115 @@ msgstr ""
 "Введите старый пароль — из соображений безопасности, — а затем дважды новый, "
 "чтобы мы могли убедиться, что вы набрали его верно."
 
-#: config/i18n_extra.py:69
+#: config/i18n_extra.py:89
 msgid "Previous"
 msgstr "Назад"
 
-#: config/i18n_extra.py:70
+#: config/i18n_extra.py:90
 msgid "Recent searches"
 msgstr "Недавние поиски"
 
-#: config/i18n_extra.py:71
+#: config/i18n_extra.py:91
 msgid "Record picture"
 msgstr "Изображение записи"
 
-#: config/i18n_extra.py:72
+#: config/i18n_extra.py:92
 msgid "Reset filters"
 msgstr "Сбросить фильтры"
 
-#: config/i18n_extra.py:73
+#: config/i18n_extra.py:93
 msgid "Return to site"
 msgstr "Вернуться на сайт"
 
-#: config/i18n_extra.py:74
+#: config/i18n_extra.py:94
 msgid "Run"
 msgstr "Запустить"
 
-#: config/i18n_extra.py:75
+#: config/i18n_extra.py:95
 msgid "Save and add another"
 msgstr "Сохранить и добавить ещё"
 
-#: config/i18n_extra.py:76
+#: config/i18n_extra.py:96
 msgid "Save and continue editing"
 msgstr "Сохранить и продолжить редактирование"
 
-#: config/i18n_extra.py:77
+#: config/i18n_extra.py:97
 msgid "Save and view"
 msgstr "Сохранить и посмотреть"
 
-#: config/i18n_extra.py:78
+#: config/i18n_extra.py:98
 msgid "Save as new"
 msgstr "Сохранить как новый"
 
-#: config/i18n_extra.py:79
+#: config/i18n_extra.py:99
 msgid "Search apps and models..."
 msgstr "Поиск разделов и моделей..."
 
-#: config/i18n_extra.py:80
+#: config/i18n_extra.py:100
 msgid "Select"
 msgstr "Выбрать"
 
-#: config/i18n_extra.py:81
+#: config/i18n_extra.py:101
 msgid "Select action"
 msgstr "Выберите действие"
 
-#: config/i18n_extra.py:82
+#: config/i18n_extra.py:102
 msgid "Select action to run"
 msgstr "Выберите действие для выполнения"
 
-#: config/i18n_extra.py:83
+#: config/i18n_extra.py:103
 msgid "Select all"
 msgstr "Выбрать все"
 
-#: config/i18n_extra.py:84
+#: config/i18n_extra.py:104
 msgid "Select all rows"
 msgstr "Выбрать все строки"
 
-#: config/i18n_extra.py:85
+#: config/i18n_extra.py:105
 msgid "Select currency"
 msgstr "Выберите валюту"
 
-#: config/i18n_extra.py:86
+#: config/i18n_extra.py:106
 msgid "Select format"
 msgstr "Выберите формат"
 
-#: config/i18n_extra.py:87
+#: config/i18n_extra.py:107
 msgid "Select record"
 msgstr "Выберите запись"
 
-#: config/i18n_extra.py:88
+#: config/i18n_extra.py:108
 msgid "Select value"
 msgstr "Выберите значение"
 
-#: config/i18n_extra.py:89
+#: config/i18n_extra.py:109
 msgid "Show all"
 msgstr "Показать все"
 
-#: config/i18n_extra.py:90
+#: config/i18n_extra.py:110
 msgid "Show counts"
 msgstr "Показать счётчики"
 
-#: config/i18n_extra.py:91
+#: config/i18n_extra.py:111
 msgid "Sorting priority:"
 msgstr "Приоритет сортировки:"
 
-#: config/i18n_extra.py:92
+#: config/i18n_extra.py:112
 msgid "Submit"
 msgstr "Отправить"
 
-#: config/i18n_extra.py:93
+#: config/i18n_extra.py:113
 msgid "System"
 msgstr "Как в системе"
 
-#: config/i18n_extra.py:94
+#: config/i18n_extra.py:114
 msgid "Thanks for spending some quality time with the web site today."
 msgstr "Спасибо за время, проведённое с сайтом сегодня."
 
-#: config/i18n_extra.py:95
+#: config/i18n_extra.py:115
 msgid "This item will be deleted."
 msgstr "Этот элемент будет удалён."
 
-#: config/i18n_extra.py:96
+#: config/i18n_extra.py:116
 msgid ""
 "This object doesn’t have a change history. It probably wasn’t added via this "
 "admin site."
@@ -1368,115 +1420,115 @@ msgstr ""
 "У этого объекта нет истории изменений. Вероятно, он был добавлен не через "
 "эту панель администратора."
 
-#: config/i18n_extra.py:97
+#: config/i18n_extra.py:117
 msgid ""
 "This page yielded into no results. Create a new item or reset your filters."
 msgstr ""
 "На этой странице результатов нет. Создайте элемент или сбросьте фильтры."
 
-#: config/i18n_extra.py:98
+#: config/i18n_extra.py:118
 msgid "To"
 msgstr "До"
 
-#: config/i18n_extra.py:99
+#: config/i18n_extra.py:119
 msgid "Toggle password visibility"
 msgstr "Показать или скрыть пароль"
 
-#: config/i18n_extra.py:100
+#: config/i18n_extra.py:120
 msgid "Toggle sorting"
 msgstr "Переключить сортировку"
 
-#: config/i18n_extra.py:101
+#: config/i18n_extra.py:121
 msgid "True"
 msgstr "Да"
 
-#: config/i18n_extra.py:102
+#: config/i18n_extra.py:122
 msgid "Type to search"
 msgstr "Введите для поиска"
 
-#: config/i18n_extra.py:103
+#: config/i18n_extra.py:123
 msgid "Unknown content"
 msgstr "Неизвестное содержимое"
 
-#: config/i18n_extra.py:104
+#: config/i18n_extra.py:124
 msgid "User"
 msgstr "Пользователь"
 
-#: config/i18n_extra.py:105
+#: config/i18n_extra.py:125
 msgid "Value"
 msgstr "Значение"
 
-#: config/i18n_extra.py:106
+#: config/i18n_extra.py:126
 msgid "View selected"
 msgstr "Посмотреть выбранные"
 
-#: config/i18n_extra.py:107
+#: config/i18n_extra.py:127
 msgid "Welcome"
 msgstr "Добро пожаловать"
 
-#: config/i18n_extra.py:108
+#: config/i18n_extra.py:128
 msgid "Yes, I’m sure"
 msgstr "Да, я уверен"
 
-#: config/i18n_extra.py:109
+#: config/i18n_extra.py:129
 msgid "You can not create nested object without parent"
 msgstr "Нельзя создать вложенный объект без родительского"
 
-#: config/i18n_extra.py:110
+#: config/i18n_extra.py:130
 msgid "You don’t have permission to view or edit anything."
 msgstr "У вас нет прав на просмотр или редактирование."
 
-#: config/i18n_extra.py:111
+#: config/i18n_extra.py:131
 msgid "You have been successfully logged out from the administration"
 msgstr "Вы успешно вышли из панели администратора"
 
-#: config/i18n_extra.py:112
+#: config/i18n_extra.py:132
 msgid "Your password was changed."
 msgstr "Ваш пароль изменён."
 
-#: config/i18n_extra.py:115
+#: config/i18n_extra.py:135
 #, python-format
 msgid " By %(filter_title)s "
 msgstr "%(filter_title)s"
 
-#: config/i18n_extra.py:116
+#: config/i18n_extra.py:136
 #, python-format
 msgid "%(app)s administration"
 msgstr "Администрирование приложения «%(app)s»"
 
-#: config/i18n_extra.py:117
+#: config/i18n_extra.py:137
 #, python-format
 msgid "%(full_result_count)s total"
 msgstr "%(full_result_count)s всего"
 
-#: config/i18n_extra.py:118
+#: config/i18n_extra.py:138
 #, python-format
 msgid "%(name)s with ID “%(key)s” doesn’t exist. Perhaps it was deleted?"
 msgstr "%(name)s с ID “%(key)s“ не существует. Возможно оно было удалено?"
 
-#: config/i18n_extra.py:119
+#: config/i18n_extra.py:139
 #, python-format
 msgid "0 of %(cnt)s selected"
 msgstr "Выбрано 0 объектов из %(cnt)s "
 
-#: config/i18n_extra.py:120
+#: config/i18n_extra.py:140
 msgid "A user with that username already exists."
 msgstr "Пользователь с таким именем уже существует."
 
-#: config/i18n_extra.py:121
+#: config/i18n_extra.py:141
 #, python-format
 msgid "Add another %(model)s"
 msgstr "Добавить ещё один объект типа \"%(model)s\""
 
-#: config/i18n_extra.py:122
+#: config/i18n_extra.py:142
 msgid "Added."
 msgstr "Добавлено."
 
-#: config/i18n_extra.py:123
+#: config/i18n_extra.py:143
 msgid "Added:"
 msgstr "Создано:"
 
-#: config/i18n_extra.py:124
+#: config/i18n_extra.py:144
 #, python-format
 msgid ""
 "Are you sure you want to delete the selected %(objects_name)s? All of the "
@@ -1485,42 +1537,42 @@ msgstr ""
 "Вы уверены, что хотите удалить %(objects_name)s? Все следующие объекты и "
 "связанные с ними элементы будут удалены:"
 
-#: config/i18n_extra.py:125
+#: config/i18n_extra.py:145
 #, python-format
 msgid "Change history: %s"
 msgstr "История изменений: %s"
 
-#: config/i18n_extra.py:126
+#: config/i18n_extra.py:146
 msgid "Change my password"
 msgstr "Изменить мой пароль"
 
-#: config/i18n_extra.py:127
+#: config/i18n_extra.py:147
 #, python-format
 msgid "Change selected %(model)s"
 msgstr "Изменить выбранный объект типа \"%(model)s\""
 
-#: config/i18n_extra.py:128
+#: config/i18n_extra.py:148
 msgid "Changed:"
 msgstr "Изменено:"
 
-#: config/i18n_extra.py:129
+#: config/i18n_extra.py:149
 msgid "Confirm password:"
 msgstr "Подтвердите пароль:"
 
-#: config/i18n_extra.py:130
+#: config/i18n_extra.py:150
 msgid "Delete multiple objects"
 msgstr "Удалить несколько объектов"
 
-#: config/i18n_extra.py:131
+#: config/i18n_extra.py:151
 #, python-format
 msgid "Delete selected %(model)s"
 msgstr "Удалить выбранный объект типа \"%(model)s\""
 
-#: config/i18n_extra.py:132
+#: config/i18n_extra.py:152
 msgid "Deleted:"
 msgstr "Удалено:"
 
-#: config/i18n_extra.py:133
+#: config/i18n_extra.py:153
 #, python-format
 msgid ""
 "Deleting %(class_name)s %(instance)s would require deleting the following "
@@ -1529,7 +1581,7 @@ msgstr ""
 "Удаление объекта %(instance)s типа %(class_name)s будет требовать удаления "
 "следующих связанных объектов: %(related_objects)s"
 
-#: config/i18n_extra.py:134
+#: config/i18n_extra.py:154
 #, python-format
 msgid ""
 "Deleting the %(object_name)s '%(escaped_object)s' would require deleting the "
@@ -1538,7 +1590,7 @@ msgstr ""
 "Удаление %(object_name)s '%(escaped_object)s' потребует удаления следующих "
 "связанных защищенных объектов:"
 
-#: config/i18n_extra.py:135
+#: config/i18n_extra.py:155
 #, python-format
 msgid ""
 "Deleting the %(object_name)s '%(escaped_object)s' would result in deleting "
@@ -1549,7 +1601,7 @@ msgstr ""
 "объектов, но ваша учетная запись не имеет прав для удаления следующих типов "
 "объектов:"
 
-#: config/i18n_extra.py:136
+#: config/i18n_extra.py:156
 #, python-format
 msgid ""
 "Deleting the selected %(objects_name)s would require deleting the following "
@@ -1558,7 +1610,7 @@ msgstr ""
 "Удаление %(objects_name)s потребует удаления следующих связанных защищенных "
 "объектов:"
 
-#: config/i18n_extra.py:137
+#: config/i18n_extra.py:157
 #, python-format
 msgid ""
 "Deleting the selected %(objects_name)s would result in deleting related "
@@ -1568,18 +1620,18 @@ msgstr ""
 "Удаление выбранной %(objects_name)s приведет к удалению связанных объектов, "
 "но ваша учетная запись не имеет прав на удаление следующих типов объектов:"
 
-#: config/i18n_extra.py:138
+#: config/i18n_extra.py:158
 msgid ""
 "Designates that this user has all permissions without explicitly assigning "
 "them."
 msgstr "Указывает, что пользователь имеет все права без явного их назначения."
 
-#: config/i18n_extra.py:139
+#: config/i18n_extra.py:159
 msgid "Designates whether the user can log into this admin site."
 msgstr ""
 "Отметьте, если пользователь может входить в административную часть сайта."
 
-#: config/i18n_extra.py:140
+#: config/i18n_extra.py:160
 msgid ""
 "Designates whether this user should be treated as active. Unselect this "
 "instead of deleting accounts."
@@ -1587,16 +1639,16 @@ msgstr ""
 "Отметьте, если пользователь должен считаться активным. Уберите эту отметку "
 "вместо удаления учётной записи."
 
-#: config/i18n_extra.py:141
+#: config/i18n_extra.py:161
 msgid "Email address:"
 msgstr "Адрес электронной почты:"
 
-#: config/i18n_extra.py:142
+#: config/i18n_extra.py:162
 #, python-format
 msgid "Enter a new password for the user <strong>%(username)s</strong>."
 msgstr "Введите новый пароль для пользователя <strong>%(username)s</strong>."
 
-#: config/i18n_extra.py:143
+#: config/i18n_extra.py:163
 msgid ""
 "Enter a valid username. This value may contain only English letters, "
 "numbers, and @/./+/-/_ characters."
@@ -1604,7 +1656,7 @@ msgstr ""
 "Введите корректное имя пользователя. Допустимы только латинские буквы, цифры "
 "и символы @/./+/-/_ ."
 
-#: config/i18n_extra.py:144
+#: config/i18n_extra.py:164
 msgid ""
 "Enter a valid username. This value may contain only letters, numbers, and "
 "@/./+/-/_ characters."
@@ -1612,15 +1664,15 @@ msgstr ""
 "Введите правильное имя пользователя. Оно может содержать только буквы, цифры "
 "и знаки @/./+/-/_."
 
-#: config/i18n_extra.py:145
+#: config/i18n_extra.py:165
 msgid "Enter new password"
 msgstr "Введите новый пароль"
 
-#: config/i18n_extra.py:146
+#: config/i18n_extra.py:166
 msgid "Filter navigation items"
 msgstr "Фильтр элементов навигации"
 
-#: config/i18n_extra.py:147
+#: config/i18n_extra.py:167
 msgid ""
 "First, enter a username and password. Then, you’ll be able to edit more user "
 "options."
@@ -1628,7 +1680,7 @@ msgstr ""
 "Сначала введите имя пользователя и пароль. Затем можно будет изменить "
 "остальные настройки."
 
-#: config/i18n_extra.py:148
+#: config/i18n_extra.py:168
 msgid ""
 "Forgotten your password? Enter your email address below, and we’ll email "
 "instructions for setting a new one."
@@ -1636,17 +1688,17 @@ msgstr ""
 "Забыли пароль? Введите свой адрес электронной почты ниже, и мы вышлем вам "
 "инструкцию, как установить новый пароль."
 
-#: config/i18n_extra.py:149
+#: config/i18n_extra.py:169
 msgid "Go"
 msgstr "Выполнить"
 
-#: config/i18n_extra.py:150
+#: config/i18n_extra.py:170
 msgid "Hold down “Control”, or “Command” on a Mac, to select more than one."
 msgstr ""
 "Удерживайте “Control“ (или “Command“ на Mac), чтобы выбрать несколько "
 "значений."
 
-#: config/i18n_extra.py:151
+#: config/i18n_extra.py:171
 msgid ""
 "If you don’t receive an email, please make sure you’ve entered the address "
 "you registered with, and check your spam folder."
@@ -1654,7 +1706,7 @@ msgstr ""
 "Если вы не получили письмо, пожалуйста, убедитесь, что вы ввели адрес с "
 "которым Вы зарегистрировались, и проверьте папку со спамом."
 
-#: config/i18n_extra.py:152
+#: config/i18n_extra.py:172
 msgid ""
 "Items must be selected in order to perform actions on them. No items have "
 "been changed."
@@ -1662,77 +1714,77 @@ msgstr ""
 "Чтобы произвести действия над объектами, необходимо их выбрать. Объекты не "
 "были изменены."
 
-#: config/i18n_extra.py:153
+#: config/i18n_extra.py:173
 msgid "Logged out"
 msgstr "Не авторизован"
 
-#: config/i18n_extra.py:154
+#: config/i18n_extra.py:174
 #, python-format
 msgid "Models in the %(name)s application"
 msgstr "Модели в приложении %(name)s"
 
-#: config/i18n_extra.py:155
+#: config/i18n_extra.py:175
 msgid "New password:"
 msgstr "Новый пароль:"
 
-#: config/i18n_extra.py:156
+#: config/i18n_extra.py:176
 msgid "No action selected."
 msgstr "Действие не выбрано."
 
-#: config/i18n_extra.py:157
+#: config/i18n_extra.py:177
 msgid "No fields changed."
 msgstr "Ни одно поле не изменено."
 
-#: config/i18n_extra.py:158
+#: config/i18n_extra.py:178
 msgid "None available"
 msgstr "Недоступно"
 
-#: config/i18n_extra.py:159
+#: config/i18n_extra.py:179
 msgid "Old password"
 msgstr "Старый пароль"
 
-#: config/i18n_extra.py:160
+#: config/i18n_extra.py:180
 msgid "Page not found"
 msgstr "Страница не найдена"
 
-#: config/i18n_extra.py:161
+#: config/i18n_extra.py:181
 msgid "Password (again)"
 msgstr "Пароль (повторно)"
 
-#: config/i18n_extra.py:162
+#: config/i18n_extra.py:182
 msgid "Password change"
 msgstr "Изменение пароля"
 
-#: config/i18n_extra.py:163
+#: config/i18n_extra.py:183
 msgid "Password change successful"
 msgstr "Пароль успешно изменен"
 
-#: config/i18n_extra.py:164
+#: config/i18n_extra.py:184
 msgid "Password reset"
 msgstr "Восстановление пароля"
 
-#: config/i18n_extra.py:165
+#: config/i18n_extra.py:185
 msgid "Password reset complete"
 msgstr "Восстановление пароля завершено"
 
-#: config/i18n_extra.py:166
+#: config/i18n_extra.py:186
 msgid "Password reset confirmation"
 msgstr "Подтверждение восстановления пароля"
 
-#: config/i18n_extra.py:167
+#: config/i18n_extra.py:187
 #, python-format
 msgid "Password reset on %(site_name)s"
 msgstr "Сброс пароля на %(site_name)s"
 
-#: config/i18n_extra.py:168
+#: config/i18n_extra.py:188
 msgid "Password reset sent"
 msgstr "Письмо с инструкциями по восстановлению пароля отправлено"
 
-#: config/i18n_extra.py:169
+#: config/i18n_extra.py:189
 msgid "Password reset unsuccessful"
 msgstr "Ошибка восстановления пароля"
 
-#: config/i18n_extra.py:170
+#: config/i18n_extra.py:190
 msgid ""
 "Please enter your new password twice so we can verify you typed it in "
 "correctly."
@@ -1740,49 +1792,49 @@ msgstr ""
 "Пожалуйста, введите новый пароль дважды, чтобы мы могли убедиться в "
 "правильности написания."
 
-#: config/i18n_extra.py:171
+#: config/i18n_extra.py:191
 msgid "Please go to the following page and choose a new password:"
 msgstr "Пожалуйста, перейдите на эту страницу и введите новый пароль:"
 
-#: config/i18n_extra.py:172
+#: config/i18n_extra.py:192
 msgid "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
 msgstr ""
 "Обязательное поле. Не более 150 символов. Только буквы, цифры и символы @/./"
 "+/-/_."
 
-#: config/i18n_extra.py:173
+#: config/i18n_extra.py:193
 #, python-format
 msgid "Select %s to change"
 msgstr "Выберите %s для изменения"
 
-#: config/i18n_extra.py:174
+#: config/i18n_extra.py:194
 #, python-format
 msgid "Select %s to view"
 msgstr "Выберите %s для просмотра"
 
-#: config/i18n_extra.py:175
+#: config/i18n_extra.py:195
 #, python-format
 msgid "Select all %(total_count)s %(module_name)s"
 msgstr "Выбрать все %(module_name)s (%(total_count)s)"
 
-#: config/i18n_extra.py:176
+#: config/i18n_extra.py:196
 msgid "Select all objects on this page for an action"
 msgstr "Выбрать все объекты на этой странице, чтобы применить к ним действие"
 
-#: config/i18n_extra.py:177
+#: config/i18n_extra.py:197
 #, python-brace-format
 msgid "Select this object for an action - {}"
 msgstr "Выбрать этот объект, чтобы применить к нему действие - {}"
 
-#: config/i18n_extra.py:178
+#: config/i18n_extra.py:198
 msgid "Site administration"
 msgstr "Администрирование сайта"
 
-#: config/i18n_extra.py:179
+#: config/i18n_extra.py:199
 msgid "Skip to main content"
 msgstr "К основному"
 
-#: config/i18n_extra.py:180
+#: config/i18n_extra.py:200
 msgid ""
 "Something’s wrong with your database installation. Make sure the appropriate "
 "database tables have been created, and make sure the database is readable by "
@@ -1792,25 +1844,25 @@ msgstr ""
 "таблицы были созданы, и что соответствующему пользователю разрешен к ним "
 "доступ."
 
-#: config/i18n_extra.py:181
+#: config/i18n_extra.py:201
 #, python-format
 msgid "Sorting priority: %(priority_number)s"
 msgstr "Приоритет сортировки: %(priority_number)s"
 
-#: config/i18n_extra.py:182
+#: config/i18n_extra.py:202
 msgid "Specific permissions for this user."
 msgstr "Индивидуальные права данного пользователя."
 
-#: config/i18n_extra.py:183
+#: config/i18n_extra.py:203
 msgid "Start typing to filter…"
 msgstr "Начните печатать для фильтрации..."
 
-#: config/i18n_extra.py:184
+#: config/i18n_extra.py:204
 #, python-format
 msgid "The %(site_name)s team"
 msgstr "Команда сайта %(site_name)s"
 
-#: config/i18n_extra.py:185
+#: config/i18n_extra.py:205
 msgid ""
 "The groups this user belongs to. A user will get all permissions granted to "
 "each of their groups."
@@ -1818,12 +1870,12 @@ msgstr ""
 "Группы, к которым принадлежит данный пользователь. Пользователь получит все "
 "права, указанные в каждой из его/её групп."
 
-#: config/i18n_extra.py:186
+#: config/i18n_extra.py:206
 #, python-format
 msgid "The password is too similar to the %(verbose_name)s."
 msgstr "Введённый пароль слишком похож на %(verbose_name)s."
 
-#: config/i18n_extra.py:187
+#: config/i18n_extra.py:207
 msgid ""
 "The password reset link was invalid, possibly because it has already been "
 "used.  Please request a new password reset."
@@ -1831,38 +1883,38 @@ msgstr ""
 "Неверная ссылка для восстановления пароля. Возможно, ей уже воспользовались. "
 "Пожалуйста, попробуйте восстановить пароль еще раз."
 
-#: config/i18n_extra.py:188
+#: config/i18n_extra.py:208
 #, python-brace-format
 msgid "The {name} “{obj}” was added successfully."
 msgstr "{name} \"{obj}\" был успешно добавлен."
 
-#: config/i18n_extra.py:189
+#: config/i18n_extra.py:209
 #, python-brace-format
 msgid ""
 "The {name} “{obj}” was added successfully. You may add another {name} below."
 msgstr ""
 "{name} “{obj}“ был успешно добавлен. Вы можете добавить еще один {name} ниже."
 
-#: config/i18n_extra.py:190
+#: config/i18n_extra.py:210
 #, python-brace-format
 msgid "The {name} “{obj}” was added successfully. You may edit it again below."
 msgstr "{name} «{obj}» успешно добавлен. Ниже его можно отредактировать снова."
 
-#: config/i18n_extra.py:191
+#: config/i18n_extra.py:211
 #, python-brace-format
 msgid ""
 "The {name} “{obj}” was changed successfully. You may add another {name} "
 "below."
 msgstr "{name} “{obj}“ был изменен. Вы можете добавить еще один {name} ниже."
 
-#: config/i18n_extra.py:192
+#: config/i18n_extra.py:212
 #, python-brace-format
 msgid ""
 "The {name} “{obj}” was changed successfully. You may edit it again below."
 msgstr ""
 "{name} “{obj}“ был изменен успешно. Вы можете отредактировать его снова ниже."
 
-#: config/i18n_extra.py:193
+#: config/i18n_extra.py:213
 msgid ""
 "There’s been an error. It’s been reported to the site administrators via "
 "email and should be fixed shortly. Thanks for your patience."
@@ -1870,36 +1922,36 @@ msgstr ""
 "Произошла ошибка. О ней сообщено администраторам сайта по электронной почте, "
 "ошибка должна быть вскоре исправлена. Благодарим вас за терпение."
 
-#: config/i18n_extra.py:194
+#: config/i18n_extra.py:214
 msgid "This password is entirely numeric."
 msgstr "Введённый пароль состоит только из цифр."
 
-#: config/i18n_extra.py:195
+#: config/i18n_extra.py:215
 msgid "This password is too common."
 msgstr "Введённый пароль слишком широко распространён."
 
-#: config/i18n_extra.py:196
+#: config/i18n_extra.py:216
 msgid "Toggle theme (current theme: auto)"
 msgstr "Переключить тему (текущая: выбрана автоматически)"
 
-#: config/i18n_extra.py:197
+#: config/i18n_extra.py:217
 msgid "Toggle theme (current theme: dark)"
 msgstr "Переключить тему (текущая: тёмная)"
 
-#: config/i18n_extra.py:198
+#: config/i18n_extra.py:218
 msgid "Toggle theme (current theme: light)"
 msgstr "Переключить тему (текущая: светлая)"
 
-#: config/i18n_extra.py:199
+#: config/i18n_extra.py:219
 #, python-format
 msgid "View selected %(model)s"
 msgstr "Просмотреть выбранный объект типа \"%(model)s\""
 
-#: config/i18n_extra.py:200
+#: config/i18n_extra.py:220
 msgid "We’re sorry, but the requested page could not be found."
 msgstr "К сожалению, запрашиваемая вами страница не найдена."
 
-#: config/i18n_extra.py:201
+#: config/i18n_extra.py:221
 msgid ""
 "We’ve emailed you instructions for setting your password, if an account "
 "exists with the email you entered. You should receive them shortly."
@@ -1908,7 +1960,7 @@ msgstr ""
 "электронной почты (если в нашей базе данных есть такой адрес). Вы должны "
 "получить ее в ближайшее время."
 
-#: config/i18n_extra.py:202 templates/admin/otp_login.html:46
+#: config/i18n_extra.py:222 templates/admin/otp_login.html:46
 #, python-format
 msgid ""
 "You are authenticated as %(username)s, but are not authorized to access this "
@@ -1918,11 +1970,11 @@ msgstr ""
 "просмотра данной страницы. Возможно, вы хотели бы войти в систему, используя "
 "другую учётную запись?"
 
-#: config/i18n_extra.py:203
+#: config/i18n_extra.py:223
 msgid "You may edit it again below."
 msgstr "Вы можете снова изменить этот объект ниже."
 
-#: config/i18n_extra.py:204
+#: config/i18n_extra.py:224
 #, python-format
 msgid ""
 "You're receiving this email because you requested a password reset for your "
@@ -1932,159 +1984,159 @@ msgstr ""
 "восстановление пароля от учётной записи на сайте %(site_name)s, которая "
 "связана с этим адресом электронной почты."
 
-#: config/i18n_extra.py:205
+#: config/i18n_extra.py:225
 msgid "Your password can’t be a commonly used password."
 msgstr "Пароль не должен быть слишком простым и распространенным."
 
-#: config/i18n_extra.py:206
+#: config/i18n_extra.py:226
 msgid "Your password can’t be entirely numeric."
 msgstr "Пароль не может состоять только из цифр."
 
-#: config/i18n_extra.py:207
+#: config/i18n_extra.py:227
 msgid "Your password can’t be too similar to your other personal information."
 msgstr "Пароль не должен быть слишком похож на другую вашу личную информацию."
 
-#: config/i18n_extra.py:208
+#: config/i18n_extra.py:228
 msgid "Your password has been set.  You may go ahead and log in now."
 msgstr "Ваш пароль был сохранен.  Теперь вы можете войти."
 
-#: config/i18n_extra.py:209
+#: config/i18n_extra.py:229
 msgid "Your username, in case you’ve forgotten:"
 msgstr "Ваше имя пользователя, если вы его забыли:"
 
-#: config/i18n_extra.py:210
+#: config/i18n_extra.py:230
 msgid "active"
 msgstr "активный"
 
-#: config/i18n_extra.py:211
+#: config/i18n_extra.py:231
 msgid "algorithm"
 msgstr "алгоритм"
 
-#: config/i18n_extra.py:212
+#: config/i18n_extra.py:232
 msgid "checksum"
 msgstr "контрольная сумма"
 
-#: config/i18n_extra.py:213
+#: config/i18n_extra.py:233
 msgid "codename"
 msgstr "кодовое название"
 
-#: config/i18n_extra.py:214
+#: config/i18n_extra.py:234
 msgid "content type"
 msgstr "тип содержимого"
 
-#: config/i18n_extra.py:215
+#: config/i18n_extra.py:235
 msgid "date joined"
 msgstr "дата регистрации"
 
-#: config/i18n_extra.py:216
+#: config/i18n_extra.py:236
 msgid "email address"
 msgstr "адрес электронной почты"
 
-#: config/i18n_extra.py:217
+#: config/i18n_extra.py:237
 msgid "first name"
 msgstr "имя"
 
-#: config/i18n_extra.py:218
+#: config/i18n_extra.py:238
 msgid "group"
 msgstr "группа"
 
-#: config/i18n_extra.py:219
+#: config/i18n_extra.py:239
 msgid "groups"
 msgstr "группы"
 
-#: config/i18n_extra.py:220
+#: config/i18n_extra.py:240
 msgid "hash"
 msgstr "хэш"
 
-#: config/i18n_extra.py:221
+#: config/i18n_extra.py:241
 msgid "iterations"
 msgstr "итерации"
 
-#: config/i18n_extra.py:222
+#: config/i18n_extra.py:242
 msgid "last name"
 msgstr "фамилия"
 
-#: config/i18n_extra.py:223
+#: config/i18n_extra.py:243
 msgid "memory cost"
 msgstr "затраты памяти"
 
-#: config/i18n_extra.py:225
+#: config/i18n_extra.py:245
 msgid "parallelism"
 msgstr "параллелизм"
 
-#: config/i18n_extra.py:226
+#: config/i18n_extra.py:246
 msgid "permission"
 msgstr "право"
 
-#: config/i18n_extra.py:227
+#: config/i18n_extra.py:247
 msgid "permissions"
 msgstr "права"
 
-#: config/i18n_extra.py:228
+#: config/i18n_extra.py:248
 msgid "salt"
 msgstr "соль"
 
-#: config/i18n_extra.py:229
+#: config/i18n_extra.py:249
 msgid "staff status"
 msgstr "статус персонала"
 
-#: config/i18n_extra.py:230
+#: config/i18n_extra.py:250
 msgid "superuser status"
 msgstr "статус суперпользователя"
 
-#: config/i18n_extra.py:231
+#: config/i18n_extra.py:251
 msgid "time cost"
 msgstr "затраты времени"
 
-#: config/i18n_extra.py:232
+#: config/i18n_extra.py:252
 msgid "user"
 msgstr "пользователь"
 
-#: config/i18n_extra.py:233
+#: config/i18n_extra.py:253
 msgid "user permissions"
 msgstr "права пользователя"
 
-#: config/i18n_extra.py:234
+#: config/i18n_extra.py:254
 msgid "username"
 msgstr "имя пользователя"
 
-#: config/i18n_extra.py:235
+#: config/i18n_extra.py:255
 msgid "users"
 msgstr "пользователи"
 
-#: config/i18n_extra.py:236
+#: config/i18n_extra.py:256
 msgid "variety"
 msgstr "множество"
 
-#: config/i18n_extra.py:237
+#: config/i18n_extra.py:257
 msgid "version"
 msgstr "версия"
 
-#: config/i18n_extra.py:238
+#: config/i18n_extra.py:258
 msgid "work factor"
 msgstr "рабочий фактор"
 
-#: config/i18n_extra.py:243 config/tests_i18n.py:174
+#: config/i18n_extra.py:263 config/tests_i18n.py:174
 #, python-format
 msgid "Add %(name)s"
 msgstr "Добавить %(name)s"
 
-#: config/i18n_extra.py:244
+#: config/i18n_extra.py:264
 #, python-format
 msgid "Successfully deleted %(count)d %(items)s."
 msgstr "Успешно удалено %(count)d %(items)s."
 
-#: config/i18n_extra.py:245
+#: config/i18n_extra.py:265
 #, python-format
 msgid "The %(name)s “%(obj)s” was deleted successfully."
 msgstr "%(name)s «%(obj)s» успешно удалён."
 
-#: config/i18n_extra.py:246
+#: config/i18n_extra.py:266
 #, python-format
 msgid "Changed “%(object)s” — %(changes)s"
 msgstr "«%(object)s» изменён — %(changes)s"
 
-#: config/i18n_extra.py:249 templates/admin/otp_login.html:35
+#: config/i18n_extra.py:269 templates/admin/otp_login.html:35
 msgid "Welcome back to"
 msgstr "С возвращением —"
 
@@ -2102,8 +2154,8 @@ msgid ""
 "enrolled. Ask an administrator to run `manage.py setup_totp <username>`."
 msgstr ""
 "Двухфакторная аутентификация обязательна, а у этой учётной записи "
-"аутентификатор не подключён. Попросите администратора запустить "
-"`manage.py setup_totp <username>`."
+"аутентификатор не подключён. Попросите администратора запустить `manage.py "
+"setup_totp <username>`."
 
 #: config/otp.py:111
 msgid "Please enter the correct username, password and authenticator code."

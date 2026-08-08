@@ -13,13 +13,33 @@ concerned.
 
 Nothing imports this at runtime — the tuple exists to be read by xgettext.
 
-89 strings, measured against django-unfold 0.101.0 and Django 5.2's own uz/ru
-catalogues. Re-measure after upgrading either.
+102 strings, measured against django-unfold 0.103.0 and Django 5.2's own uz/ru
+catalogues. Re-measure after upgrading either — the shortcut panel below is what
+an unmeasured upgrade looks like from the operator's side.
 """
 
 from django.utils.translation import gettext_lazy as _
 
 THIRD_PARTY_STRINGS = (
+    # --- django-unfold's keyboard-shortcut modal (0.103) ------------------
+    # New in 0.103 and shipped untranslated, so the panel rendered half in
+    # English. "Clear" is different in kind: Django's *own* Uzbek catalogue
+    # translates it as "Aniq" — the adjective sense (clear as in obvious) where
+    # the verb was meant — so the esc key was labelled "Exact". LOCALE_PATHS is
+    # searched before Django's own, which is what lets an entry here correct it.
+    _("Available shortcuts"),
+    _("Changelist shortcuts"),
+    _("Clear"),
+    _("Command tool shortcuts"),
+    _("Create new record"),
+    _("Global shortcuts"),
+    _("Open command tool"),
+    _("Open selection"),
+    _("Open selection in new tab"),
+    _("Open shortcuts list"),
+    _("Toggle dark/light mode"),
+    _("Toggle filter"),
+    _("Toggle sidebar"),
     # --- django-unfold ---------------------------------------------------
     _("Action"),
     _("Add another"),

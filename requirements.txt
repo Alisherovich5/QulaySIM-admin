@@ -1,6 +1,9 @@
 Django>=5.1,<5.3
 psycopg[binary]>=3.1
-django-unfold>=0.40
+# Pinned, not floated. The admin was running 0.103 in production while the
+# development venv sat on 0.101, so a whole keyboard-shortcut panel existed
+# on the server that could not be found — let alone translated — locally.
+django-unfold==0.103.0
 python-decouple>=3.8
 Pillow>=10.0
 redis>=5.0
