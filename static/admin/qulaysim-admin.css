@@ -536,3 +536,30 @@ input[type="submit"] {
   margin-top: 20px;
   padding: 12px 16px;
 }
+
+/* ------------------------------------------------------------------ */
+/* Unfold's modal, hidden by CSS rather than by Alpine                  */
+/*                                                                      */
+/* The modal ships in every admin page as an empty white box plus a     */
+/* full-screen backdrop-blur overlay, both hidden only by Alpine's      */
+/* x-cloak/x-show. When Alpine does not finish initialising, x-cloak is */
+/* already gone and x-show never binds, so the panel renders with a     */
+/* blurred grey page and an undismissable white rectangle across the    */
+/* form. It was reported five times as "the admin will not open", and   */
+/* every screenshot of it looked out of focus — that was the backdrop   */
+/* blur, not the screenshot.                                            */
+/*                                                                      */
+/* Keyed on :empty rather than on x-cloak: the attribute is exactly     */
+/* what goes missing in the failure, so a rule that depends on it would */
+/* fail in the same case. #modal-content holds no children until        */
+/* something is loaded into it, which makes emptiness a reliable stand- */
+/* in for "no modal is open" — and it stops applying the instant a real */
+/* modal arrives, so nothing that works today is broken.                */
+/* ------------------------------------------------------------------ */
+#modal-content:empty {
+  display: none !important;
+}
+/* The backdrop follows the modal: visible only while one has content. */
+body:not(:has(#modal-content:not(:empty))) #modal-overlay {
+  display: none !important;
+}

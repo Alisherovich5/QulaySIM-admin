@@ -88,3 +88,39 @@ class LoginFieldTests(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.client.get(reverse("admin:index")).status_code, 200)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False, AXES_ENABLED=False)
+class ModalOverlayTests(TestCase):
+    """Unfold's empty modal must not cover the page.
+
+    It ships on every admin page as an empty white box plus a full-screen
+    backdrop-blur overlay, hidden only by Alpine. When Alpine does not finish
+    initialising, both render — a blurred page with an undismissable white
+    rectangle over the form, which is indistinguishable from the admin being
+    broken. The stylesheet now hides them on :empty, which does not depend on
+    the attribute that goes missing in that failure.
+    """
+
+    def test_the_stylesheet_hides_the_empty_modal(self):
+        from django.conf import settings
+
+        css = (settings.BASE_DIR / "static" / "admin" / "qulaysim-admin.css").read_text()
+        self.assertIn("#modal-content:empty", css)
+        self.assertIn("#modal-overlay", css)
+
+    def test_the_rule_does_not_depend_on_x_cloak(self):
+        # x-cloak is precisely what is missing when this fails, so a rule keyed
+        # on it would fail in the same case.
+        from django.conf import settings
+
+        css = (settings.BASE_DIR / "static" / "admin" / "qulaysim-admin.css").read_text()
+        block = css[css.index("#modal-content:empty"):]
+        self.assertNotIn("x-cloak", block)
+
+    def test_the_admin_page_still_carries_the_modal_markup(self):
+        # Hidden, not deleted: a real modal must still be able to open.
+        user = get_user_model().objects.create_superuser("modal", "m@x.uz", PASSWORD)
+        self.client.force_login(user)
+        body = self.client.get(reverse("admin:index")).content.decode()
+        self.assertIn('id="modal-content"', body)
