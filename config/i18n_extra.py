@@ -21,25 +21,12 @@ an unmeasured upgrade looks like from the operator's side.
 from django.utils.translation import gettext_lazy as _
 
 THIRD_PARTY_STRINGS = (
-    # --- django-unfold's keyboard-shortcut modal (0.103) ------------------
-    # New in 0.103 and shipped untranslated, so the panel rendered half in
-    # English. "Clear" is different in kind: Django's *own* Uzbek catalogue
-    # translates it as "Aniq" — the adjective sense (clear as in obvious) where
-    # the verb was meant — so the esc key was labelled "Exact". LOCALE_PATHS is
-    # searched before Django's own, which is what lets an entry here correct it.
-    _("Available shortcuts"),
-    _("Changelist shortcuts"),
+    # --- Django's own mistranslation ------------------------------------
+    # Django's Uzbek catalogue renders "Clear" as "Aniq" — the adjective sense,
+    # clear as in obvious, where the verb was meant. It shows on file-field
+    # clear boxes and filter resets. LOCALE_PATHS is searched before Django's
+    # own, which is what lets this correct it.
     _("Clear"),
-    _("Command tool shortcuts"),
-    _("Create new record"),
-    _("Global shortcuts"),
-    _("Open command tool"),
-    _("Open selection"),
-    _("Open selection in new tab"),
-    _("Open shortcuts list"),
-    _("Toggle dark/light mode"),
-    _("Toggle filter"),
-    _("Toggle sidebar"),
     # --- django-unfold ---------------------------------------------------
     _("Action"),
     _("Add another"),

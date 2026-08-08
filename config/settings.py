@@ -41,13 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Locks the admin login out after repeated failures.
     "axes",
-    # Second factor for the admin. A stolen password is not enough on its own —
-    # see config/otp.py for why this matters more than a secret admin URL.
-    "django_otp",
-    "django_otp.plugins.otp_totp",
-    # QulaySIM apps. `config` is an app so `manage.py setup_totp` is discoverable
-    # and so AppConfig.ready can wire the two-factor login form.
-    "config",
+    # QulaySIM apps
     "catalog",
     "customers",
     "orders",
@@ -68,10 +62,6 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    # After the auth middleware, which is what puts request.user in place. This
-    # is the window-check behind the login form's door: a session that is
-    # authenticated but never passed the second factor gets no admin page.
-    "config.otp.RequireOtpMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # Must be last: it wraps authentication so a lockout is enforced after the
     # session and auth middleware have run.
@@ -150,20 +140,17 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # ---------------------------------------------------------------------------
 # Admin access
 #
-# The path is not guessable in production. That is worth having — it stops the
-# scanners that hammer /admin/ and /wp-admin/ all day — but it is obscurity, not
-# a lock: a URL travels in browser history, in a Referer header, and in the
-# memory of everyone who has been shown it. Treat it as noise reduction and put
-# the actual security in the two factors below.
+# The path is not guessable in production. Worth having — it stops the scanners
+# that hammer /admin/ and /wp-admin/ all day — but it is obscurity, not a lock: a
+# URL travels in browser history, in a Referer header, and in the memory of
+# everyone who has been shown it.
 #
-# OTP_REQUIRED closes the last gap. While it is False, staff with no
-# authenticator enrolled can still log in with a password alone — which is what
-# stops this deploy locking the only superuser out of their own panel. Turn it on
-# once every staff account has run `manage.py setup_totp`.
+# What actually guards the door is the password plus django-axes below, which
+# locks an account out after AXES_FAILURE_LIMIT wrong tries. A second factor was
+# built and then removed at the owner's request; if it is ever wanted back, the
+# commit that removed it is the recipe.
 # ---------------------------------------------------------------------------
 ADMIN_URL_PATH = config("ADMIN_URL_PATH", default="admin")
-OTP_REQUIRED = config("OTP_REQUIRED", default=False, cast=bool)
-OTP_TOTP_ISSUER = config("OTP_TOTP_ISSUER", default="QulaySIM Admin")
 
 # Suppliers the fulfilment service can actually place orders with. The FastAPI
 # side registers its supplier integrations in app/integrations/suppliers.py;
