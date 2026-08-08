@@ -1,0 +1,13 @@
+{% comment %}
+Deliberately empty: it replaces django-unfold's keyboard-shortcut panel.
+
+Unfold includes this from unfold/layouts/skeleton.html on every admin page, and
+our templates directory is searched before any app's, so an empty file here means
+the panel has no markup to render. Alpine's `shortcutsOpen` flag still flips when
+someone presses shift+?, but there is nothing for it to show, so nothing opens.
+
+Removed rather than styled or translated because it was asked for. Note the
+consequence if it is ever restored: the strings it uses are still registered in
+config/i18n_extra.py and translated in both catalogues, so bringing the panel
+back is a matter of deleting this file — no translation work is lost.
+{% endcomment %}
