@@ -124,3 +124,21 @@ class ModalOverlayTests(TestCase):
         self.client.force_login(user)
         body = self.client.get(reverse("admin:index")).content.decode()
         self.assertIn('id="modal-content"', body)
+
+    def test_the_inputs_keep_their_styling(self):
+        """The login form must not strip Unfold's classes off the inputs.
+
+        Subclassing Django's AdminAuthenticationForm instead of Unfold's did
+        exactly that: the fields rendered with no class, which on a white page
+        means invisible white boxes under visible labels. It reads as the fields
+        having vanished, and no error is raised anywhere.
+        """
+        import re
+
+        body = self.client.get(reverse("admin:login")).content.decode()
+        for name in ("username", "password"):
+            tag = re.search(rf'<input[^>]*name="{name}"[^>]*>', body).group(0)
+            cls = re.search(r'class="([^"]*)"', tag)
+            self.assertIsNotNone(cls, f"{name} rendered with no class attribute")
+            self.assertIn("border", cls.group(1))
+            self.assertIn("bg-white", cls.group(1))

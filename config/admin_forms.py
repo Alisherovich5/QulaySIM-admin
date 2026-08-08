@@ -18,10 +18,15 @@ one person signs into, typing eight characters beats a panel you cannot dismiss.
 
 from __future__ import annotations
 
-from django.contrib.admin.forms import AdminAuthenticationForm
+# Unfold's form, not Django's. Unfold styles the login inputs by writing a
+# Tailwind class list onto each widget in its own __init__, so subclassing
+# Django's AdminAuthenticationForm silently produced inputs with no class at
+# all — invisible white boxes on a white page, with the labels still showing.
+# It looked exactly like the fields had disappeared.
+from unfold.forms import AuthenticationForm
 
 
-class QuietAdminLoginForm(AdminAuthenticationForm):
+class QuietAdminLoginForm(AuthenticationForm):
     """The admin login, without anything that triggers browser autofill UI."""
 
     def __init__(self, *args, **kwargs):
