@@ -14,6 +14,13 @@ from django.views.generic import RedirectView
 
 from config.health import healthz
 
+# The admin login is swapped for one that does not invite the browser's
+# password-manager panel — see config/admin_forms.py. Done here because urls.py
+# is imported once at startup, after admin.site exists and before any request.
+from config import admin_forms  # noqa: E402
+
+admin_forms.install()
+
 urlpatterns = [
     # Exempt from SECURE_SSL_REDIRECT — see settings.
     path("healthz", healthz, name="healthz"),
