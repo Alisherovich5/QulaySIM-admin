@@ -55,6 +55,10 @@ MIDDLEWARE = [
     # entire admin — Unfold's CSS included — loads unstyled behind a 404.
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    # Between the session and LocaleMiddleware: it reads a language the operator
+    # chose (session or cookie) and, when there is none, drops Accept-Language so
+    # the panel defaults to Uzbek instead of to whatever browser is open.
+    "config.locale.PreferSiteLanguageMiddleware",
     # Order matters: after the session, which is where the chosen language is
     # stored, and before CommonMiddleware.
     "django.middleware.locale.LocaleMiddleware",
