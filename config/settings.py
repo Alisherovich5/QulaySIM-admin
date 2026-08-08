@@ -136,10 +136,19 @@ X_FRAME_OPTIONS = "DENY"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
-# Staff sessions are far more valuable than customer ones; expire them daily
-# and on browser close rather than leaving them open for two weeks.
-SESSION_COOKIE_AGE = 60 * 60 * 24
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+# Staff sessions expire after a week of not being used. They used to also die on
+# browser close, which sounds prudent and cost far more than it was worth: the
+# operator works across two browsers and an incognito window, each with its own
+# cookie jar, so a session established in one was simply absent in the next and
+# the panel looked broken rather than logged out. Nothing about closing a browser
+# tab makes a stolen session less stolen; the length of the window is what bounds
+# that, and a week on an admin behind a random 32-character path is a reasonable
+# trade for not being asked to log in several times an hour.
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 7
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+# Each request pushes the expiry back, so an operator using the panel daily is
+# never logged out mid-task, while one who stops using it is.
+SESSION_SAVE_EVERY_REQUEST = True
 
 # ---------------------------------------------------------------------------
 # Admin access
