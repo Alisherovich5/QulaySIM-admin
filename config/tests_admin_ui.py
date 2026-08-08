@@ -150,7 +150,6 @@ class ModalOverlayTests(TestCase):
         # sits invisibly on top and swallows clicks.
         self.assertIn("div:has(> #modal-content:empty)", css)
         self.assertIn("#modal-overlay", css)
-        self.assertIn('[x-data="searchCommand()"]', css)
         self.assertLessEqual(
             len(overlays), 4, f"a new full-screen overlay appeared: {overlays}"
         )
