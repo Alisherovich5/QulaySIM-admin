@@ -15,6 +15,7 @@ from .models import (
     PaymeTransaction,
     PromoCode,
     SupplierPurchase,
+    TelegramRecipient,
 )
 from django.utils.translation import gettext_lazy as _
 
@@ -483,3 +484,19 @@ class ComplimentaryGrantAdmin(ModelAdmin):
             _("eSIM ordered at cost ($%(cost)s). It appears under the customer's profile once the wholesaler answers.")
             % {"cost": obj.cost_usd},
         )
+
+
+@admin.register(TelegramRecipient)
+class TelegramRecipientAdmin(ModelAdmin):
+    """The list of people and groups the bot writes to.
+
+    Deliberately plain. The only thing that needs saying beyond the fields is why
+    a new person hears nothing: Telegram does not let a bot open a conversation,
+    so they have to press Start on the bot before their id exists at all.
+    """
+
+    list_display = ("label", "chat_id", "is_active", "created_at")
+    list_filter = ("is_active",)
+    search_fields = ("label", "chat_id")
+    list_editable = ("is_active",)
+    fields = ("label", "chat_id", "is_active")

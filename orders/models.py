@@ -137,6 +137,50 @@ class PromoCode(models.Model):
         super().save(*args, **kwargs)
 
 
+class TelegramRecipient(models.Model):
+    """Who receives the sales reports and the support requests.
+
+    Lived in `TELEGRAM_CHAT_ID` as a single value, which meant adding a colleague
+    was an SSH session and an `.env` edit — so in practice nobody would be added.
+    A table means the owner can do it, and can see who is on the list.
+
+    A group is the better answer for more than two people: add the bot to a staff
+    group and put the group's id here, and the membership stays in Telegram where
+    people actually manage it. This table is then one row rather than five that
+    drift.
+    """
+
+    chat_id = models.CharField(
+        max_length=32,
+        unique=True,
+        verbose_name=_("chat id"),
+        help_text=_(
+            "The number Telegram gives a chat. A person's own id is positive; a "
+            "group's is negative and starts with -100. A person must press Start "
+            "on the bot first — Telegram does not let a bot write first."
+        ),
+    )
+    label = models.CharField(
+        max_length=80,
+        verbose_name=_("label"),
+        help_text=_("Who or what this is, so the list stays readable a year from now."),
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name=_("is active"),
+        help_text=_("Switch off to stop sending without losing the id."),
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"))
+
+    class Meta:
+        verbose_name = _("telegram recipient")
+        verbose_name_plural = _("telegram recipients")
+        ordering = ("label",)
+
+    def __str__(self) -> str:
+        return f"{self.label} ({self.chat_id})"
+
+
 class ComplimentaryGrant(models.Model):
     """An eSIM given to someone at our own cost, with no payment taken.
 

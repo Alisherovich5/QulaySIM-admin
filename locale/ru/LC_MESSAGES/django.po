@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-10 22:53+0500\n"
+"POT-Creation-Date: 2026-08-10 23:33+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -741,7 +741,7 @@ msgstr "популярный"
 #: catalog/models.py:69 catalog/models.py:191 catalog/models.py:560
 #: content/models.py:21 content/models.py:41 content/models.py:70
 #: content/models.py:115 content/models.py:132 content/models.py:184
-#: customers/models.py:15 orders/models.py:38
+#: customers/models.py:15 orders/models.py:38 orders/models.py:170
 msgid "is active"
 msgstr "активен"
 
@@ -774,7 +774,7 @@ msgstr "трафик, МБ"
 msgid "is unlimited"
 msgstr "безлимитный"
 
-#: catalog/models.py:124 orders/models.py:328
+#: catalog/models.py:124 orders/models.py:372
 msgid "validity days"
 msgstr "срок действия, дней"
 
@@ -784,7 +784,7 @@ msgid ""
 msgstr ""
 "Себестоимость поставщика. Если есть предложения, берётся из самого дешёвого."
 
-#: catalog/models.py:137 catalog/models.py:442 orders/models.py:177
+#: catalog/models.py:137 catalog/models.py:442 orders/models.py:221
 msgid "cost usd"
 msgstr "себестоимость (USD)"
 
@@ -836,8 +836,8 @@ msgid "Winning supplier. Managed by the offers below when there are any."
 msgstr "Победивший поставщик. Если есть предложения ниже, управляется ими."
 
 #: catalog/models.py:182 catalog/models.py:377 catalog/models.py:435
-#: catalog/models.py:515 customers/models.py:103 orders/models.py:251
-#: orders/models.py:321 orders/models.py:472
+#: catalog/models.py:515 customers/models.py:103 orders/models.py:295
+#: orders/models.py:365 orders/models.py:516
 msgid "provider"
 msgstr "провайдер"
 
@@ -849,8 +849,8 @@ msgstr "Код пакета поставщика, например JP_1_7 для
 msgid "provider package code"
 msgstr "код пакета провайдера"
 
-#: catalog/models.py:196 catalog/models.py:434 orders/models.py:165
-#: orders/models.py:268 orders/models.py:311
+#: catalog/models.py:196 catalog/models.py:434 orders/models.py:209
+#: orders/models.py:312 orders/models.py:355
 msgid "plan"
 msgstr "тариф"
 
@@ -882,8 +882,8 @@ msgstr "Предпросмотр ничего не записывает."
 msgid "preview only"
 msgstr "только предпросмотр"
 
-#: catalog/models.py:385 customers/models.py:68 orders/models.py:214
-#: orders/models.py:325 orders/models.py:368 orders/models.py:532
+#: catalog/models.py:385 customers/models.py:68 orders/models.py:258
+#: orders/models.py:369 orders/models.py:412 orders/models.py:576
 msgid "status"
 msgstr "статус"
 
@@ -931,7 +931,7 @@ msgstr "Поставщика нет — продавать нельзя"
 msgid "This supplier's own code for the package, e.g. TR_5_30."
 msgstr "Собственный код пакета у этого поставщика, например TR_5_30."
 
-#: catalog/models.py:438 orders/models.py:480
+#: catalog/models.py:438 orders/models.py:524
 msgid "package code"
 msgstr "код пакета"
 
@@ -965,7 +965,7 @@ msgid "last synced at"
 msgstr "последняя синхронизация"
 
 #: catalog/models.py:457 catalog/models.py:562 content/models.py:185
-#: orders/models.py:419 orders/models.py:490 orders/models.py:534
+#: orders/models.py:463 orders/models.py:534 orders/models.py:578
 msgid "updated at"
 msgstr "обновлено"
 
@@ -1035,7 +1035,7 @@ msgstr "минимальная маржа, USD"
 msgid "rounding"
 msgstr "округление"
 
-#: catalog/models.py:561 orders/models.py:488
+#: catalog/models.py:561 orders/models.py:532
 msgid "note"
 msgstr "примечание"
 
@@ -1051,20 +1051,20 @@ msgstr "правила ценообразования"
 msgid "Give the traffic size this rule is about, in MB."
 msgstr "Укажите размер трафика, к которому относится правило, в МБ."
 
-#: config/dashboard.py:187 orders/models.py:209 templates/admin/index.html:301
+#: config/dashboard.py:187 orders/models.py:253 templates/admin/index.html:301
 #: templates/admin/orders/receipt.html:117
 msgid "Paid"
 msgstr "Оплачен"
 
-#: config/dashboard.py:188 orders/models.py:208 templates/admin/index.html:303
+#: config/dashboard.py:188 orders/models.py:252 templates/admin/index.html:303
 msgid "Pending"
 msgstr "В ожидании"
 
-#: config/dashboard.py:189 orders/models.py:210
+#: config/dashboard.py:189 orders/models.py:254
 msgid "Cancelled"
 msgstr "Отменён"
 
-#: config/dashboard.py:190 orders/models.py:211 templates/admin/index.html:305
+#: config/dashboard.py:190 orders/models.py:255 templates/admin/index.html:305
 msgid "Refunded"
 msgstr "Возвращён"
 
@@ -2144,7 +2144,7 @@ msgstr "Продажи"
 msgid "Orders"
 msgstr "Заказы"
 
-#: config/settings.py:507 orders/models.py:336 orders/models.py:339
+#: config/settings.py:507 orders/models.py:380 orders/models.py:383
 msgid "eSIMs"
 msgstr "eSIM"
 
@@ -2417,7 +2417,7 @@ msgid "benefits"
 msgstr "преимущества"
 
 #: content/models.py:96 customers/models.py:39 customers/models.py:101
-#: orders/models.py:158 orders/models.py:213 orders/models.py:312
+#: orders/models.py:202 orders/models.py:257 orders/models.py:356
 msgid "customer"
 msgstr "клиент"
 
@@ -2446,9 +2446,10 @@ msgid "moderation status"
 msgstr "статус модерации"
 
 #: content/models.py:113 customers/models.py:16 customers/models.py:70
-#: customers/models.py:112 orders/models.py:79 orders/models.py:195
-#: orders/models.py:249 orders/models.py:331 orders/models.py:370
-#: orders/models.py:418 orders/models.py:489 orders/models.py:533
+#: customers/models.py:112 orders/models.py:79 orders/models.py:173
+#: orders/models.py:239 orders/models.py:293 orders/models.py:375
+#: orders/models.py:414 orders/models.py:462 orders/models.py:533
+#: orders/models.py:577
 msgid "created at"
 msgstr "создано"
 
@@ -2497,7 +2498,7 @@ msgstr ""
 "его скидку — процент или фиксированную сумму, — поэтому менять нужно одно "
 "число, а не два."
 
-#: content/models.py:173 orders/models.py:83 orders/models.py:220
+#: content/models.py:173 orders/models.py:83 orders/models.py:264
 msgid "promo code"
 msgstr "промокод"
 
@@ -2617,60 +2618,64 @@ msgstr "аккаунт соцсети"
 msgid "social accounts"
 msgstr "аккаунты соцсетей"
 
-#: orders/admin.py:101
+#: orders/admin.py:102
 msgid "Usage"
 msgstr "Использование"
 
-#: orders/admin.py:144 orders/admin.py:168 orders/admin.py:272
-#: orders/admin.py:368 templates/admin/index.html:287
+#: orders/admin.py:145 orders/admin.py:169 orders/admin.py:273
+#: orders/admin.py:369 templates/admin/index.html:287
 msgid "Status"
 msgstr "Статус"
 
-#: orders/admin.py:148
+#: orders/admin.py:149
 msgid "Items"
 msgstr "Позиции"
 
-#: orders/admin.py:172
+#: orders/admin.py:173
 msgid "Data used"
 msgstr "Использовано трафика"
 
-#: orders/admin.py:185
+#: orders/admin.py:186
 msgid "QR code"
 msgstr "QR-код"
 
-#: orders/admin.py:260 templates/admin/orders/receipt.html:90
+#: orders/admin.py:261 templates/admin/orders/receipt.html:90
 msgid "Payment confirmation"
 msgstr "Подтверждение платежа"
 
-#: orders/admin.py:276
+#: orders/admin.py:277
 msgid "Confirmation"
 msgstr "Подтверждение"
 
-#: orders/admin.py:285
+#: orders/admin.py:286
 msgid "open"
 msgstr "открыть"
 
-#: orders/admin.py:314 orders/admin.py:364
+#: orders/admin.py:315 orders/admin.py:365
 msgid "Amount"
 msgstr "Сумма"
 
-#: orders/admin.py:318 orders/admin.py:419
+#: orders/admin.py:319 orders/admin.py:420
 msgid "State"
 msgstr "Состояние"
 
-#: orders/admin.py:475
+#: orders/admin.py:476
 #, python-format
 msgid ""
 "The order was created but the wholesaler was not contacted: %(reason)s. "
 "Nothing has been delivered — check the worker and try again."
-msgstr "Заказ создан, но запрос поставщику не ушёл: %(reason)s. Ничего не доставлено — проверьте воркер и повторите."
+msgstr ""
+"Заказ создан, но запрос поставщику не ушёл: %(reason)s. Ничего не доставлено "
+"— проверьте воркер и повторите."
 
-#: orders/admin.py:483
+#: orders/admin.py:484
 #, python-format
 msgid ""
 "eSIM ordered at cost ($%(cost)s). It appears under the customer's profile "
 "once the wholesaler answers."
-msgstr "eSIM заказан по себестоимости ($%(cost)s). Появится в профиле клиента, когда ответит поставщик."
+msgstr ""
+"eSIM заказан по себестоимости ($%(cost)s). Появится в профиле клиента, когда "
+"ответит поставщик."
 
 #: orders/models.py:18
 msgid "discount type"
@@ -2729,7 +2734,7 @@ msgstr ""
 "Почему этот код существует. Для кодов, созданных сотрудником, не трогается; "
 "для двух схем кешбэка его ставит воркер."
 
-#: orders/models.py:54 orders/models.py:170 orders/models.py:412
+#: orders/models.py:54 orders/models.py:214 orders/models.py:456
 msgid "reason"
 msgstr "причина"
 
@@ -2751,7 +2756,10 @@ msgid ""
 "Redeemable only by a customer who has never paid for an order. WELCOME10 is "
 "advertised as a discount on your first eSIM, and without this it applied to "
 "every later one as well — the same customer kept getting 10% off forever."
-msgstr "Доступен только клиенту, который ещё ни разу не оплачивал заказ. WELCOME10 объявлен как скидка на первый eSIM, а без этого признака он применялся и ко всем последующим — один клиент получал 10% бесконечно."
+msgstr ""
+"Доступен только клиенту, который ещё ни разу не оплачивал заказ. WELCOME10 "
+"объявлен как скидка на первый eSIM, а без этого признака он применялся и ко "
+"всем последующим — один клиент получал 10% бесконечно."
 
 #: orders/models.py:77
 msgid "first order only"
@@ -2761,264 +2769,297 @@ msgstr "только на первый заказ"
 msgid "promo codes"
 msgstr "промокоды"
 
-#: orders/models.py:159
+#: orders/models.py:156
+msgid "chat id"
+msgstr "chat ID"
+
+#: orders/models.py:158
+msgid ""
+"The number Telegram gives a chat. A person's own id is positive; a group's "
+"is negative and starts with -100. A person must press Start on the bot first "
+"— Telegram does not let a bot write first."
+msgstr "Номер, который Telegram присваивает чату. У человека он положительный; у группы отрицательный и начинается с -100. Человек должен сначала нажать Start у бота — Telegram не даёт боту написать первым."
+
+#: orders/models.py:165
+msgid "label"
+msgstr "метка"
+
+#: orders/models.py:166
+msgid "Who or what this is, so the list stays readable a year from now."
+msgstr "Кто или что это — чтобы список был понятен и через год."
+
+#: orders/models.py:171
+msgid "Switch off to stop sending without losing the id."
+msgstr "Отключите, чтобы прекратить отправку, не удаляя ID."
+
+#: orders/models.py:176
+msgid "telegram recipient"
+msgstr "получатель Telegram"
+
+#: orders/models.py:177
+msgid "telegram recipients"
+msgstr "получатели Telegram"
+
+#: orders/models.py:203
 msgid "Who receives the eSIM. They must already have an account."
 msgstr "Кто получит eSIM. У него уже должен быть аккаунт."
 
-#: orders/models.py:166
+#: orders/models.py:210
 msgid "Which tariff to buy for them."
 msgstr "Какой тариф для него купить."
 
-#: orders/models.py:171
+#: orders/models.py:215
 msgid ""
 "Why this was given away. Required — a giveaway with no reason is "
 "indistinguishable from a mistake."
-msgstr "Почему выдано бесплатно. Обязательно — выдача без причины неотличима от ошибки."
+msgstr ""
+"Почему выдано бесплатно. Обязательно — выдача без причины неотличима от "
+"ошибки."
 
-#: orders/models.py:185
+#: orders/models.py:229
 msgid "granted by"
 msgstr "кто выдал"
 
-#: orders/models.py:193 orders/models.py:258 orders/models.py:267
-#: orders/models.py:310 orders/models.py:365 orders/models.py:404
-#: orders/models.py:470 orders/models.py:526
+#: orders/models.py:237 orders/models.py:302 orders/models.py:311
+#: orders/models.py:354 orders/models.py:409 orders/models.py:448
+#: orders/models.py:514 orders/models.py:570
 msgid "order"
 msgstr "заказ"
 
-#: orders/models.py:198
+#: orders/models.py:242
 msgid "complimentary grant"
 msgstr "выдача по себестоимости"
 
-#: orders/models.py:199
+#: orders/models.py:243
 msgid "complimentary grants"
 msgstr "выдачи по себестоимости"
 
-#: orders/models.py:215
+#: orders/models.py:259
 msgid "subtotal"
 msgstr "промежуточная сумма"
 
-#: orders/models.py:216
+#: orders/models.py:260
 msgid "discount"
 msgstr "скидка"
 
-#: orders/models.py:217
+#: orders/models.py:261
 msgid "total"
 msgstr "итого"
 
-#: orders/models.py:230
+#: orders/models.py:274
 msgid "is complimentary"
 msgstr "по себестоимости"
 
-#: orders/models.py:231
+#: orders/models.py:275
 msgid "Issued by staff at cost, with no payment taken."
 msgstr "Выдано сотрудником по себестоимости, оплата не взималась."
 
-#: orders/models.py:238
+#: orders/models.py:282
 msgid "Som amount frozen at checkout. Payme is validated against this."
 msgstr ""
 "Сумма в сумах, зафиксированная при оформлении. Payme проверяется по ней."
 
-#: orders/models.py:239
+#: orders/models.py:283
 msgid "amount uzs"
 msgstr "сумма, сум"
 
-#: orders/models.py:246
+#: orders/models.py:290
 msgid "USD→UZS rate used to freeze amount_uzs."
 msgstr "Курс USD→UZS, использованный для фиксации amount_uzs."
 
-#: orders/models.py:247
+#: orders/models.py:291
 msgid "exchange rate"
 msgstr "курс валюты"
 
-#: orders/models.py:250
+#: orders/models.py:294
 msgid "paid at"
 msgstr "оплачено"
 
-#: orders/models.py:252
+#: orders/models.py:296
 msgid "provider transaction id"
 msgstr "ID транзакции провайдера"
 
-#: orders/models.py:253
+#: orders/models.py:297
 msgid "provider order no"
 msgstr "номер заказа у провайдера"
 
-#: orders/models.py:254 orders/models.py:323
+#: orders/models.py:298 orders/models.py:367
 msgid "provider status"
 msgstr "статус у провайдера"
 
-#: orders/models.py:259
+#: orders/models.py:303
 msgid "orders"
 msgstr "заказы"
 
-#: orders/models.py:269
+#: orders/models.py:313
 msgid "unit price"
 msgstr "цена за единицу"
 
-#: orders/models.py:281
+#: orders/models.py:325
 msgid "Supplier cost per unit at the time of sale."
 msgstr "Себестоимость у поставщика за единицу на момент продажи."
 
-#: orders/models.py:282
+#: orders/models.py:326
 msgid "unit cost"
 msgstr "себестоимость за единицу"
 
-#: orders/models.py:284
+#: orders/models.py:328
 msgid "quantity"
 msgstr "количество"
 
-#: orders/models.py:297
+#: orders/models.py:341
 msgid "order item"
 msgstr "позиция заказа"
 
-#: orders/models.py:298
+#: orders/models.py:342
 msgid "order items"
 msgstr "позиции заказа"
 
-#: orders/models.py:315
+#: orders/models.py:359
 msgid "iccid"
 msgstr "ICCID"
 
-#: orders/models.py:320
+#: orders/models.py:364
 msgid "Base64 PNG data URL (encrypted at rest)"
 msgstr "Base64 PNG data URL (шифруется при хранении)"
 
-#: orders/models.py:322
+#: orders/models.py:366
 msgid "provider esim tran no"
 msgstr "номер eSIM-транзакции провайдера"
 
-#: orders/models.py:324
+#: orders/models.py:368
 msgid "provider qr url"
 msgstr "ссылка на QR провайдера"
 
-#: orders/models.py:326
+#: orders/models.py:370
 msgid "data total mb"
 msgstr "всего трафика, МБ"
 
-#: orders/models.py:327
+#: orders/models.py:371
 msgid "data used mb"
 msgstr "использовано трафика, МБ"
 
-#: orders/models.py:329
+#: orders/models.py:373
 msgid "activated at"
 msgstr "активировано"
 
-#: orders/models.py:330
+#: orders/models.py:374
 msgid "expires at"
 msgstr "истекает"
 
-#: orders/models.py:335 orders/models.py:338
+#: orders/models.py:379 orders/models.py:382
 msgid "eSIM"
 msgstr "eSIM"
 
-#: orders/models.py:366
+#: orders/models.py:410
 msgid "method"
 msgstr "способ"
 
-#: orders/models.py:367
+#: orders/models.py:411
 msgid "amount"
 msgstr "сумма"
 
-#: orders/models.py:369
+#: orders/models.py:413
 msgid "provider ref"
 msgstr "референс провайдера"
 
-#: orders/models.py:374
+#: orders/models.py:418
 msgid "payment"
 msgstr "платёж"
 
-#: orders/models.py:375
+#: orders/models.py:419
 msgid "payments"
 msgstr "платежи"
 
-#: orders/models.py:406 orders/models.py:528
+#: orders/models.py:450 orders/models.py:572
 msgid "transaction id"
 msgstr "ID транзакции"
 
-#: orders/models.py:409 orders/models.py:530
+#: orders/models.py:453 orders/models.py:574
 msgid "amount tiyin"
 msgstr "сумма, тийин"
 
-#: orders/models.py:410
+#: orders/models.py:454
 msgid "The account value Payme sent."
 msgstr "Значение account, присланное Payme."
 
-#: orders/models.py:410 orders/models.py:531
+#: orders/models.py:454 orders/models.py:575
 msgid "account"
 msgstr "аккаунт"
 
-#: orders/models.py:411 orders/models.py:482
+#: orders/models.py:455 orders/models.py:526
 msgid "state"
 msgstr "состояние"
 
-#: orders/models.py:412
+#: orders/models.py:456
 msgid "Payme cancellation reason."
 msgstr "Причина отмены в Payme."
 
-#: orders/models.py:415
+#: orders/models.py:459
 msgid "create time"
 msgstr "время создания в Payme"
 
-#: orders/models.py:416
+#: orders/models.py:460
 msgid "perform time"
 msgstr "время выполнения в Payme"
 
-#: orders/models.py:417
+#: orders/models.py:461
 msgid "cancel time"
 msgstr "время отмены в Payme"
 
-#: orders/models.py:423
+#: orders/models.py:467
 msgid "Payme transaction"
 msgstr "Транзакция Payme"
 
-#: orders/models.py:424
+#: orders/models.py:468
 msgid "Payme transactions"
 msgstr "Транзакции Payme"
 
-#: orders/models.py:462
+#: orders/models.py:506
 msgid "Claimed — outcome unknown"
 msgstr "Забронировано — результат неизвестен"
 
-#: orders/models.py:463
+#: orders/models.py:507
 msgid "Bought"
 msgstr "Куплено"
 
-#: orders/models.py:464
+#: orders/models.py:508
 msgid "Refused before charge"
 msgstr "Отказано до списания"
 
-#: orders/models.py:477
+#: orders/models.py:521
 msgid "Which unit of the order this row bought."
 msgstr "Какую единицу заказа купила эта строка."
 
-#: orders/models.py:478
+#: orders/models.py:522
 msgid "line key"
 msgstr "ключ позиции"
 
-#: orders/models.py:485
+#: orders/models.py:529
 msgid "supplier reference"
 msgstr "ссылка поставщика"
 
-#: orders/models.py:487
+#: orders/models.py:531
 msgid "ICCID"
 msgstr "ICCID"
 
-#: orders/models.py:494
+#: orders/models.py:538
 msgid "supplier purchase"
 msgstr "закупка у поставщика"
 
-#: orders/models.py:495
+#: orders/models.py:539
 msgid "supplier purchases"
 msgstr "закупки у поставщика"
 
-#: orders/models.py:531
+#: orders/models.py:575
 msgid "The account value ATMOS sent."
 msgstr "Значение account, которое прислал ATMOS."
 
-#: orders/models.py:538
+#: orders/models.py:582
 msgid "ATMOS transaction"
 msgstr "Транзакция ATMOS"
 
-#: orders/models.py:539
+#: orders/models.py:583
 msgid "ATMOS transactions"
 msgstr "Транзакции ATMOS"
 

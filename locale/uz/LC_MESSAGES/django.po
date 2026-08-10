@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: QulaySIM admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-10 22:53+0500\n"
+"POT-Creation-Date: 2026-08-10 23:33+0500\n"
 "PO-Revision-Date: 2026-07-31 00:00+0500\n"
 "Last-Translator: QulaySIM\n"
 "Language-Team: QulaySIM\n"
@@ -747,7 +747,7 @@ msgstr "mashhur"
 #: catalog/models.py:69 catalog/models.py:191 catalog/models.py:560
 #: content/models.py:21 content/models.py:41 content/models.py:70
 #: content/models.py:115 content/models.py:132 content/models.py:184
-#: customers/models.py:15 orders/models.py:38
+#: customers/models.py:15 orders/models.py:38 orders/models.py:170
 msgid "is active"
 msgstr "faol"
 
@@ -780,7 +780,7 @@ msgstr "trafik, MB"
 msgid "is unlimited"
 msgstr "cheksiz"
 
-#: catalog/models.py:124 orders/models.py:328
+#: catalog/models.py:124 orders/models.py:372
 msgid "validity days"
 msgstr "amal qilish muddati, kun"
 
@@ -789,7 +789,7 @@ msgid ""
 "Supplier cost. Set automatically from the cheapest supplier offer, if any."
 msgstr "Ta’minotchi tannarxi. Taklif bo‘lsa, eng arzonidan avtomatik olinadi."
 
-#: catalog/models.py:137 catalog/models.py:442 orders/models.py:177
+#: catalog/models.py:137 catalog/models.py:442 orders/models.py:221
 msgid "cost usd"
 msgstr "tannarx (USD)"
 
@@ -843,8 +843,8 @@ msgid "Winning supplier. Managed by the offers below when there are any."
 msgstr "G‘olib ta’minotchi. Takliflar bo‘lsa, pastdagi takliflar boshqaradi."
 
 #: catalog/models.py:182 catalog/models.py:377 catalog/models.py:435
-#: catalog/models.py:515 customers/models.py:103 orders/models.py:251
-#: orders/models.py:321 orders/models.py:472
+#: catalog/models.py:515 customers/models.py:103 orders/models.py:295
+#: orders/models.py:365 orders/models.py:516
 msgid "provider"
 msgstr "provayder"
 
@@ -856,8 +856,8 @@ msgstr "Ta’minotchi paketining kodi, masalan eSIM Access uchun JP_1_7."
 msgid "provider package code"
 msgstr "provayder paket kodi"
 
-#: catalog/models.py:196 catalog/models.py:434 orders/models.py:165
-#: orders/models.py:268 orders/models.py:311
+#: catalog/models.py:196 catalog/models.py:434 orders/models.py:209
+#: orders/models.py:312 orders/models.py:355
 msgid "plan"
 msgstr "tarif"
 
@@ -889,8 +889,8 @@ msgstr "Ko‘rib chiqish hech narsa yozmaydi."
 msgid "preview only"
 msgstr "faqat ko‘rib chiqish"
 
-#: catalog/models.py:385 customers/models.py:68 orders/models.py:214
-#: orders/models.py:325 orders/models.py:368 orders/models.py:532
+#: catalog/models.py:385 customers/models.py:68 orders/models.py:258
+#: orders/models.py:369 orders/models.py:412 orders/models.py:576
 msgid "status"
 msgstr "holat"
 
@@ -938,7 +938,7 @@ msgstr "Ta’minotchi yo‘q — sotilmaydi"
 msgid "This supplier's own code for the package, e.g. TR_5_30."
 msgstr "Shu ta’minotchining paket uchun o‘z kodi, masalan TR_5_30."
 
-#: catalog/models.py:438 orders/models.py:480
+#: catalog/models.py:438 orders/models.py:524
 msgid "package code"
 msgstr "paket kodi"
 
@@ -973,7 +973,7 @@ msgid "last synced at"
 msgstr "oxirgi sinxronizatsiya"
 
 #: catalog/models.py:457 catalog/models.py:562 content/models.py:185
-#: orders/models.py:419 orders/models.py:490 orders/models.py:534
+#: orders/models.py:463 orders/models.py:534 orders/models.py:578
 msgid "updated at"
 msgstr "yangilangan vaqti"
 
@@ -1045,7 +1045,7 @@ msgstr "eng kam marja, USD"
 msgid "rounding"
 msgstr "yaxlitlash"
 
-#: catalog/models.py:561 orders/models.py:488
+#: catalog/models.py:561 orders/models.py:532
 msgid "note"
 msgstr "izoh"
 
@@ -1061,20 +1061,20 @@ msgstr "narxlash qoidalari"
 msgid "Give the traffic size this rule is about, in MB."
 msgstr "Bu qoida qaysi trafik o‘lchami haqida — MB da yozing."
 
-#: config/dashboard.py:187 orders/models.py:209 templates/admin/index.html:301
+#: config/dashboard.py:187 orders/models.py:253 templates/admin/index.html:301
 #: templates/admin/orders/receipt.html:117
 msgid "Paid"
 msgstr "To‘langan"
 
-#: config/dashboard.py:188 orders/models.py:208 templates/admin/index.html:303
+#: config/dashboard.py:188 orders/models.py:252 templates/admin/index.html:303
 msgid "Pending"
 msgstr "Kutilmoqda"
 
-#: config/dashboard.py:189 orders/models.py:210
+#: config/dashboard.py:189 orders/models.py:254
 msgid "Cancelled"
 msgstr "Bekor qilingan"
 
-#: config/dashboard.py:190 orders/models.py:211 templates/admin/index.html:305
+#: config/dashboard.py:190 orders/models.py:255 templates/admin/index.html:305
 msgid "Refunded"
 msgstr "Qaytarilgan"
 
@@ -2158,7 +2158,7 @@ msgstr "Savdo"
 msgid "Orders"
 msgstr "Buyurtmalar"
 
-#: config/settings.py:507 orders/models.py:336 orders/models.py:339
+#: config/settings.py:507 orders/models.py:380 orders/models.py:383
 msgid "eSIMs"
 msgstr "eSIM’lar"
 
@@ -2430,7 +2430,7 @@ msgid "benefits"
 msgstr "afzalliklar"
 
 #: content/models.py:96 customers/models.py:39 customers/models.py:101
-#: orders/models.py:158 orders/models.py:213 orders/models.py:312
+#: orders/models.py:202 orders/models.py:257 orders/models.py:356
 msgid "customer"
 msgstr "mijoz"
 
@@ -2459,9 +2459,10 @@ msgid "moderation status"
 msgstr "moderatsiya holati"
 
 #: content/models.py:113 customers/models.py:16 customers/models.py:70
-#: customers/models.py:112 orders/models.py:79 orders/models.py:195
-#: orders/models.py:249 orders/models.py:331 orders/models.py:370
-#: orders/models.py:418 orders/models.py:489 orders/models.py:533
+#: customers/models.py:112 orders/models.py:79 orders/models.py:173
+#: orders/models.py:239 orders/models.py:293 orders/models.py:375
+#: orders/models.py:414 orders/models.py:462 orders/models.py:533
+#: orders/models.py:577
 msgid "created at"
 msgstr "yaratilgan vaqti"
 
@@ -2510,7 +2511,7 @@ msgstr ""
 "foiz yoki qat’iy summa — ko‘rsatiladi, shunda o‘zgartirish uchun ikki emas, "
 "bitta son bo‘ladi."
 
-#: content/models.py:173 orders/models.py:83 orders/models.py:220
+#: content/models.py:173 orders/models.py:83 orders/models.py:264
 msgid "promo code"
 msgstr "promokod"
 
@@ -2630,60 +2631,64 @@ msgstr "ijtimoiy tarmoq hisobi"
 msgid "social accounts"
 msgstr "ijtimoiy tarmoq hisoblari"
 
-#: orders/admin.py:101
+#: orders/admin.py:102
 msgid "Usage"
 msgstr "Sarflangani"
 
-#: orders/admin.py:144 orders/admin.py:168 orders/admin.py:272
-#: orders/admin.py:368 templates/admin/index.html:287
+#: orders/admin.py:145 orders/admin.py:169 orders/admin.py:273
+#: orders/admin.py:369 templates/admin/index.html:287
 msgid "Status"
 msgstr "Holat"
 
-#: orders/admin.py:148
+#: orders/admin.py:149
 msgid "Items"
 msgstr "Qatorlar"
 
-#: orders/admin.py:172
+#: orders/admin.py:173
 msgid "Data used"
 msgstr "Sarflangan trafik"
 
-#: orders/admin.py:185
+#: orders/admin.py:186
 msgid "QR code"
 msgstr "QR kod"
 
-#: orders/admin.py:260 templates/admin/orders/receipt.html:90
+#: orders/admin.py:261 templates/admin/orders/receipt.html:90
 msgid "Payment confirmation"
 msgstr "To‘lov tasdiqnomasi"
 
-#: orders/admin.py:276
+#: orders/admin.py:277
 msgid "Confirmation"
 msgstr "Tasdiqnoma"
 
-#: orders/admin.py:285
+#: orders/admin.py:286
 msgid "open"
 msgstr "ochish"
 
-#: orders/admin.py:314 orders/admin.py:364
+#: orders/admin.py:315 orders/admin.py:365
 msgid "Amount"
 msgstr "Summa"
 
-#: orders/admin.py:318 orders/admin.py:419
+#: orders/admin.py:319 orders/admin.py:420
 msgid "State"
 msgstr "Holat"
 
-#: orders/admin.py:475
+#: orders/admin.py:476
 #, python-format
 msgid ""
 "The order was created but the wholesaler was not contacted: %(reason)s. "
 "Nothing has been delivered — check the worker and try again."
-msgstr "Buyurtma yaratildi, lekin ta‘minotchiga so‘rov ketmadi: %(reason)s. Hech nima yetkazilmadi — ishchini tekshirib, qaytadan urinib ko‘ring."
+msgstr ""
+"Buyurtma yaratildi, lekin ta‘minotchiga so‘rov ketmadi: %(reason)s. Hech "
+"nima yetkazilmadi — ishchini tekshirib, qaytadan urinib ko‘ring."
 
-#: orders/admin.py:483
+#: orders/admin.py:484
 #, python-format
 msgid ""
 "eSIM ordered at cost ($%(cost)s). It appears under the customer's profile "
 "once the wholesaler answers."
-msgstr "eSIM tannarxda buyurtma qilindi ($%(cost)s). Ta‘minotchi javob berishi bilan mijoz profilida paydo bo‘ladi."
+msgstr ""
+"eSIM tannarxda buyurtma qilindi ($%(cost)s). Ta‘minotchi javob berishi bilan "
+"mijoz profilida paydo bo‘ladi."
 
 #: orders/models.py:18
 msgid "discount type"
@@ -2742,7 +2747,7 @@ msgstr ""
 "Bu kod nima uchun mavjud. Xodim yaratgan kodlarda tegilmaydi; ikkala keshbek "
 "sxemasi uchun uni vazifa o‘zi qo‘yadi."
 
-#: orders/models.py:54 orders/models.py:170 orders/models.py:412
+#: orders/models.py:54 orders/models.py:214 orders/models.py:456
 msgid "reason"
 msgstr "sabab"
 
@@ -2765,7 +2770,10 @@ msgid ""
 "Redeemable only by a customer who has never paid for an order. WELCOME10 is "
 "advertised as a discount on your first eSIM, and without this it applied to "
 "every later one as well — the same customer kept getting 10% off forever."
-msgstr "Faqat hech qachon to‘lov qilmagan mijoz ishlatishi mumkin. WELCOME10 «birinchi eSIM‘ingizga chegirma» deb reklama qilinadi, bu belgisiz esa keyingi har bir xaridga ham tushardi — bitta mijoz cheksiz 10% olib turardi."
+msgstr ""
+"Faqat hech qachon to‘lov qilmagan mijoz ishlatishi mumkin. WELCOME10 "
+"«birinchi eSIM‘ingizga chegirma» deb reklama qilinadi, bu belgisiz esa "
+"keyingi har bir xaridga ham tushardi — bitta mijoz cheksiz 10% olib turardi."
 
 #: orders/models.py:77
 msgid "first order only"
@@ -2775,265 +2783,296 @@ msgstr "faqat birinchi buyurtmaga"
 msgid "promo codes"
 msgstr "promokodlar"
 
-#: orders/models.py:159
+#: orders/models.py:156
+msgid "chat id"
+msgstr "chat ID"
+
+#: orders/models.py:158
+msgid ""
+"The number Telegram gives a chat. A person's own id is positive; a group's "
+"is negative and starts with -100. A person must press Start on the bot first "
+"— Telegram does not let a bot write first."
+msgstr "Telegram chatga beradigan raqam. Odamning IDsi musbat; guruhning IDsi manfiy va -100 bilan boshlanadi. Odam avval botga Start bosishi kerak — Telegram botga birinchi yozishga ruxsat bermaydi."
+
+#: orders/models.py:165
+msgid "label"
+msgstr "nomi"
+
+#: orders/models.py:166
+msgid "Who or what this is, so the list stays readable a year from now."
+msgstr "Bu kim yoki nima — bir yildan keyin ham ro‘yxat tushunarli bo‘lishi uchun."
+
+#: orders/models.py:171
+msgid "Switch off to stop sending without losing the id."
+msgstr "IDni o‘chirmasdan yuborishni to‘xtatish uchun uzib qo‘ying."
+
+#: orders/models.py:176
+msgid "telegram recipient"
+msgstr "Telegram qabul qiluvchi"
+
+#: orders/models.py:177
+msgid "telegram recipients"
+msgstr "Telegram qabul qiluvchilar"
+
+#: orders/models.py:203
 msgid "Who receives the eSIM. They must already have an account."
 msgstr "eSIM kimga beriladi. Uning akkaunti allaqachon bo‘lishi kerak."
 
-#: orders/models.py:166
+#: orders/models.py:210
 msgid "Which tariff to buy for them."
 msgstr "Unga qaysi tarif olinadi."
 
-#: orders/models.py:171
+#: orders/models.py:215
 msgid ""
 "Why this was given away. Required — a giveaway with no reason is "
 "indistinguishable from a mistake."
 msgstr "Nega sovg‘a qilindi. Majburiy — sababsiz sovg‘a xatodan farq qilmaydi."
 
-#: orders/models.py:185
+#: orders/models.py:229
 msgid "granted by"
 msgstr "kim bergan"
 
-#: orders/models.py:193 orders/models.py:258 orders/models.py:267
-#: orders/models.py:310 orders/models.py:365 orders/models.py:404
-#: orders/models.py:470 orders/models.py:526
+#: orders/models.py:237 orders/models.py:302 orders/models.py:311
+#: orders/models.py:354 orders/models.py:409 orders/models.py:448
+#: orders/models.py:514 orders/models.py:570
 msgid "order"
 msgstr "buyurtma"
 
-#: orders/models.py:198
+#: orders/models.py:242
 msgid "complimentary grant"
 msgstr "tannarxda berilgan eSIM"
 
-#: orders/models.py:199
+#: orders/models.py:243
 msgid "complimentary grants"
 msgstr "tannarxda berilgan eSIM‘lar"
 
-#: orders/models.py:215
+#: orders/models.py:259
 msgid "subtotal"
 msgstr "oraliq summa"
 
-#: orders/models.py:216
+#: orders/models.py:260
 msgid "discount"
 msgstr "chegirma"
 
-#: orders/models.py:217
+#: orders/models.py:261
 msgid "total"
 msgstr "jami"
 
-#: orders/models.py:230
+#: orders/models.py:274
 msgid "is complimentary"
 msgstr "tannarxda berilgan"
 
-#: orders/models.py:231
+#: orders/models.py:275
 msgid "Issued by staff at cost, with no payment taken."
 msgstr "Xodim tomonidan tannarxda berilgan, to‘lov olinmagan."
 
-#: orders/models.py:238
+#: orders/models.py:282
 msgid "Som amount frozen at checkout. Payme is validated against this."
 msgstr ""
 "To‘lov paytida qotirilgan so‘m summasi. Payme shunga solishtirib "
 "tekshiriladi."
 
-#: orders/models.py:239
+#: orders/models.py:283
 msgid "amount uzs"
 msgstr "summa, so‘m"
 
-#: orders/models.py:246
+#: orders/models.py:290
 msgid "USD→UZS rate used to freeze amount_uzs."
 msgstr "amount_uzs ni qotirish uchun ishlatilgan USD→UZS kursi."
 
-#: orders/models.py:247
+#: orders/models.py:291
 msgid "exchange rate"
 msgstr "valyuta kursi"
 
-#: orders/models.py:250
+#: orders/models.py:294
 msgid "paid at"
 msgstr "to‘langan vaqti"
 
-#: orders/models.py:252
+#: orders/models.py:296
 msgid "provider transaction id"
 msgstr "provayder tranzaksiya identifikatori"
 
-#: orders/models.py:253
+#: orders/models.py:297
 msgid "provider order no"
 msgstr "provayderdagi buyurtma raqami"
 
-#: orders/models.py:254 orders/models.py:323
+#: orders/models.py:298 orders/models.py:367
 msgid "provider status"
 msgstr "provayderdagi holat"
 
-#: orders/models.py:259
+#: orders/models.py:303
 msgid "orders"
 msgstr "buyurtmalar"
 
-#: orders/models.py:269
+#: orders/models.py:313
 msgid "unit price"
 msgstr "dona narxi"
 
-#: orders/models.py:281
+#: orders/models.py:325
 msgid "Supplier cost per unit at the time of sale."
 msgstr "Sotuv paytidagi bir dona uchun ta’minotchi tannarxi."
 
-#: orders/models.py:282
+#: orders/models.py:326
 msgid "unit cost"
 msgstr "dona tannarxi"
 
-#: orders/models.py:284
+#: orders/models.py:328
 msgid "quantity"
 msgstr "miqdori"
 
-#: orders/models.py:297
+#: orders/models.py:341
 msgid "order item"
 msgstr "buyurtma qatori"
 
-#: orders/models.py:298
+#: orders/models.py:342
 msgid "order items"
 msgstr "buyurtma qatorlari"
 
-#: orders/models.py:315
+#: orders/models.py:359
 msgid "iccid"
 msgstr "ICCID"
 
-#: orders/models.py:320
+#: orders/models.py:364
 msgid "Base64 PNG data URL (encrypted at rest)"
 msgstr "Base64 PNG data URL (saqlanishda shifrlangan)"
 
-#: orders/models.py:322
+#: orders/models.py:366
 msgid "provider esim tran no"
 msgstr "provayder eSIM tranzaksiya raqami"
 
-#: orders/models.py:324
+#: orders/models.py:368
 msgid "provider qr url"
 msgstr "provayder QR havolasi"
 
-#: orders/models.py:326
+#: orders/models.py:370
 msgid "data total mb"
 msgstr "jami trafik, MB"
 
-#: orders/models.py:327
+#: orders/models.py:371
 msgid "data used mb"
 msgstr "sarflangan trafik, MB"
 
-#: orders/models.py:329
+#: orders/models.py:373
 msgid "activated at"
 msgstr "faollashtirilgan vaqti"
 
-#: orders/models.py:330
+#: orders/models.py:374
 msgid "expires at"
 msgstr "muddati tugaydi"
 
-#: orders/models.py:335 orders/models.py:338
+#: orders/models.py:379 orders/models.py:382
 msgid "eSIM"
 msgstr "eSIM"
 
-#: orders/models.py:366
+#: orders/models.py:410
 msgid "method"
 msgstr "usul"
 
-#: orders/models.py:367
+#: orders/models.py:411
 msgid "amount"
 msgstr "summa"
 
-#: orders/models.py:369
+#: orders/models.py:413
 msgid "provider ref"
 msgstr "provayder ma’lumotnomasi"
 
-#: orders/models.py:374
+#: orders/models.py:418
 msgid "payment"
 msgstr "to‘lov"
 
-#: orders/models.py:375
+#: orders/models.py:419
 msgid "payments"
 msgstr "to‘lovlar"
 
-#: orders/models.py:406 orders/models.py:528
+#: orders/models.py:450 orders/models.py:572
 msgid "transaction id"
 msgstr "tranzaksiya identifikatori"
 
-#: orders/models.py:409 orders/models.py:530
+#: orders/models.py:453 orders/models.py:574
 msgid "amount tiyin"
 msgstr "summa, tiyin"
 
-#: orders/models.py:410
+#: orders/models.py:454
 msgid "The account value Payme sent."
 msgstr "Payme yuborgan hisob qiymati."
 
-#: orders/models.py:410 orders/models.py:531
+#: orders/models.py:454 orders/models.py:575
 msgid "account"
 msgstr "hisob"
 
-#: orders/models.py:411 orders/models.py:482
+#: orders/models.py:455 orders/models.py:526
 msgid "state"
 msgstr "holati"
 
-#: orders/models.py:412
+#: orders/models.py:456
 msgid "Payme cancellation reason."
 msgstr "Payme bekor qilish sababi."
 
-#: orders/models.py:415
+#: orders/models.py:459
 msgid "create time"
 msgstr "Payme yaratgan vaqti"
 
-#: orders/models.py:416
+#: orders/models.py:460
 msgid "perform time"
 msgstr "Payme bajargan vaqti"
 
-#: orders/models.py:417
+#: orders/models.py:461
 msgid "cancel time"
 msgstr "Payme bekor qilgan vaqti"
 
-#: orders/models.py:423
+#: orders/models.py:467
 msgid "Payme transaction"
 msgstr "Payme tranzaksiyasi"
 
-#: orders/models.py:424
+#: orders/models.py:468
 msgid "Payme transactions"
 msgstr "Payme tranzaksiyalari"
 
-#: orders/models.py:462
+#: orders/models.py:506
 msgid "Claimed — outcome unknown"
 msgstr "Band qilindi — natija noma'lum"
 
-#: orders/models.py:463
+#: orders/models.py:507
 msgid "Bought"
 msgstr "Sotib olindi"
 
-#: orders/models.py:464
+#: orders/models.py:508
 msgid "Refused before charge"
 msgstr "To'lovdan oldin rad etildi"
 
-#: orders/models.py:477
+#: orders/models.py:521
 msgid "Which unit of the order this row bought."
 msgstr "Bu qator buyurtmaning qaysi donasini sotib olgani."
 
-#: orders/models.py:478
+#: orders/models.py:522
 msgid "line key"
 msgstr "qator kaliti"
 
-#: orders/models.py:485
+#: orders/models.py:529
 msgid "supplier reference"
 msgstr "ta’minotchi havolasi"
 
-#: orders/models.py:487
+#: orders/models.py:531
 msgid "ICCID"
 msgstr "ICCID"
 
-#: orders/models.py:494
+#: orders/models.py:538
 msgid "supplier purchase"
 msgstr "ta’minotchidan xarid"
 
-#: orders/models.py:495
+#: orders/models.py:539
 msgid "supplier purchases"
 msgstr "ta’minotchidan xaridlar"
 
-#: orders/models.py:531
+#: orders/models.py:575
 msgid "The account value ATMOS sent."
 msgstr "ATMOS yuborgan account qiymati."
 
-#: orders/models.py:538
+#: orders/models.py:582
 msgid "ATMOS transaction"
 msgstr "ATMOS tranzaksiyasi"
 
-#: orders/models.py:539
+#: orders/models.py:583
 msgid "ATMOS transactions"
 msgstr "ATMOS tranzaksiyalari"
 
