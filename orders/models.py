@@ -65,6 +65,16 @@ class PromoCode(models.Model):
         ),
         verbose_name=_("issued to"),
     )
+    first_order_only = models.BooleanField(
+        default=False,
+        help_text=_(
+            "Redeemable only by a customer who has never paid for an order. "
+            "WELCOME10 is advertised as a discount on your first eSIM, and "
+            "without this it applied to every later one as well — the same "
+            "customer kept getting 10% off forever."
+        ),
+        verbose_name=_("first order only"),
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"))
 
     class Meta:
