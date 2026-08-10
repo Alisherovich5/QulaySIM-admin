@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 from catalog.fields import EncryptedCharField, EncryptedTextField
@@ -136,6 +137,72 @@ class PromoCode(models.Model):
         super().save(*args, **kwargs)
 
 
+class ComplimentaryGrant(models.Model):
+    """An eSIM given to someone at our own cost, with no payment taken.
+
+    Exists as a model rather than as an admin action so the page, the validation
+    and the record all come from one place. Giving stock away is the kind of
+    thing that has to be answerable later — who gave what to whom, when, and
+    why — and an action leaves nothing behind but a log line.
+
+    Saving one creates a real order and asks the fulfilment worker to buy a real
+    profile from the wholesaler. Writing an eSIM row directly would repeat the
+    top-up mistake: a number in our database that the supplier has never heard
+    of, and a customer holding a QR code that installs nothing.
+    """
+
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.CASCADE,
+        related_name="complimentary_grants",
+        verbose_name=_("customer"),
+        help_text=_("Who receives the eSIM. They must already have an account."),
+    )
+    plan = models.ForeignKey(
+        "catalog.Plan",
+        on_delete=models.PROTECT,
+        related_name="complimentary_grants",
+        verbose_name=_("plan"),
+        help_text=_("Which tariff to buy for them."),
+    )
+    reason = models.CharField(
+        max_length=200,
+        verbose_name=_("reason"),
+        help_text=_("Why this was given away. Required — a giveaway with no reason is indistinguishable from a mistake."),
+    )
+    # What it cost us, frozen at the moment of the grant. The plan's live cost
+    # moves with every sync, so reading it later would rewrite the history of
+    # what this decision actually spent.
+    cost_usd = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0, verbose_name=_("cost usd")
+    )
+    granted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="complimentary_grants",
+        verbose_name=_("granted by"),
+    )
+    order = models.ForeignKey(
+        "orders.Order",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="complimentary_grants",
+        verbose_name=_("order"),
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"))
+
+    class Meta:
+        verbose_name = _("complimentary grant")
+        verbose_name_plural = _("complimentary grants")
+        ordering = ("-created_at",)
+
+    def __str__(self) -> str:
+        return f"{self.plan} → {self.customer} (${self.cost_usd})"
+
+
 class Order(models.Model):
     class Status(models.TextChoices):
         PENDING = "pending", _("Pending")
@@ -156,6 +223,13 @@ class Order(models.Model):
     # is frozen when the order is created. Recomputing it at payment time would
     # let the exchange rate move between the price the customer agreed to and
     # the amount actually charged.
+    # Given away at our cost rather than sold. Kept on the order because that is
+    # what the reports read: counted as spend, never as revenue.
+    is_complimentary = models.BooleanField(
+        default=False,
+        verbose_name=_("is complimentary"),
+        help_text=_("Issued by staff at cost, with no payment taken."),
+    )
     amount_uzs = models.DecimalField(
         max_digits=14,
         decimal_places=2,

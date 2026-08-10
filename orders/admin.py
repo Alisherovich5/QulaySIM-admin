@@ -8,6 +8,7 @@ from unfold.decorators import display
 from .models import (
     ESIM,
     AtmosTransaction,
+    ComplimentaryGrant,
     Order,
     OrderItem,
     Payment,
@@ -429,4 +430,56 @@ class SupplierPurchaseAdmin(ModelAdmin):
             ink,
             wash,
             obj.get_state_display(),
+        )
+
+@admin.register(ComplimentaryGrant)
+class ComplimentaryGrantAdmin(ModelAdmin):
+    """The page for handing someone an eSIM at our cost.
+
+    Add-only by design. A grant is a thing that happened; editing one afterwards
+    would rewrite a record of stock given away, and the order it created would
+    not change to match. Delete stays available for a mistyped row, which is why
+    the order id is shown — the order itself outlives the grant and is what the
+    reports read.
+    """
+
+    list_display = ("created_at", "customer", "plan", "cost_usd", "reason", "order", "granted_by")
+    list_filter = ("created_at",)
+    search_fields = ("customer__email", "plan__title", "reason")
+    autocomplete_fields = ("customer", "plan")
+    readonly_fields = ("cost_usd", "order", "granted_by", "created_at")
+    fields = ("customer", "plan", "reason", "cost_usd", "order", "granted_by", "created_at")
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def save_model(self, request, obj, form, change):
+        """Record who did it, then create the order and queue the purchase.
+
+        A failure to reach the worker is raised to the operator rather than
+        logged: a grant whose order was never fulfilled looks finished here and
+        delivers nothing.
+        """
+        from django.contrib import messages
+
+        from orders.complimentary import FulfilmentNotQueued, issue
+
+        obj.granted_by = request.user
+        super().save_model(request, obj, form, change)
+        try:
+            issue(obj)
+        except FulfilmentNotQueued as exc:
+            messages.error(
+                request,
+                _(
+                    "The order was created but the wholesaler was not contacted: %(reason)s. "
+                    "Nothing has been delivered — check the worker and try again."
+                )
+                % {"reason": exc},
+            )
+            return
+        messages.success(
+            request,
+            _("eSIM ordered at cost ($%(cost)s). It appears under the customer's profile once the wholesaler answers.")
+            % {"cost": obj.cost_usd},
         )
