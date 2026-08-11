@@ -511,11 +511,6 @@ UNFOLD = {
                         "icon": "credit_card",
                         "link": reverse_lazy("admin:orders_atmostransaction_changelist"),
                     },
-                    {
-                        "title": _("Supplier purchases"),
-                        "icon": "shopping_cart_checkout",
-                        "link": reverse_lazy("admin:orders_supplierpurchase_changelist"),
-                    },
                     {"title": _("Promo codes"), "icon": "sell", "link": reverse_lazy("admin:orders_promocode_changelist")},
                 ],
             },

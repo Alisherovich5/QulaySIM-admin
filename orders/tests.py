@@ -239,23 +239,33 @@ class OrderAdminHardeningTests(TestCase):
         self.assertEqual(self.order.total, Decimal("10.00"), "totals stay consistent")
 
 
-class PaymeTransactionAdminTests(TestCase):
-    """Payme owns this lifecycle end to end.
+class PaymeTransactionHasNoAdminPageTests(TestCase):
+    """Payme owns this lifecycle end to end, and now nothing here can touch it.
 
-    Add and change were already refused; delete was not — and a deleted row
-    answers CheckTransaction/GetStatement with "not found" for a transaction
-    Payme knows it performed, which desynchronises reconciliation.
+    These tests used to assert that add, change and delete were each refused on
+    the admin page — the concern being that a deleted row answers
+    CheckTransaction/GetStatement with "not found" for a transaction Payme knows
+    it performed, which desynchronises reconciliation.
+
+    The page itself is gone now (Payme is not the active provider), which enforces
+    the same rule more strongly than three permission checks could: there is no
+    form to submit. What is asserted is therefore the absence of the page — and,
+    separately, that the model and its table survive, because losing the rows
+    would break reconciliation just as badly as editing them.
     """
 
-    def setUp(self):
-        self.superuser = User.objects.create_superuser(
-            "payme-admin", "p@example.com", "pw-for-tests-only"
-        )
-        self.request = RequestFactory().get("/")
-        self.request.user = self.superuser
-        self.model_admin = site._registry[PaymeTransaction]
+    def test_there_is_no_admin_page(self):
+        self.assertNotIn(PaymeTransaction, site._registry)
 
-    def test_nobody_can_delete_a_payme_transaction(self):
+    def test_the_records_are_still_kept(self):
+        from django.db import connection
+
+        self.assertIn(
+            PaymeTransaction._meta.db_table, connection.introspection.table_names()
+        )
+
+    def test_a_transaction_can_still_be_written_by_code(self):
+        """The integration keeps working; only the screen went away."""
         customer = Customer.objects.create(
             email="c@example.com", full_name="C", hashed_password="x", is_active=True
         )
@@ -263,73 +273,7 @@ class PaymeTransactionAdminTests(TestCase):
         transaction = PaymeTransaction.objects.create(
             order=order, transaction_id="tx-1", amount_tiyin=1000000, account=str(order.pk)
         )
-        self.assertFalse(self.model_admin.has_delete_permission(self.request))
-        self.assertFalse(self.model_admin.has_delete_permission(self.request, transaction))
-
-    def test_add_and_change_stay_refused(self):
-        # Belt and braces: the delete lock must not have loosened the others.
-        self.assertFalse(self.model_admin.has_add_permission(self.request))
-        self.assertFalse(self.model_admin.has_change_permission(self.request))
-
-
-@override_settings(SECURE_SSL_REDIRECT=False)
-class AtmosTransactionTests(TestCase):
-    """Same posture as Payme: the gateway reconciles against these rows, so the
-    admin may look but never touch, and a replayed callback must collide with
-    the unique transaction_id instead of double-recording a payment."""
-
-    def setUp(self):
-        self.superuser = User.objects.create_superuser(
-            "atmos-admin", "a@example.com", "pw-for-tests-only"
-        )
-        self.request = RequestFactory().get("/")
-        self.request.user = self.superuser
-        self.model_admin = site._registry[AtmosTransaction]
-        customer = Customer.objects.create(
-            email="at@example.com", full_name="A", hashed_password="x", is_active=True
-        )
-        self.order = Order.objects.create(customer=customer)
-
-    def test_round_trip_and_unique_transaction_id(self):
-        AtmosTransaction.objects.create(
-            order=self.order,
-            transaction_id="atmos-1",
-            amount_tiyin=250000,
-            account=str(self.order.pk),
-            status=AtmosTransaction.Status.CONFIRMED,
-        )
-        stored = AtmosTransaction.objects.get(transaction_id="atmos-1")
-        self.assertEqual(stored.order_id, self.order.pk)
-        with self.assertRaises(Exception):
-            with transaction.atomic():
-                AtmosTransaction.objects.create(
-                    order=self.order,
-                    transaction_id="atmos-1",
-                    amount_tiyin=250000,
-                    account=str(self.order.pk),
-                    status=AtmosTransaction.Status.CONFIRMED,
-                )
-
-    def test_admin_is_fully_locked(self):
-        self.assertFalse(self.model_admin.has_add_permission(self.request))
-        self.assertFalse(self.model_admin.has_change_permission(self.request))
-        self.assertFalse(self.model_admin.has_delete_permission(self.request))
-
-    def test_changelist_renders(self):
-        AtmosTransaction.objects.create(
-            order=self.order,
-            transaction_id="atmos-2",
-            amount_tiyin=100000,
-            account=str(self.order.pk),
-            status=AtmosTransaction.Status.REJECTED,
-        )
-        self.client.force_login(self.superuser)
-        from django.urls import reverse
-
-        response = self.client.get(reverse("admin:orders_atmostransaction_changelist"))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "atmos-2")
-
+        self.assertEqual(PaymeTransaction.objects.get(pk=transaction.pk).transaction_id, "tx-1")
 
 class ESIMExpiryValidationTests(TestCase):
     """The API's clean-up job only expires rows whose expires_at has passed, so
