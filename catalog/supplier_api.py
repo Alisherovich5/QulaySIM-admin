@@ -67,9 +67,7 @@ class FetchedCatalogue:
     countries: dict[str, str] = field(default_factory=dict)
     # (region slug, GB, days) -> (package code, cost, how many countries it
     # covers). The cheapest wins, same rule as the per-country prices.
-    regional: dict[tuple[str, float, int], tuple[str, Decimal, int]] = field(
-        default_factory=dict
-    )
+    regional: dict[tuple[str, float, int], "RegionalOffer"] = field(default_factory=dict)
     packages_read: int = 0
     multi_country: int = 0
     # Multi-country packages too narrow to honestly call regional.
@@ -103,6 +101,25 @@ MIN_REGIONAL_COVERAGE = 8
 # Below this a cross-continental bundle is simply not a product we have a shelf
 # for: it is not a region either, so it is reported and left alone.
 MIN_GLOBAL_COVERAGE = 40
+
+
+@dataclass(frozen=True)
+class RegionalOffer:
+    """One multi-country package: what to buy, what it costs, and what it covers.
+
+    The coverage *list* rather than only its length. "106 ta davlat" is the part
+    that reads well on a card and the part that causes complaints: a customer
+    buying a bundle that omits a third of the world has no way to check whether
+    their stop is in it, and finds out on arrival.
+    """
+
+    package_code: str
+    cost_usd: Decimal
+    codes: tuple[str, ...]
+
+    @property
+    def coverage(self) -> int:
+        return len(self.codes)
 
 
 def _add_regional(
@@ -147,8 +164,8 @@ def _add_regional(
     key = (region, gb, days)
     existing = catalogue.regional.get(key)
     # Widest first, then cheapest.
-    if existing is None or (-len(codes), cost) < (-existing[2], existing[1]):
-        catalogue.regional[key] = (code, cost, len(codes))
+    if existing is None or (-len(codes), cost) < (-existing.coverage, existing.cost_usd):
+        catalogue.regional[key] = RegionalOffer(code, cost, tuple(codes))
 
 
 def _add(catalogue: FetchedCatalogue, iso2: str, gb: float, days: int, code: str, cost: Decimal):

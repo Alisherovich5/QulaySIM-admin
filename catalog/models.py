@@ -152,6 +152,22 @@ class Plan(models.Model):
         ),
         verbose_name=_("price note"),
     )
+    # Which countries a multi-country plan actually covers, as ISO2 codes.
+    #
+    # The count alone ("106 ta davlat") is what sells and what complains: the
+    # cheapest worldwide bundles are cheap precisely because they omit a third
+    # of the world, and a customer cannot see which third. Storing the list lets
+    # the page answer "is my stop included?" before the money moves.
+    #
+    # A plain comma-separated string rather than a relation: it is written once
+    # per sync, read whole, and never queried by member — a join table would be
+    # 3 000 rows to answer a question nobody asks in SQL.
+    coverage_iso2 = models.TextField(
+        blank=True,
+        default="",
+        help_text=_("ISO2 codes this multi-country plan covers, comma separated."),
+        verbose_name=_("coverage"),
+    )
     markup_percent = models.DecimalField(
         max_digits=6,
         decimal_places=2,

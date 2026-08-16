@@ -4269,3 +4269,11 @@ msgid ""
 msgstr ""
 "Сумма в сумах — это то, что фактически списано с карты, зафиксировано по "
 "курсу на момент оформления заказа."
+
+#: catalog/models.py
+msgid "coverage"
+msgstr "покрытие"
+
+#: catalog/models.py
+msgid "ISO2 codes this multi-country plan covers, comma separated."
+msgstr "Коды ISO2 стран, которые покрывает этот мультистрановой тариф, через запятую."

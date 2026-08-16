@@ -197,7 +197,8 @@ def apply_regional(
     ladder_index = {(mb, days): (order, network) for order, (mb, days, network) in enumerate(LADDER)}
     made_plans = made_offers = 0
 
-    for (region_slug, gb, days), (code, cost, coverage) in sorted(regional.items()):
+    for (region_slug, gb, days), offer in sorted(regional.items()):
+        code, cost, coverage = offer.package_code, offer.cost_usd, offer.coverage
         region = regions.get(region_slug)
         if region is None:
             continue
@@ -258,9 +259,20 @@ def apply_regional(
         # The count can grow as a supplier adds countries to a bundle, so it is
         # refreshed rather than frozen at creation.
         note = f"{coverage} ta davlat"
+        # The list, not only the count: a bundle covering 106 of 200 countries
+        # is a fine product, but only if the customer can check their stop
+        # before paying. Refreshed on every sync for the same reason the count
+        # is — a wholesaler adds and drops countries from a bundle over time.
+        coverage_codes = ",".join(offer.codes)
+        changed = []
         if plan.price_note != note:
             plan.price_note = note
-            plan.save(update_fields=["price_note"])
+            changed.append("price_note")
+        if plan.coverage_iso2 != coverage_codes:
+            plan.coverage_iso2 = coverage_codes
+            changed.append("coverage_iso2")
+        if changed:
+            plan.save(update_fields=changed)
 
         _, offer_created = SupplierOffer.objects.update_or_create(
             plan=plan,

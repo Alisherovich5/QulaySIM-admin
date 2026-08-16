@@ -4247,3 +4247,11 @@ msgid ""
 msgstr ""
 "So‘mdagi summa — kartadan haqiqatan yechilgan miqdor, buyurtma berilgan "
 "paytdagi kurs bo‘yicha qotirilgan."
+
+#: catalog/models.py
+msgid "coverage"
+msgstr "qamrab olingan davlatlar"
+
+#: catalog/models.py
+msgid "ISO2 codes this multi-country plan covers, comma separated."
+msgstr "Bu ko‘p davlatli tarif qamrab oladigan davlatlarning ISO2 kodlari, vergul bilan."

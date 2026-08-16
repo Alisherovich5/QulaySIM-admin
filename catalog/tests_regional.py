@@ -29,6 +29,17 @@ GLOBAL_MIX = "US GB JP BR ZA AU IN FR MX KE TH CA SG AE".split()
 ASIA_EIGHT = "JP KR CN TH VN SG PH MY".split()
 
 
+def offer(code: str, cost: str, coverage: int) -> supplier_api.RegionalOffer:
+    """A supplier package covering `coverage` countries, for the write tests.
+
+    The codes themselves are synthetic here — which countries a bundle covers is
+    `_add_regional`'s business, tested above; these tests only care that a
+    package of that width is written correctly.
+    """
+    codes = tuple(f"X{i:02d}" for i in range(coverage))
+    return supplier_api.RegionalOffer(code, Decimal(cost), codes)
+
+
 class RegionFromCoverageTests(TestCase):
     """Which region a bundle belongs to, decided from what it covers."""
 
@@ -86,7 +97,7 @@ class CoverageIsCountedInCountriesNotEntriesTests(TestCase):
         # Ten countries, each listed three times as three networks.
         codes = [c for c in EUROPE_41[:10] for _ in range(3)]
         supplier_api._add_regional(catalogue, codes, 3.0, 30, "eu", Decimal("7.30"))
-        (_, _, coverage) = next(iter(catalogue.regional.values()))
+        coverage = next(iter(catalogue.regional.values())).coverage
         self.assertEqual(coverage, 10, "must count countries, not coverage rows")
 
     def test_a_narrow_bundle_cannot_buy_its_way_past_the_floor_with_networks(self):
@@ -104,7 +115,8 @@ class CoverageIsCountedInCountriesNotEntriesTests(TestCase):
         supplier_api._add_regional(
             catalogue, [c for c in EUROPE_41[:10] for _ in range(3)], 5.0, 30, "ten", Decimal("8.00")
         )
-        (code, _, coverage) = next(iter(catalogue.regional.values()))
+        won = next(iter(catalogue.regional.values()))
+        code, coverage = won.package_code, won.coverage
         self.assertEqual(code, "twelve")
         self.assertEqual(coverage, 12)
 
@@ -151,7 +163,8 @@ class CoverageBeatsPriceTests(TestCase):
         )
         supplier_api._add_regional(catalogue, EUROPE_41, 5.0, 30, "wide-dear", Decimal("11.00"))
 
-        (code, cost, coverage) = next(iter(catalogue.regional.values()))
+        won = next(iter(catalogue.regional.values()))
+        code, cost, coverage = won.package_code, won.cost_usd, won.coverage
         # Saving $3 by dropping 29 countries is not a saving. For a local tariff
         # the product is fixed and only the cost varies; for a regional one the
         # coverage IS the product.
@@ -163,7 +176,7 @@ class CoverageBeatsPriceTests(TestCase):
         catalogue = supplier_api.FetchedCatalogue()
         supplier_api._add_regional(catalogue, EUROPE_41, 5.0, 30, "dear", Decimal("12.00"))
         supplier_api._add_regional(catalogue, EUROPE_41, 5.0, 30, "cheap", Decimal("9.50"))
-        self.assertEqual(next(iter(catalogue.regional.values()))[0], "cheap")
+        self.assertEqual(next(iter(catalogue.regional.values())).package_code, "cheap")
 
     def test_different_shapes_do_not_compete(self):
         catalogue = supplier_api.FetchedCatalogue()
@@ -182,7 +195,7 @@ class ApplyRegionalTests(TestCase):
 
     def test_a_regional_tariff_is_created_priced_and_left_switched_off(self):
         result = supplier_import.apply_regional(
-            {("europe", 5.0, 30): ("EU_5_30", Decimal("11.00"), 41)}, "esimaccess"
+            {("europe", 5.0, 30): offer("EU_5_30", "11.00", 41)}, "esimaccess"
         )
         self.assertEqual(result["plans_created"], 1)
 
@@ -199,35 +212,35 @@ class ApplyRegionalTests(TestCase):
 
     def test_a_global_bundle_is_scoped_global_not_regional(self):
         supplier_import.apply_regional(
-            {("global", 3.0, 30): ("GL139", Decimal("11.99"), 128)}, "esimaccess"
+            {("global", 3.0, 30): offer("GL139", "11.99", 128)}, "esimaccess"
         )
         plan = Plan.objects.get(region=self.world)
         self.assertEqual(plan.scope, Plan.Scope.GLOBAL)
         self.assertEqual(plan.price_note, "128 ta davlat")
 
     def test_a_second_sync_updates_rather_than_duplicates(self):
-        payload = {("europe", 5.0, 30): ("EU_5_30", Decimal("11.00"), 41)}
+        payload = {("europe", 5.0, 30): offer("EU_5_30", "11.00", 41)}
         supplier_import.apply_regional(payload, "esimaccess")
         supplier_import.apply_regional(payload, "esimaccess")
         self.assertEqual(Plan.objects.filter(region=self.europe).count(), 1)
 
     def test_a_bundle_that_grew_has_its_coverage_refreshed(self):
         supplier_import.apply_regional(
-            {("europe", 5.0, 30): ("EU_5_30", Decimal("11.00"), 41)}, "esimaccess"
+            {("europe", 5.0, 30): offer("EU_5_30", "11.00", 41)}, "esimaccess"
         )
         # The supplier added three countries to the same package.
         supplier_import.apply_regional(
-            {("europe", 5.0, 30): ("EU_5_30", Decimal("11.00"), 44)}, "esimaccess"
+            {("europe", 5.0, 30): offer("EU_5_30", "11.00", 44)}, "esimaccess"
         )
         plan = Plan.objects.get(region=self.europe)
         self.assertEqual(plan.price_note, "44 ta davlat", "coverage must not be frozen")
 
     def test_both_suppliers_are_kept_side_by_side_for_the_same_tariff(self):
         supplier_import.apply_regional(
-            {("europe", 5.0, 30): ("EU_5_30", Decimal("11.00"), 41)}, "esimaccess"
+            {("europe", 5.0, 30): offer("EU_5_30", "11.00", 41)}, "esimaccess"
         )
         supplier_import.apply_regional(
-            {("europe", 5.0, 30): ("eu-5-30", Decimal("9.80"), 41)}, "esimcard"
+            {("europe", 5.0, 30): offer("eu-5-30", "9.80", 41)}, "esimcard"
         )
         plan = Plan.objects.get(region=self.europe)
         self.assertEqual(plan.offers.count(), 2)
@@ -237,13 +250,13 @@ class ApplyRegionalTests(TestCase):
 
     def test_a_shape_with_no_rung_is_not_written(self):
         result = supplier_import.apply_regional(
-            {("europe", 2.0, 3): ("EU_2_3", Decimal("4.00"), 41)}, "esimaccess"
+            {("europe", 2.0, 3): offer("EU_2_3", "4.00", 41)}, "esimaccess"
         )
         self.assertEqual(result["plans_created"], 0)
 
     def test_an_unknown_region_is_skipped_not_crashed(self):
         result = supplier_import.apply_regional(
-            {("atlantis", 5.0, 30): ("X", Decimal("5.00"), 41)}, "esimaccess"
+            {("atlantis", 5.0, 30): offer("X", "5.00", 41)}, "esimaccess"
         )
         self.assertEqual(result["plans_created"], 0)
 
@@ -268,7 +281,7 @@ class WorldwideCarriesEveryShapeTests(TestCase):
         # 20 GB / 31 days: a real eSIMCard package, and one of the cheapest per
         # gigabyte we can buy. It had no rung, so it was silently discarded.
         result = supplier_import.apply_regional(
-            {("global", 20.0, 31): ("GL_20_31", Decimal("17.84"), 106)}, "esimcard"
+            {("global", 20.0, 31): offer("GL_20_31", "17.84", 106)}, "esimcard"
         )
         self.assertEqual(result["plans_created"], 1)
         plan = Plan.objects.get(region=self.world)
@@ -278,7 +291,7 @@ class WorldwideCarriesEveryShapeTests(TestCase):
     def test_the_same_shape_is_still_refused_for_a_region(self):
         """The widening is global-only, not a general loosening."""
         result = supplier_import.apply_regional(
-            {("europe", 20.0, 31): ("EU_20_31", Decimal("17.84"), 41)}, "esimcard"
+            {("europe", 20.0, 31): offer("EU_20_31", "17.84", 41)}, "esimcard"
         )
         self.assertEqual(result["plans_created"], 0)
         self.assertFalse(Plan.objects.filter(region=self.europe).exists())
@@ -291,13 +304,13 @@ class WorldwideCarriesEveryShapeTests(TestCase):
         prompts anyone to go and enable it.
         """
         supplier_import.apply_regional(
-            {("global", 5.0, 15): ("GL_5_15", Decimal("17.95"), 167)}, "esimcard"
+            {("global", 5.0, 15): offer("GL_5_15", "17.95", 167)}, "esimcard"
         )
         self.assertTrue(Plan.objects.get(region=self.world).is_active)
 
     def test_a_regional_tariff_still_arrives_switched_off(self):
         supplier_import.apply_regional(
-            {("europe", 5.0, 30): ("EU_5_30", Decimal("11.00"), 41)}, "esimaccess"
+            {("europe", 5.0, 30): offer("EU_5_30", "11.00", 41)}, "esimaccess"
         )
         self.assertFalse(Plan.objects.get(region=self.europe).is_active)
 
@@ -308,7 +321,7 @@ class WorldwideCarriesEveryShapeTests(TestCase):
         refusing to create it means the decision cannot be undone by accident.
         """
         result = supplier_import.apply_regional(
-            {("global", 1.0, 7): ("GL_1_7", Decimal("7.60"), 127)}, "esimaccess"
+            {("global", 1.0, 7): offer("GL_1_7", "7.60", 127)}, "esimaccess"
         )
         self.assertEqual(result["plans_created"], 0)
         self.assertFalse(Plan.objects.filter(region=self.world).exists())
@@ -316,9 +329,9 @@ class WorldwideCarriesEveryShapeTests(TestCase):
     def test_shapes_sort_by_size_then_duration(self):
         supplier_import.apply_regional(
             {
-                ("global", 10.0, 7): ("a", Decimal("30.77"), 167),
-                ("global", 3.0, 30): ("b", Decimal("11.99"), 167),
-                ("global", 10.0, 30): ("c", Decimal("34.10"), 167),
+                ("global", 10.0, 7): offer("a", "30.77", 167),
+                ("global", 3.0, 30): offer("b", "11.99", 167),
+                ("global", 10.0, 30): offer("c", "34.10", 167),
             },
             "esimcard",
         )
@@ -328,3 +341,54 @@ class WorldwideCarriesEveryShapeTests(TestCase):
             .values_list("data_amount_mb", "validity_days")
         )
         self.assertEqual(order, [(3072, 30), (10240, 7), (10240, 30)])
+
+
+class CoverageListIsStoredTests(TestCase):
+    """The countries themselves, not only how many.
+
+    A worldwide bundle at 106 countries costs a third of the 167-country one,
+    which makes it the row a customer picks. Sold with only the number, the
+    first time anyone learns their stop is missing is on arrival abroad with a
+    dead eSIM — the one failure this shop cannot fix remotely.
+    """
+
+    def setUp(self):
+        PricingRule.objects.create(scope=PricingRule.Scope.GLOBAL, markup_percent=Decimal("30"))
+        self.world = Region.objects.create(name="Global", slug="global", sort_order=8)
+
+    def test_the_covered_countries_are_written_to_the_plan(self):
+        supplier_import.apply_regional(
+            {("global", 20.0, 31): supplier_api.RegionalOffer(
+                "GL_20_31", Decimal("17.84"), ("US", "GB", "TR", "AE"))},
+            "esimcard",
+        )
+        plan = Plan.objects.get(region=self.world)
+        self.assertEqual(plan.coverage_iso2, "US,GB,TR,AE")
+        self.assertEqual(plan.price_note, "4 ta davlat")
+
+    def test_a_bundle_that_lost_a_country_has_its_list_refreshed(self):
+        payload = {("global", 20.0, 31): supplier_api.RegionalOffer(
+            "GL_20_31", Decimal("17.84"), ("US", "GB", "TR"))}
+        supplier_import.apply_regional(payload, "esimcard")
+        supplier_import.apply_regional(
+            {("global", 20.0, 31): supplier_api.RegionalOffer(
+                "GL_20_31", Decimal("17.84"), ("US", "GB"))},
+            "esimcard",
+        )
+        plan = Plan.objects.get(region=self.world)
+        # Stale coverage is worse than none: it is a promise we stopped keeping.
+        self.assertEqual(plan.coverage_iso2, "US,GB")
+        self.assertEqual(plan.price_note, "2 ta davlat")
+
+    def test_the_widest_bundle_wins_and_brings_its_own_list(self):
+        # Both wide enough to count as worldwide (the floor is 40 countries),
+        # so the comparison is about coverage rather than the floor.
+        wide = [f"{a}{b}" for a in "ABCDEFG" for b in "ABCDEFGH"][:60]
+        narrow = wide[:45]
+        catalogue = supplier_api.FetchedCatalogue()
+        supplier_api._add_regional(catalogue, narrow, 5.0, 30, "narrow", Decimal("8.00"))
+        supplier_api._add_regional(catalogue, wide * 3, 5.0, 30, "wide", Decimal("11.00"))
+        won = next(iter(catalogue.regional.values()))
+        self.assertEqual(won.package_code, "wide")
+        # Deduplicated, so repeating the same countries cannot inflate the list.
+        self.assertEqual(won.codes, tuple(sorted(set(wide))))
