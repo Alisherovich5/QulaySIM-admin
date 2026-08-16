@@ -199,7 +199,7 @@ class ApplyRegionalTests(TestCase):
 
     def test_a_global_bundle_is_scoped_global_not_regional(self):
         supplier_import.apply_regional(
-            {("global", 1.0, 7): ("GL139", Decimal("7.60"), 128)}, "esimaccess"
+            {("global", 3.0, 30): ("GL139", Decimal("11.99"), 128)}, "esimaccess"
         )
         plan = Plan.objects.get(region=self.world)
         self.assertEqual(plan.scope, Plan.Scope.GLOBAL)
@@ -246,3 +246,85 @@ class ApplyRegionalTests(TestCase):
             {("atlantis", 5.0, 30): ("X", Decimal("5.00"), 41)}, "esimaccess"
         )
         self.assertEqual(result["plans_created"], 0)
+
+
+class WorldwideCarriesEveryShapeTests(TestCase):
+    """The worldwide page is the one place the ladder does not apply.
+
+    A destination page gets seven rungs because every country stocks roughly the
+    same shapes and twenty-four near-identical rows is a spreadsheet, not a menu.
+    Worldwide is the opposite: one page, one product family, shapes that differ
+    enough to matter (3 to 100 GB, 3 to 365 days, 66 to 167 countries), and a
+    customer who already knows roughly what they need. There the answer is
+    filters over the full range — the wholesalers list 24 shapes and we sold 7.
+    """
+
+    def setUp(self):
+        PricingRule.objects.create(scope=PricingRule.Scope.GLOBAL, markup_percent=Decimal("30"))
+        self.europe = Region.objects.create(name="Europe", slug="europe", sort_order=1)
+        self.world = Region.objects.create(name="Global", slug="global", sort_order=8)
+
+    def test_a_shape_with_no_rung_is_written_for_global(self):
+        # 20 GB / 31 days: a real eSIMCard package, and one of the cheapest per
+        # gigabyte we can buy. It had no rung, so it was silently discarded.
+        result = supplier_import.apply_regional(
+            {("global", 20.0, 31): ("GL_20_31", Decimal("17.84"), 106)}, "esimcard"
+        )
+        self.assertEqual(result["plans_created"], 1)
+        plan = Plan.objects.get(region=self.world)
+        self.assertEqual(plan.validity_days, 31)
+        self.assertEqual(plan.data_amount_mb, 20 * 1024)
+
+    def test_the_same_shape_is_still_refused_for_a_region(self):
+        """The widening is global-only, not a general loosening."""
+        result = supplier_import.apply_regional(
+            {("europe", 20.0, 31): ("EU_20_31", Decimal("17.84"), 41)}, "esimcard"
+        )
+        self.assertEqual(result["plans_created"], 0)
+        self.assertFalse(Plan.objects.filter(region=self.europe).exists())
+
+    def test_a_worldwide_tariff_arrives_switched_on(self):
+        """Otherwise the page carries the range in name only.
+
+        A regional tariff waits for someone to look at it. A worldwide one that
+        arrives off would never reach the page it exists for, since nothing else
+        prompts anyone to go and enable it.
+        """
+        supplier_import.apply_regional(
+            {("global", 5.0, 15): ("GL_5_15", Decimal("17.95"), 167)}, "esimcard"
+        )
+        self.assertTrue(Plan.objects.get(region=self.world).is_active)
+
+    def test_a_regional_tariff_still_arrives_switched_off(self):
+        supplier_import.apply_regional(
+            {("europe", 5.0, 30): ("EU_5_30", Decimal("11.00"), 41)}, "esimaccess"
+        )
+        self.assertFalse(Plan.objects.get(region=self.europe).is_active)
+
+    def test_worldwide_1gb_is_not_created_at_all(self):
+        """The owner took worldwide 1 GB off sale, and it stays off.
+
+        Created-and-disabled would leave a row one click from being sold again;
+        refusing to create it means the decision cannot be undone by accident.
+        """
+        result = supplier_import.apply_regional(
+            {("global", 1.0, 7): ("GL_1_7", Decimal("7.60"), 127)}, "esimaccess"
+        )
+        self.assertEqual(result["plans_created"], 0)
+        self.assertFalse(Plan.objects.filter(region=self.world).exists())
+
+    def test_shapes_sort_by_size_then_duration(self):
+        supplier_import.apply_regional(
+            {
+                ("global", 10.0, 7): ("a", Decimal("30.77"), 167),
+                ("global", 3.0, 30): ("b", Decimal("11.99"), 167),
+                ("global", 10.0, 30): ("c", Decimal("34.10"), 167),
+            },
+            "esimcard",
+        )
+        order = list(
+            Plan.objects.filter(region=self.world)
+            .order_by("sort_order")
+            .values_list("data_amount_mb", "validity_days")
+        )
+        self.assertEqual(order, [(3072, 30), (10240, 7), (10240, 30)])

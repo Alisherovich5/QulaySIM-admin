@@ -47,6 +47,10 @@ LADDER = [
 
 LADDER_SHAPES = {(mb, days) for mb, days, _ in LADDER}
 
+#: The one region whose page carries every shape the wholesalers sell rather
+#: than the seven-rung ladder a destination page gets.
+GLOBAL_SLUG = "global"
+
 
 def on_ladder(megabytes: int, days: int) -> bool:
     """Whether a package shape has a rung, and so becomes a sellable plan."""
@@ -199,9 +203,34 @@ def apply_regional(
             continue
         mb = int(round(gb * 1024))
         rung = ladder_index.get((mb, days))
+        is_global = region_slug == GLOBAL_SLUG
+
+        # The ladder is a per-destination idea: every country offers roughly the
+        # same seven shapes, so seven rungs keep a destination page a menu rather
+        # than a spreadsheet. The worldwide page is the opposite case — it is one
+        # page with one product family, the shapes are genuinely different
+        # (1 to 100 GB, 1 to 365 days, 66 to 167 countries), and a customer
+        # arrives already knowing roughly what they need. Filtering, not
+        # pre-selection, is the right tool there, so global takes every shape the
+        # wholesalers sell: 24 instead of 7.
         if rung is None:
+            if not is_global:
+                continue
+            network = "5G" if mb >= 3072 else "4G"
+        else:
+            network = rung[1]
+
+        # Global rows sort by size then duration so the page reads as a ladder of
+        # its own. Using the rung order here would put the seven ladder shapes
+        # first and scatter the rest, which is worse than no order at all.
+        order = (int(gb) * 1000 + min(days, 999)) if is_global else rung[0]
+
+        # A worldwide 1 GB is deliberately not sold — the owner took it off the
+        # page: at global cost it prices close to a 3 GB and reads as a trap.
+        # Skipped rather than created-and-disabled, so it cannot be switched on
+        # by accident later.
+        if is_global and mb <= 1024:
             continue
-        order, network = rung
 
         plan, created = Plan.objects.get_or_create(
             region=region,
@@ -216,9 +245,13 @@ def apply_regional(
                 "cost_usd": cost,
                 "sort_order": order,
                 "is_popular": False,
-                # Off until someone looks at it, same as a new destination: a
-                # regional tariff appears on the site the moment it is active.
-                "is_active": False,
+                # Regional tariffs stay off until someone looks at them, same as
+                # a new destination. Global is the exception: the worldwide page
+                # is meant to carry the whole range with filters, so a shape that
+                # arrives switched off would simply never appear. The below-cost
+                # guard still refuses to sell anything whose cost has overtaken
+                # its price, so "on by default" cannot mean "sold at a loss".
+                "is_active": region_slug == GLOBAL_SLUG,
             },
         )
         made_plans += int(created)
