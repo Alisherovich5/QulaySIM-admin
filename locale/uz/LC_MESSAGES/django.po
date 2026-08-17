@@ -4374,3 +4374,15 @@ msgstr "to‘langan"
 #: orders/admin.py
 msgid "created"
 msgstr "yaratilgan"
+
+#: orders/models.py
+msgid "target eSIM"
+msgstr "qaysi eSIM"
+
+#: orders/models.py
+msgid "top-up applied at"
+msgstr "qo‘shimcha berilgan vaqti"
+
+#: orders/models.py
+msgid "Set on a top-up line: the eSIM the extra data is added to."
+msgstr "Qo‘shimcha qatorida to‘ldiriladi: qo‘shimcha GB qaysi eSIM‘ga qo‘shiladi."

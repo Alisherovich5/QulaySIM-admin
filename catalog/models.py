@@ -104,6 +104,10 @@ class Plan(models.Model):
         LOCAL = "local", "Local"
         REGIONAL = "regional", "Regional"
         GLOBAL = "global", "Global"
+        # Extra data added to an eSIM somebody already owns. Never listed in the
+        # catalogue: a top-up is only meaningful next to a specific eSIM, and its
+        # availability is a property of that eSIM rather than of the destination.
+        TOPUP = "topup", "Top-up"
 
     class Network(models.TextChoices):
         LTE = "4G", "4G / LTE"

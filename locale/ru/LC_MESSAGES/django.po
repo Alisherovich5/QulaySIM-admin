@@ -4396,3 +4396,15 @@ msgstr "оплачен"
 #: orders/admin.py
 msgid "created"
 msgstr "создан"
+
+#: orders/models.py
+msgid "target eSIM"
+msgstr "целевой eSIM"
+
+#: orders/models.py
+msgid "top-up applied at"
+msgstr "пополнение выдано"
+
+#: orders/models.py
+msgid "Set on a top-up line: the eSIM the extra data is added to."
+msgstr "Заполняется у строки пополнения: eSIM, которому добавляются гигабайты."

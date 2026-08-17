@@ -338,6 +338,25 @@ class OrderItem(models.Model):
         verbose_name=_("unit cost"),
     )
     quantity = models.PositiveIntegerField(default=1, verbose_name=_("quantity"))
+    # Which eSIM this line adds data to. Null for an ordinary purchase, which
+    # creates its own eSIM; set only on a top-up, where the customer already has
+    # the profile and is buying more data for it.
+    esim = models.ForeignKey(
+        "orders.ESIM",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="topup_items",
+        help_text=_("Set on a top-up line: the eSIM the extra data is added to."),
+        verbose_name=_("target eSIM"),
+    )
+    # When the wholesaler confirmed the extra data. A top-up order creates no new
+    # eSIM row, so this is the only record that it was delivered — and it is what
+    # the paid-but-undelivered sweep reads for these lines. Without it a top-up
+    # would look unfulfilled forever, or worse, look fine while nothing arrived.
+    topup_applied_at = models.DateTimeField(
+        null=True, blank=True, verbose_name=_("top-up applied at")
+    )
 
     @property
     def line_total(self):
