@@ -302,6 +302,18 @@ class Order(models.Model):
         verbose_name = _("order")
         verbose_name_plural = _("orders")
         ordering = ["-created_at"]
+        indexes = [
+            # The account page's only query: this customer's orders, newest
+            # first. Django indexes the foreign key on its own, but that index
+            # cannot supply the ordering, so Postgres sorted every one of a
+            # customer's rows on each visit. Composite, so the index answers
+            # both halves.
+            models.Index(fields=["customer", "-created_at"], name="orders_customer_recent_idx"),
+            # The reporting queries filter on status and date together: "paid
+            # orders since yesterday" runs six times a day for the Telegram
+            # reports and once per sale announcement.
+            models.Index(fields=["status", "-created_at"], name="orders_status_recent_idx"),
+        ]
 
     def __str__(self):
         return f"Order #{self.pk} — {self.customer.email}"
