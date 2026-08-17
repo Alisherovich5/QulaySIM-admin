@@ -18,6 +18,7 @@ from .models import (
     SupplierPurchase,
     TelegramRecipient,
 )
+from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 # (ink, wash) per status. A wash behind coloured ink reads in both themes;
@@ -184,7 +185,16 @@ class OrderAdmin(ModelAdmin):
         if first is None or first.plan is None:
             return "—"
         plan = first.plan
-        where = plan.country.name if plan.country_id else (plan.region.name if plan.region_id else "")
+        # The Uzbek name when there is one: the admin runs in Uzbek, and an
+        # operator reading "Turkey" in a column of Uzbek text has to translate it
+        # back before recognising the order.
+        if plan.country_id:
+            country = plan.country
+            where = get_language() == "ru" and country.name_ru or country.name_uz or country.name
+        elif plan.region_id:
+            where = plan.region.name_uz or plan.region.name
+        else:
+            where = ""
         size = _("Unlimited") if plan.is_unlimited else f"{plan.data_amount_mb / 1024:g} GB"
         extra = f" +{obj._item_count - 1}" if obj._item_count > 1 else ""
         return format_html(
