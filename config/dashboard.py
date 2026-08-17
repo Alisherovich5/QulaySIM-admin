@@ -24,13 +24,31 @@ def dashboard_callback(request, context):
     today = timezone.localdate()
     start = today - timedelta(days=13)
 
-    revenue_rows = paid.filter(paid_at__date__gte=start).values_list("paid_at", "total")
+    # Som, not dollars, and from the frozen figures rather than today's rate:
+    # `amount_uzs` is what the card was charged and `exchange_rate` is the rate
+    # that applied at that moment. Converting a historical dollar total at
+    # today's rate would quietly rewrite last week's takings every time the som
+    # moves.
+    revenue_rows = paid.filter(paid_at__date__gte=start).values_list(
+        "paid_at", "amount_uzs", "total", "exchange_rate"
+    )
     revenue_buckets = {start + timedelta(days=i): Decimal("0") for i in range(14)}
-    for paid_at, total in revenue_rows:
-        if paid_at:
-            day = timezone.localtime(paid_at).date()
-            if day in revenue_buckets:
-                revenue_buckets[day] += total or Decimal("0")
+    rates: dict[object, Decimal] = {}
+    for paid_at, amount_uzs, total, rate in revenue_rows:
+        if not paid_at:
+            continue
+        day = timezone.localtime(paid_at).date()
+        if day not in revenue_buckets:
+            continue
+        # Orders that predate the frozen-som column fall back to their dollar
+        # total at their own recorded rate, and to nothing if neither exists —
+        # an invented number would be worse than a short bar.
+        if amount_uzs:
+            revenue_buckets[day] += amount_uzs
+        elif total and rate:
+            revenue_buckets[day] += total * rate
+        if rate:
+            rates[day] = rate
 
     # Cost of goods sold: what we paid suppliers for the eSIMs on paid orders.
     # unit_cost is the snapshot taken at the time of sale; rows that predate
@@ -47,7 +65,11 @@ def dashboard_callback(request, context):
         if paid_at and unit_cost is not None:
             day = timezone.localtime(paid_at).date()
             if day in cost_buckets:
-                cost_buckets[day] += unit_cost * quantity
+                # Supplier cost is recorded in dollars, so it is converted at the
+                # rate of the sale it belongs to — the same rate the customer was
+                # charged at, which is what makes the profit bar honest.
+                rate = rates.get(day)
+                cost_buckets[day] += unit_cost * quantity * (rate or Decimal("1"))
 
     max_val = max(revenue_buckets.values()) or Decimal("1")
     chart = [

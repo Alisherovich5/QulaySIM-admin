@@ -79,9 +79,9 @@
         </div>
       </div>
       <div style="display:flex;gap:22px;margin-top:12px;font-size:13px;">
-        <div><span style="color:var(--qs-ink-soft);">{% trans "Revenue" %}</span> <b style="color:var(--qs-ink);">${{ fs_period_revenue|floatformat:2 }}</b></div>
-        <div><span style="color:var(--qs-ink-soft);">{% trans "Cost" %}</span> <b style="color:var(--qs-ink);">${{ fs_period_cost|floatformat:2 }}</b></div>
-        <div><span style="color:var(--qs-ink-soft);">{% trans "Profit" %}</span> <b style="color:var(--qs-teal-text);">${{ fs_period_profit|floatformat:2 }}</b></div>
+        <div><span style="color:var(--qs-ink-soft);">{% trans "Revenue" %}</span> <b style="color:var(--qs-ink);">{{ fs_period_revenue|floatformat:0 }} {% trans "so‘m" %}</b></div>
+        <div><span style="color:var(--qs-ink-soft);">{% trans "Cost" %}</span> <b style="color:var(--qs-ink);">{{ fs_period_cost|floatformat:0 }} {% trans "so‘m" %}</b></div>
+        <div><span style="color:var(--qs-ink-soft);">{% trans "Profit" %}</span> <b style="color:var(--qs-teal-text);">{{ fs_period_profit|floatformat:0 }} {% trans "so‘m" %}</b></div>
         {% if fs_cost_estimated %}
         {# Items sold before the unit-cost snapshot existed carry no cost of their own. #}
         <div style="font-size:11px;color:var(--qs-ink-mute);align-self:center;">≈ {% trans "estimated at today's cost" %}</div>
@@ -90,7 +90,7 @@
       <div style="display:flex;align-items:flex-end;gap:6px;height:180px;margin-top:16px;">
         {% for d in fs_chart %}
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;"
-             title="{% blocktrans with day=d.label revenue=d.value|floatformat:2 cost=d.cost|floatformat:2 profit=d.profit|floatformat:2 %}{{ day }} — revenue ${{ revenue }}, cost ${{ cost }}, profit ${{ profit }}{% endblocktrans %}">
+             title="{% blocktrans with day=d.label revenue=d.value|floatformat:0 cost=d.cost|floatformat:0 profit=d.profit|floatformat:0 %}{{ day }} — tushum {{ revenue }}, tannarx {{ cost }}, foyda {{ profit }}{% endblocktrans %}">
           <div style="width:100%;height:{{ d.pct }}%;min-height:3px;border-radius:6px 6px 0 0;overflow:hidden;display:flex;flex-direction:column;transition:height .4s ease;background:linear-gradient(180deg,var(--qs-accent-soft),var(--qs-accent));">
             <div style="height:{{ d.cost_pct }}%;background:var(--qs-line-strong);margin-top:auto;"></div>
           </div>

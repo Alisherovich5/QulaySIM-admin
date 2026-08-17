@@ -18,7 +18,7 @@ msgstr ""
 
 #: catalog/admin.py:71 catalog/admin.py:265 config/settings.py:454
 msgid "Destinations"
-msgstr "Yo‘nalishlar soni"
+msgstr "Yo‘nalishlar"
 
 #: catalog/admin.py:75
 msgid "Regional tariffs"
@@ -4352,3 +4352,9 @@ msgstr "Kirish urinishlari"
 #: config/settings.py
 msgid "Complimentary grants"
 msgstr "Tannarxda berilganlar"
+
+#: templates/admin/index.html
+msgid "%(counter)s sale"
+msgid_plural "%(counter)s sales"
+msgstr[0] "%(counter)s ta sotuv"
+msgstr[1] "%(counter)s ta sotuv"
