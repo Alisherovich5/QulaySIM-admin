@@ -4380,3 +4380,19 @@ msgid "%(counter)s sale"
 msgid_plural "%(counter)s sales"
 msgstr[0] "%(counter)s продажа"
 msgstr[1] "%(counter)s продаж"
+
+#: orders/admin.py
+msgid "issued"
+msgstr "выдан"
+
+#: orders/admin.py
+msgid "missing"
+msgstr "не выдан"
+
+#: orders/admin.py
+msgid "paid"
+msgstr "оплачен"
+
+#: orders/admin.py
+msgid "created"
+msgstr "создан"

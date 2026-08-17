@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.db.models import Count
+from django.utils import timezone
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
@@ -113,7 +114,22 @@ class OrderAdmin(ModelAdmin):
     # tether where bytes are the slow part. Fifty still fills a screen several
     # times over.
     list_per_page = 50
-    list_display = ("id", "customer", "status_badge", "total", "item_count", "created_at", "paid_at")
+    # The columns an operator actually reads down this page.
+    #
+    # What was here: total (a bare "1,00" — dollars, but nothing said so, and it
+    # read like a quantity), a line count that is 1 on every order, and two long
+    # date columns. What was missing is the question this page exists to answer:
+    # has this paid order got its eSIM? That is the difference between a sale and
+    # a complaint, and it was invisible.
+    list_display = (
+        "id",
+        "customer",
+        "what",
+        "status_badge",
+        "delivery",
+        "charged",
+        "when",
+    )
     list_filter = ("status", "created_at")
     search_fields = ("id", "customer__email")
     autocomplete_fields = ("customer", "promo_code")
@@ -139,8 +155,15 @@ class OrderAdmin(ModelAdmin):
 
     def get_queryset(self, request):
         # `obj.items.count()` per row was one query per order — 100 extra
-        # queries on a default-sized page.
-        return super().get_queryset(request).annotate(_item_count=Count("items"))
+        # queries on a default-sized page. The same applies to the eSIM count and
+        # to naming what was bought, so both are annotated and prefetched rather
+        # than fetched per row.
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(_item_count=Count("items", distinct=True), _esim_count=Count("esims", distinct=True))
+            .prefetch_related("items__plan__country")
+        )
 
     @display(description=_("Status"))
     def status_badge(self, obj):
@@ -149,6 +172,82 @@ class OrderAdmin(ModelAdmin):
     @display(description=_("Items"), ordering="_item_count")
     def item_count(self, obj):
         return obj._item_count
+
+    @display(description=_("Bought"))
+    def what(self, obj):
+        """Destination and size, which is how an operator recognises an order.
+
+        A row identified only by an id and an email means opening it to find out
+        what it was — and this page is read while somebody is on the phone.
+        """
+        first = next(iter(obj.items.all()), None)
+        if first is None or first.plan is None:
+            return "—"
+        plan = first.plan
+        where = plan.country.name if plan.country_id else (plan.region.name if plan.region_id else "")
+        size = _("Unlimited") if plan.is_unlimited else f"{plan.data_amount_mb / 1024:g} GB"
+        extra = f" +{obj._item_count - 1}" if obj._item_count > 1 else ""
+        return format_html(
+            '<span style="white-space:nowrap">{}</span>',
+            f"{where} · {size}{extra}" if where else f"{size}{extra}",
+        )
+
+    @display(description=_("eSIM"), ordering="_esim_count")
+    def delivery(self, obj):
+        """Whether the thing the customer paid for exists.
+
+        Only meaningful once money has changed hands: an unpaid order having no
+        eSIM is correct, and colouring it red would train the reader to ignore
+        the colour.
+        """
+        if obj._esim_count:
+            return format_html(
+                '<span style="color:var(--qs-good-deep);font-weight:600">✓ {}</span>',
+                obj._esim_count if obj._esim_count > 1 else _("issued"),
+            )
+        if obj.status != Order.Status.PAID:
+            return format_html('<span style="color:var(--qs-ink-mute)">—</span>')
+        return format_html(
+            '<span style="color:var(--qs-bad-text);font-weight:600">{}</span>', _("missing")
+        )
+
+    @display(description=_("Charged"), ordering="amount_uzs")
+    def charged(self, obj):
+        """What the card was charged, in som.
+
+        `amount_uzs` is the frozen figure the customer actually paid. The dollar
+        total is our bookkeeping and belongs on the detail page, not in the column
+        somebody scans to find a payment.
+        """
+        if obj.amount_uzs:
+            return format_html(
+                '<span style="font-variant-numeric:tabular-nums;white-space:nowrap">{} <span style="color:var(--qs-ink-mute)">{}</span></span>',
+                f"{int(obj.amount_uzs):,}".replace(",", " "),
+                _("so‘m"),
+            )
+        return format_html(
+            '<span style="font-variant-numeric:tabular-nums;color:var(--qs-ink-soft)">${}</span>',
+            f"{obj.total:.2f}",
+        )
+
+    @display(description=_("Date"), ordering="-created_at")
+    def when(self, obj):
+        """One date column, and the one that matters for this row's state.
+
+        Two columns of "16-Avgust, 2026-yil 14:53" took a third of the width to
+        say what a short date says, and for an unpaid order the paid column was
+        always a dash.
+        """
+        stamp = obj.paid_at or obj.created_at
+        if stamp is None:
+            return "—"
+        local = timezone.localtime(stamp)
+        label = _("paid") if obj.paid_at else _("created")
+        return format_html(
+            '<span style="white-space:nowrap">{}</span><br><span style="color:var(--qs-ink-mute);font-size:11px">{}</span>',
+            local.strftime("%d.%m.%Y %H:%M"),
+            label,
+        )
 
 
 @admin.register(ESIM)

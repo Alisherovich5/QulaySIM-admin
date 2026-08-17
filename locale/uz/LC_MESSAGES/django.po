@@ -4358,3 +4358,19 @@ msgid "%(counter)s sale"
 msgid_plural "%(counter)s sales"
 msgstr[0] "%(counter)s ta sotuv"
 msgstr[1] "%(counter)s ta sotuv"
+
+#: orders/admin.py
+msgid "issued"
+msgstr "berildi"
+
+#: orders/admin.py
+msgid "missing"
+msgstr "berilmagan"
+
+#: orders/admin.py
+msgid "paid"
+msgstr "to‘langan"
+
+#: orders/admin.py
+msgid "created"
+msgstr "yaratilgan"
