@@ -4255,3 +4255,100 @@ msgstr "qamrab olingan davlatlar"
 #: catalog/models.py
 msgid "ISO2 codes this multi-country plan covers, comma separated."
 msgstr "Bu ko‘p davlatli tarif qamrab oladigan davlatlarning ISO2 kodlari, vergul bilan."
+
+#: config/attention.py templates/admin/index.html
+msgid "Today"
+msgstr "Bugun"
+
+#: config/attention.py templates/admin/index.html
+msgid "7 days"
+msgstr "7 kun"
+
+#: config/attention.py templates/admin/index.html
+msgid "30 days"
+msgstr "30 kun"
+
+
+#: config/attention.py templates/admin/index.html
+msgid "margin"
+msgstr "marja"
+
+#: config/attention.py templates/admin/index.html
+msgid "Paid, no eSIM"
+msgstr "To‘landi, eSIM yo‘q"
+
+#: config/attention.py templates/admin/index.html
+msgid "The customer paid and has nothing. Check the supplier and the worker."
+msgstr "Mijoz to‘lagan, lekin hech nima olmagan. Ta‘minotchi va workerni tekshiring."
+
+#: config/attention.py templates/admin/index.html
+msgid "eSIMs waiting on a supplier"
+msgstr "Ta‘minotchini kutayotgan eSIM‘lar"
+
+#: config/attention.py templates/admin/index.html
+msgid "Ordered more than half an hour ago and still without a profile."
+msgstr "Yarim soatdan oshdi, profil hali kelmadi."
+
+#: config/attention.py templates/admin/index.html
+msgid "Plans priced below cost"
+msgstr "Tannarxidan past narxdagi tariflar"
+
+#: config/attention.py templates/admin/index.html
+msgid "Not sellable until repriced. Checkout refuses them."
+msgstr "Narxi ko‘tarilmaguncha sotilmaydi — checkout ularni rad etadi."
+
+#: config/attention.py templates/admin/index.html
+msgid "Unpaid orders"
+msgstr "To‘lanmagan buyurtmalar"
+
+#: config/attention.py templates/admin/index.html
+msgid "Reached the payment page over an hour ago and never paid."
+msgstr "Bir soatdan ko‘p oldin to‘lov sahifasiga chiqib, to‘lamagan."
+
+#: config/attention.py templates/admin/index.html
+msgid "eSIMs expiring within three days"
+msgstr "Uch kun ichida tugaydigan eSIM‘lar"
+
+#: config/attention.py templates/admin/index.html
+msgid "A good moment to offer a top-up."
+msgstr "Qo‘shimcha GB taklif qilish uchun qulay payt."
+
+#: config/attention.py templates/admin/index.html
+msgid "Supplier balance is low"
+msgstr "Ta‘minotchi balansi past"
+
+#: config/attention.py templates/admin/index.html
+msgid "A sale fails when the wallet is empty."
+msgstr "Hisob bo‘shab qolsa, sotuv amalga oshmaydi."
+
+#: config/attention.py templates/admin/index.html
+msgid "Nothing needs attention"
+msgstr "Diqqat talab qiladigan narsa yo‘q"
+
+#: config/attention.py templates/admin/index.html
+msgid "Every paid order has its eSIM, no supplier is stuck, no plan is under water."
+msgstr "Har bir to‘langan buyurtmada eSIM bor, ta‘minotchi qotib qolmagan, zarariga sotilayotgan tarif yo‘q."
+
+#: config/settings.py
+msgid "Balances and sourcing"
+msgstr "Balans va manbalar"
+
+#: config/settings.py
+msgid "Daily work"
+msgstr "Kunlik ish"
+
+#: config/settings.py
+msgid "Money"
+msgstr "Pul"
+
+#: config/settings.py
+msgid "Report recipients"
+msgstr "Hisobot oluvchilar"
+
+#: config/settings.py
+msgid "Login attempts"
+msgstr "Kirish urinishlari"
+
+#: config/settings.py
+msgid "Complimentary grants"
+msgstr "Tannarxda berilganlar"

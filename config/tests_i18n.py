@@ -148,7 +148,7 @@ class TranslationRenderTests(TestCase):
             "uz": {
                 "Dashboard": "Boshqaruv paneli",
                 "Supplier prices": "Ta’minotchi narxlari",
-                "Total revenue": "Umumiy tushum",
+                "Today": "Bugun",
                 "Log in": "Kirish",
                 "Light": "Kunduzgi",
                 "Dark": "Tungi",
@@ -156,7 +156,7 @@ class TranslationRenderTests(TestCase):
             "ru": {
                 "Dashboard": "Панель",
                 "Supplier prices": "Цены поставщиков",
-                "Total revenue": "Общая выручка",
+                "Today": "Сегодня",
                 "Log in": "Войти",
                 "Light": "Светлая",
                 "Dark": "Тёмная",
@@ -288,14 +288,19 @@ class LanguageSwitchingTests(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         page = self.client.get(index, secure=True)
-        self.assertContains(page, "Общая выручка")
-        self.assertNotContains(page, "Total revenue")
+        # A string the rebuilt dashboard actually renders. It used to assert
+        # "Total revenue", which was a lifetime figure on a card that has been
+        # removed — the page now opens with what needs attention and today's
+        # takings, so the test follows the page rather than pinning it to a
+        # design decision that was reversed.
+        self.assertContains(page, "Сегодня")
+        self.assertNotContains(page, "Today")
 
         self.client.post(
             reverse("set_language"), {"language": "uz", "next": index}, secure=True
         )
         page = self.client.get(index, secure=True)
-        self.assertContains(page, "Umumiy tushum")
+        self.assertContains(page, "Bugun")
 
     def test_only_the_three_configured_languages_are_offered(self):
         self.assertEqual([code for code, _name in settings.LANGUAGES], ["uz", "ru", "en"])

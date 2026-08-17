@@ -11,73 +11,61 @@
     </p>
   </div>
 
-  <!-- Stat cards -->
-  <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:22px;">
-    {% with cards="revenue" %}{% endwith %}
-    <div class="fs-rise" style="background:var(--qs-surface);border:1px solid var(--qs-line);border-radius:12px;padding:20px;box-shadow:0 4px 8px var(--qs-shadow);">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,var(--qs-accent-soft),var(--qs-accent));color:var(--qs-surface);">
-          <span class="material-symbols-outlined">payments</span>
-        </span>
-        <div>
-          <div style="font-size:26px;font-weight:700;line-height:1;">${{ fs_revenue|floatformat:2 }}</div>
-          <div style="font-size:13px;color:var(--qs-ink-soft);margin-top:4px;">{% trans "Total revenue" %}</div>
-        </div>
-      </div>
-    </div>
+  {% comment %}
+    What needs a person, first.
 
-    <div class="fs-rise" style="background:var(--qs-surface);border:1px solid var(--qs-line);border-radius:12px;padding:20px;box-shadow:0 4px 8px var(--qs-shadow);">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:var(--qs-blue);color:var(--qs-surface);">
-          <span class="material-symbols-outlined">receipt_long</span>
-        </span>
-        <div>
-          <div style="font-size:26px;font-weight:700;line-height:1;">{{ fs_orders_count }}</div>
-          <div style="font-size:13px;color:var(--qs-ink-soft);margin-top:4px;">{% blocktrans with n=fs_pending_count %}Orders · {{ n }} pending{% endblocktrans %}</div>
-        </div>
-      </div>
-    </div>
+    The page used to open with lifetime revenue and three doughnuts. Somebody
+    opening a back office in the morning is asking "did anything break", and that
+    answer was nowhere on it. Silent when there is nothing wrong: a dashboard
+    that always shows warnings teaches people to ignore warnings.
 
-    <div class="fs-rise" style="background:var(--qs-surface);border:1px solid var(--qs-line);border-radius:12px;padding:20px;box-shadow:0 4px 8px var(--qs-shadow);">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:var(--qs-violet);color:var(--qs-surface);">
-          <span class="material-symbols-outlined">group</span>
-        </span>
-        <div>
-          <div style="font-size:26px;font-weight:700;line-height:1;">{{ fs_customers_count }}</div>
-          <div style="font-size:13px;color:var(--qs-ink-soft);margin-top:4px;">{% trans "Customers" %}</div>
-        </div>
-      </div>
-    </div>
+    A Django comment rather than an HTML one — a note for whoever edits this file
+    has no business being downloaded by every visitor, and the i18n test reads the
+    rendered page, where an English word in a comment looks like an untranslated
+    string.
+  {% endcomment %}
+  {% if fs_attention %}
+  <div class="fs-rise" style="margin-top:22px;display:grid;gap:10px;">
+    {% for item in fs_attention %}
+    <a href="{{ item.url }}" style="display:flex;align-items:center;gap:14px;text-decoration:none;
+        background:var(--qs-surface);border:1px solid var(--qs-line);border-radius:12px;padding:14px 16px;
+        border-left:4px solid {% if item.level == 'critical' %}var(--qs-bad-text){% elif item.level == 'warn' %}var(--qs-warn){% else %}var(--qs-line){% endif %};">
+      <span style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;min-width:56px;
+          color:{% if item.level == 'critical' %}var(--qs-bad-text){% elif item.level == 'warn' %}var(--qs-warn){% else %}var(--qs-ink){% endif %};">{{ item.count }}</span>
+      <span style="min-width:0;">
+        <span style="display:block;font-weight:600;color:var(--qs-ink);">{{ item.label }}</span>
+        <span style="display:block;font-size:12.5px;color:var(--qs-ink-soft);margin-top:2px;">{{ item.detail }}</span>
+      </span>
+      <span class="material-symbols-outlined" style="margin-left:auto;color:var(--qs-ink-mute);">chevron_right</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="fs-rise" style="margin-top:22px;background:var(--qs-surface);border:1px solid var(--qs-line);
+      border-left:4px solid var(--qs-good-deep);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:10px;">
+    <span class="material-symbols-outlined" style="color:var(--qs-good-deep);">check_circle</span>
+    <span style="color:var(--qs-ink);font-weight:600;">{% trans "Nothing needs attention" %}</span>
+    <span style="color:var(--qs-ink-soft);font-size:13px;">{% trans "Every paid order has its eSIM, no supplier is stuck, no plan is under water." %}</span>
+  </div>
+  {% endif %}
 
-    <div class="fs-rise" style="background:var(--qs-surface);border:1px solid var(--qs-line);border-radius:12px;padding:20px;box-shadow:0 4px 8px var(--qs-shadow);">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:var(--qs-good);color:var(--qs-surface);">
-          <span class="material-symbols-outlined">sim_card</span>
-        </span>
-        <div>
-          <div style="font-size:26px;font-weight:700;line-height:1;">{{ fs_active_esims }}<span style="font-size:15px;color:var(--qs-ink-mute);font-weight:500;">/{{ fs_total_esims }}</span></div>
-          <div style="font-size:13px;color:var(--qs-ink-soft);margin-top:4px;">{% trans "Active eSIMs" %}</div>
-        </div>
+  {% comment %}
+    The day, the week, the month — in som, because som is what the card was
+    charged. The dollar total is our own bookkeeping, not the sale.
+  {% endcomment %}
+  <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-top:16px;">
+    {% for p in fs_periods %}
+    <div class="fs-rise" style="background:var(--qs-surface);border:1px solid var(--qs-line);border-radius:12px;padding:18px 20px;">
+      <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--qs-ink-mute);font-weight:600;">{{ p.label }}</div>
+      <div style="font-size:26px;font-weight:700;margin-top:6px;font-variant-numeric:tabular-nums;color:var(--qs-ink);">
+        {{ p.som|floatformat:0 }} <span style="font-size:14px;font-weight:600;color:var(--qs-ink-soft);">{% trans "so‘m" %}</span>
+      </div>
+      <div style="font-size:13px;color:var(--qs-ink-soft);margin-top:4px;font-variant-numeric:tabular-nums;">
+        {% blocktrans count counter=p.count %}{{ counter }} sale{% plural %}{{ counter }} sales{% endblocktrans %}
+        {% if p.margin is not None %} · {% trans "margin" %} {{ p.margin }}%{% endif %}
       </div>
     </div>
-
-    <div class="fs-rise" style="background:var(--qs-surface);border:1px solid var(--qs-line);border-radius:12px;padding:20px;box-shadow:0 4px 8px var(--qs-shadow);">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span style="width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:var(--qs-teal);color:var(--qs-surface);">
-          <span class="material-symbols-outlined">trending_up</span>
-        </span>
-        <div>
-          <div style="font-size:26px;font-weight:700;line-height:1;">${{ fs_profit|floatformat:2 }}</div>
-          <div style="font-size:13px;color:var(--qs-ink-soft);margin-top:4px;">{% blocktrans with pct=fs_margin_percent %}Profit · {{ pct }}% margin{% endblocktrans %}</div>
-          {% if fs_uncosted_revenue %}
-          <div style="font-size:11px;color:var(--qs-accent-deeper);margin-top:3px;" title="{% trans 'Orders with no line items have no traceable supplier cost, so they are left out of the margin rather than counted as pure profit.' %}">
-            {% blocktrans with amount=fs_uncosted_revenue|floatformat:2 %}excludes ${{ amount }} with no cost data{% endblocktrans %}
-          </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
+    {% endfor %}
   </div>
 
   <!-- Chart + top destinations -->
@@ -126,111 +114,15 @@
     </div>
   </div>
 
-  <!-- Circular charts -------------------------------------------------------
-       Three forms, each picked for its data's job:
-         · a meter (single ratio against 100%) — one hue, not a 2-slice pie;
-         · a status donut (part-to-whole, 4 segments, icon-free but always
-           labelled, because green↔red is 4.1 ΔE apart under deuteranopia);
-         · a margin donut on an ordinal ramp — the buckets are an ordered
-           scale, so one hue light→dark rather than a categorical set.
-       A 1-unit surface gap separates touching segments; nothing is stroked.
-  -->
-  <div class="qs-viz qs-grid-3">
-
-    <div class="qs-card fs-rise">
-      <h2>{% trans "Profit margin" %}</h2>
-      <p class="qs-sub">{% trans "Share of measurable revenue kept as profit." %}</p>
-      <svg class="qs-donut" width="190" height="190" viewBox="0 0 42 42" role="img"
-           aria-label="{% blocktrans with pct=fs_margin_percent %}Profit margin {{ pct }} percent{% endblocktrans %}">
-        <circle class="qs-track" cx="21" cy="21" r="15.9155" stroke-width="3.4"></circle>
-        <circle class="qs-meter-arc" cx="21" cy="21" r="15.9155" stroke-width="3.4"
-                stroke-dasharray="{{ fs_margin_percent|floatformat:1 }} {{ fs_margin_track }}"
-                stroke-dashoffset="0" transform="rotate(-90 21 21)"
-                stroke-linecap="round"></circle>
-        <g class="qs-donut-centre">
-          <text class="qs-figure" x="21" y="21.2">{{ fs_margin_percent }}%</text>
-          <text class="qs-caption" x="21" y="25.2">{% trans "MARGIN" %}</text>
-        </g>
-      </svg>
-      <ul class="qs-legend">
-        <li><span class="qs-name">{% trans "Profit" %}</span><span class="qs-val">${{ fs_profit|floatformat:2 }}</span></li>
-        <li><span class="qs-name">{% trans "Supplier cost" %}</span><span class="qs-val">${{ fs_cost|floatformat:2 }}{% if fs_cost_estimated %} <span style="font-size:10px;color:var(--qs-ink-mute);" >≈ {% trans "estimated at today's cost" %}</span>{% endif %}</span></li>
-        {% if fs_uncosted_revenue %}
-        <li title="{% trans 'Orders with no line items carry no traceable cost, so they are left out of the ratio rather than counted as pure profit.' %}">
-          <span class="qs-name" style="color:var(--viz-caution-ink);">{% trans "Excluded — no cost data" %}</span>
-          <span class="qs-val">${{ fs_uncosted_revenue|floatformat:2 }}</span>
-        </li>
-        {% endif %}
-      </ul>
-    </div>
-
-    <div class="qs-card fs-rise">
-      <h2>{% trans "Orders by status" %}</h2>
-      <p class="qs-sub">{% trans "Every order ever placed." %}</p>
-      {% if fs_status_arcs %}
-      <svg class="qs-donut" width="190" height="190" viewBox="0 0 42 42" role="img"
-           aria-label="{% trans 'Orders by status' %}">
-        <circle class="qs-track" cx="21" cy="21" r="15.9155" stroke-width="3.4"></circle>
-        {% for a in fs_status_arcs %}
-        <circle class="qs-seg qs-seg-{{ a.role }}" cx="21" cy="21" r="15.9155" stroke-width="3.4"
-                stroke-dasharray="{{ a.dash }} {{ a.rest }}" stroke-dashoffset="{{ a.offset }}"
-                transform="rotate(-90 21 21)">
-          <title>{{ a.label }}: {{ a.value }} ({{ a.percent }}%)</title>
-        </circle>
-        {% endfor %}
-        <g class="qs-donut-centre">
-          <text class="qs-figure" x="21" y="21.2">{{ fs_status_total }}</text>
-          <text class="qs-caption" x="21" y="25.2">{% trans "ORDERS" %}</text>
-        </g>
-      </svg>
-      <ul class="qs-legend">
-        {% for a in fs_status_arcs %}
-        <li>
-          <span class="qs-key qs-key-{{ a.role }}"></span>
-          <span class="qs-name">{{ a.label }}</span>
-          <span class="qs-val">{{ a.value }}</span>
-          <span class="qs-pct">{{ a.percent }}%</span>
-        </li>
-        {% endfor %}
-      </ul>
-      {% else %}<p class="qs-empty">{% trans "No orders yet." %}</p>{% endif %}
-    </div>
-
-    <div class="qs-card fs-rise">
-      <h2>{% trans "Margin spread" %}</h2>
-      <p class="qs-sub">{% trans "Active plans grouped by profit over supplier cost." %}</p>
-      {% if fs_margin_arcs %}
-      <svg class="qs-donut" width="190" height="190" viewBox="0 0 42 42" role="img"
-           aria-label="{% trans 'Active plans by margin band' %}">
-        <circle class="qs-track" cx="21" cy="21" r="15.9155" stroke-width="3.4"></circle>
-        {% for a in fs_margin_arcs %}
-        <circle class="qs-seg qs-seg-{{ a.role }}" cx="21" cy="21" r="15.9155" stroke-width="3.4"
-                stroke-dasharray="{{ a.dash }} {{ a.rest }}" stroke-dashoffset="{{ a.offset }}"
-                transform="rotate(-90 21 21)">
-          <title>{{ a.label }}: {{ a.value }} plans ({{ a.percent }}%)</title>
-        </circle>
-        {% endfor %}
-        <g class="qs-donut-centre">
-          <text class="qs-figure" x="21" y="21.2">{{ fs_margin_total }}</text>
-          <text class="qs-caption" x="21" y="25.2">{% trans "PLANS" %}</text>
-        </g>
-      </svg>
-      <ul class="qs-legend">
-        {% for a in fs_margin_arcs %}
-        <li>
-          <span class="qs-key qs-key-{{ a.role }}"></span>
-          <span class="qs-name">{{ a.label }}</span>
-          <span class="qs-val">{{ a.value }}</span>
-          <span class="qs-pct">{{ a.percent }}%</span>
-        </li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="qs-empty">{% trans "No plans carry a supplier cost yet." %}</p>
-      {% endif %}
-    </div>
-
-  </div>
+  {% comment %}
+    The three doughnuts that used to sit here are gone. A meter showing "48.9%
+    margin", a doughnut showing "29 orders", and a doughnut splitting 1370 plans
+    into margin bands: none answered a question anybody actually has at a back
+    office, and two drew percentages of numbers small enough to read directly.
+    The margin distribution belongs on the cost-and-margin report, which exists
+    and is linked in the sidebar; the order split is now a line in the attention
+    band.
+  {% endcomment %}
 
   <!-- Supply mix ---------------------------------------------------------
        One category is not a chart: with everything on one supplier a bar or a

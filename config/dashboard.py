@@ -246,4 +246,58 @@ def dashboard_callback(request, context):
             ).count(),
         }
     )
+    # --- What needs a person, and today's real numbers ----------------------
+    #
+    # The page used to open with lifetime revenue ($8.56) and three doughnuts.
+    # Nobody opens a back office to admire a doughnut: they open it to find out
+    # whether anything broke and how today went. Those two answers now come
+    # first, and the analytics keep their place further down.
+    from config.attention import collect
+
+    context["fs_attention"] = collect()
+    context["fs_attention_critical"] = [i for i in context["fs_attention"] if i.is_critical]
+
+    # Money in som, from the frozen amount the card was actually charged rather
+    # than a USD figure converted at today's rate. `amount_uzs` is what the
+    # customer paid; the dollar total is our own bookkeeping.
+    periods = []
+    for label, days in ((_("Today"), 0), (_("7 days"), 7), (_("30 days"), 30)):
+        since = timezone.now() - timedelta(days=days) if days else timezone.now().replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        window = paid.filter(paid_at__gte=since)
+        rows = window.aggregate(
+            count=Count("id"),
+            som=Coalesce(Sum("amount_uzs"), Decimal("0")),
+            usd=Coalesce(Sum("total"), Decimal("0")),
+        )
+        cost = OrderItem.objects.filter(
+            order__status=Order.Status.PAID, order__paid_at__gte=since
+        ).aggregate(
+            c=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        Coalesce("unit_cost", "plan__cost_usd") * F("quantity"),
+                        output_field=DecimalField(max_digits=14, decimal_places=2),
+                    )
+                ),
+                Decimal("0"),
+            )
+        )["c"]
+        profit = (rows["usd"] or Decimal("0")) - cost
+        periods.append(
+            {
+                "label": label,
+                "count": rows["count"],
+                "som": rows["som"] or Decimal("0"),
+                "profit": profit,
+                # Margin on a day with no sales is not zero, it is undefined —
+                # and printing 0% would read as "we sold at cost".
+                "margin": (
+                    int(profit / rows["usd"] * 100) if rows["usd"] else None
+                ),
+            }
+        )
+    context["fs_periods"] = periods
+
     return context

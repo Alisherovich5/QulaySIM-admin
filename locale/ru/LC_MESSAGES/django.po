@@ -4277,3 +4277,100 @@ msgstr "покрытие"
 #: catalog/models.py
 msgid "ISO2 codes this multi-country plan covers, comma separated."
 msgstr "Коды ISO2 стран, которые покрывает этот мультистрановой тариф, через запятую."
+
+#: config/attention.py templates/admin/index.html
+msgid "Today"
+msgstr "Сегодня"
+
+#: config/attention.py templates/admin/index.html
+msgid "7 days"
+msgstr "7 дней"
+
+#: config/attention.py templates/admin/index.html
+msgid "30 days"
+msgstr "30 дней"
+
+
+#: config/attention.py templates/admin/index.html
+msgid "margin"
+msgstr "маржа"
+
+#: config/attention.py templates/admin/index.html
+msgid "Paid, no eSIM"
+msgstr "Оплачено, eSIM нет"
+
+#: config/attention.py templates/admin/index.html
+msgid "The customer paid and has nothing. Check the supplier and the worker."
+msgstr "Клиент заплатил и ничего не получил. Проверьте поставщика и воркер."
+
+#: config/attention.py templates/admin/index.html
+msgid "eSIMs waiting on a supplier"
+msgstr "eSIM в ожидании поставщика"
+
+#: config/attention.py templates/admin/index.html
+msgid "Ordered more than half an hour ago and still without a profile."
+msgstr "Заказаны более получаса назад, профиля до сих пор нет."
+
+#: config/attention.py templates/admin/index.html
+msgid "Plans priced below cost"
+msgstr "Тарифы дешевле себестоимости"
+
+#: config/attention.py templates/admin/index.html
+msgid "Not sellable until repriced. Checkout refuses them."
+msgstr "Не продаются, пока цена не поднята — оформление их отклоняет."
+
+#: config/attention.py templates/admin/index.html
+msgid "Unpaid orders"
+msgstr "Неоплаченные заказы"
+
+#: config/attention.py templates/admin/index.html
+msgid "Reached the payment page over an hour ago and never paid."
+msgstr "Дошли до оплаты больше часа назад и не заплатили."
+
+#: config/attention.py templates/admin/index.html
+msgid "eSIMs expiring within three days"
+msgstr "eSIM, истекающие в течение трёх дней"
+
+#: config/attention.py templates/admin/index.html
+msgid "A good moment to offer a top-up."
+msgstr "Хороший момент предложить пополнение."
+
+#: config/attention.py templates/admin/index.html
+msgid "Supplier balance is low"
+msgstr "Низкий баланс поставщика"
+
+#: config/attention.py templates/admin/index.html
+msgid "A sale fails when the wallet is empty."
+msgstr "Когда кошелёк пуст, продажа не проходит."
+
+#: config/attention.py templates/admin/index.html
+msgid "Nothing needs attention"
+msgstr "Ничего не требует внимания"
+
+#: config/attention.py templates/admin/index.html
+msgid "Every paid order has its eSIM, no supplier is stuck, no plan is under water."
+msgstr "У каждого оплаченного заказа есть eSIM, поставщики не зависли, убыточных тарифов нет."
+
+#: config/settings.py
+msgid "Balances and sourcing"
+msgstr "Балансы и источники"
+
+#: config/settings.py
+msgid "Daily work"
+msgstr "Ежедневная работа"
+
+#: config/settings.py
+msgid "Money"
+msgstr "Деньги"
+
+#: config/settings.py
+msgid "Report recipients"
+msgstr "Получатели отчётов"
+
+#: config/settings.py
+msgid "Login attempts"
+msgstr "Попытки входа"
+
+#: config/settings.py
+msgid "Complimentary grants"
+msgstr "Подарочные выдачи"

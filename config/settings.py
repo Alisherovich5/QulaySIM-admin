@@ -445,37 +445,50 @@ UNFOLD = {
                     },
                 ],
             },
+            # Daily work first. The old order followed Django's app layout, so an
+            # operator's most-used page (orders) sat below eleven catalogue and
+            # pricing entries. This groups by what somebody is doing, not by
+            # which app the model happens to live in.
+            {
+                "title": _("Daily work"),
+                "separator": True,
+                "items": [
+                    {"title": _("Orders"), "icon": "receipt_long", "link": reverse_lazy("admin:orders_order_changelist")},
+                    {"title": _("eSIMs"), "icon": "qr_code_2", "link": reverse_lazy("admin:orders_esim_changelist")},
+                    {"title": _("Customers"), "icon": "group", "link": reverse_lazy("admin:customers_customer_changelist")},
+                ],
+            },
             {
                 "title": _("Catalog"),
                 "separator": True,
                 "items": [
-                    {"title": _("Regions"), "icon": "public", "link": reverse_lazy("admin:catalog_region_changelist")},
                     {
                         "title": _("Destinations"),
                         "icon": "grid_view",
                         "link": reverse_lazy("admin:catalog_country_board"),
                     },
-                    {"title": _("Countries"), "icon": "flag", "link": reverse_lazy("admin:catalog_country_changelist")},
                     {"title": _("Plans"), "icon": "sim_card", "link": reverse_lazy("admin:catalog_plan_changelist")},
+                    {"title": _("Countries"), "icon": "flag", "link": reverse_lazy("admin:catalog_country_changelist")},
+                    {"title": _("Regions"), "icon": "public", "link": reverse_lazy("admin:catalog_region_changelist")},
+                ],
+            },
+            # Five pricing pages used to sit inside Catalog with names that gave
+            # no clue which to open: "Cost and price sheet", "Supplier prices",
+            # "Sync prices", "Pricing rules", "Pricing assistant". Same pages,
+            # one group, ordered the way the work happens: look, decide, apply.
+            {
+                "title": _("Pricing"),
+                "separator": True,
+                "items": [
                     {
                         "title": _("Cost and price sheet"),
                         "icon": "price_change",
                         "link": reverse_lazy("admin:catalog_plan_price_sheet"),
                     },
                     {
-                        "title": _("Suppliers"),
-                        "icon": "account_balance_wallet",
-                        "link": reverse_lazy("admin:catalog_supplieroffer_board"),
-                    },
-                    {
-                        "title": _("Supplier prices"),
-                        "icon": "compare_arrows",
-                        "link": reverse_lazy("admin:catalog_supplieroffer_changelist"),
-                    },
-                    {
-                        "title": _("Sync prices"),
-                        "icon": "upload_file",
-                        "link": reverse_lazy("admin:catalog_plan_import_prices"),
+                        "title": _("Cost and margin report"),
+                        "icon": "assessment",
+                        "link": reverse_lazy("admin:catalog_plan_margin_report"),
                     },
                     {
                         "title": _("Pricing rules"),
@@ -488,57 +501,56 @@ UNFOLD = {
                         "link": reverse_lazy("admin:catalog_pricingrule_assistant"),
                     },
                     {
-                        "title": _("Cost and margin report"),
-                        "icon": "lab_profile",
-                        "link": reverse_lazy("admin:catalog_plan_margin_report"),
+                        "title": _("Sync prices"),
+                        "icon": "cloud_upload",
+                        "link": reverse_lazy("admin:catalog_plan_import_prices"),
                     },
                 ],
             },
             {
-                "title": _("Commerce"),
+                "title": _("Suppliers"),
                 "separator": True,
                 "items": [
                     {
-                        "title": _("Orders"),
-                        "icon": "receipt_long",
-                        "link": reverse_lazy("admin:orders_order_changelist"),
-                        "badge": "config.settings._badge_pending_orders",
+                        "title": _("Balances and sourcing"),
+                        "icon": "account_balance_wallet",
+                        "link": reverse_lazy("admin:catalog_supplieroffer_board"),
                     },
-                    {"title": _("eSIMs"), "icon": "qr_code_2", "link": reverse_lazy("admin:orders_esim_changelist")},
+                    {
+                        "title": _("Supplier prices"),
+                        "icon": "swap_horiz",
+                        "link": reverse_lazy("admin:catalog_supplieroffer_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Money"),
+                "separator": True,
+                "items": [
                     {"title": _("Payments"), "icon": "payments", "link": reverse_lazy("admin:orders_payment_changelist")},
-                    {
-                        "title": _("Card transactions"),
-                        "icon": "credit_card",
-                        "link": reverse_lazy("admin:orders_atmostransaction_changelist"),
-                    },
+                    {"title": _("Card transactions"), "icon": "credit_card", "link": reverse_lazy("admin:orders_atmostransaction_changelist")},
                     {"title": _("Promo codes"), "icon": "sell", "link": reverse_lazy("admin:orders_promocode_changelist")},
-                ],
-            },
-            {
-                "title": _("People"),
-                "separator": True,
-                "items": [
-                    {"title": _("Customers"), "icon": "group", "link": reverse_lazy("admin:customers_customer_changelist")},
-                    {
-                        "title": _("Cashback & referrals"),
-                        "icon": "redeem",
-                        "link": reverse_lazy("admin:customers_referral_changelist"),
-                    },
-                    {"title": _("Staff users"), "icon": "shield_person", "link": reverse_lazy("admin:auth_user_changelist")},
-                    {
-                        "title": _("Social logins"),
-                        "icon": "link",
-                        "link": reverse_lazy("admin:customers_socialaccount_changelist"),
-                    },
+                    {"title": _("Cashback & referrals"), "icon": "redeem", "link": reverse_lazy("admin:customers_referral_changelist")},
                 ],
             },
             {
                 "title": _("Content"),
                 "separator": True,
                 "items": [
-                    {"title": _("FAQ"), "icon": "quiz", "link": reverse_lazy("admin:content_faq_changelist")},
-                    {"title": _("Banners"), "icon": "ad", "link": reverse_lazy("admin:content_banner_changelist")},
+                    {"title": _("FAQ"), "icon": "help", "link": reverse_lazy("admin:content_faq_changelist")},
+                    {"title": _("Banners"), "icon": "campaign", "link": reverse_lazy("admin:content_banner_changelist")},
                     {"title": _("Testimonials"), "icon": "reviews", "link": reverse_lazy("admin:content_testimonial_changelist")},
+                ],
+            },
+            {
+                "title": _("System"),
+                "separator": True,
+                "items": [
+                    {"title": _("Staff users"), "icon": "manage_accounts", "link": reverse_lazy("admin:auth_user_changelist")},
+                    {"title": _("Social logins"), "icon": "key", "link": reverse_lazy("admin:customers_socialaccount_changelist")},
+                    {"title": _("Report recipients"), "icon": "send", "link": reverse_lazy("admin:orders_telegramrecipient_changelist")},
+                    {"title": _("Complimentary grants"), "icon": "card_giftcard", "link": reverse_lazy("admin:orders_complimentarygrant_changelist")},
+                    {"title": _("Login attempts"), "icon": "lock", "link": reverse_lazy("admin:axes_accessattempt_changelist")},
                 ],
             },
         ],
