@@ -278,10 +278,23 @@ AXES_VERBOSE = True
 # entirely and it falls back to REMOTE_ADDR without complaint. It is a hard
 # requirement here.
 #
-# Caddy appends the real peer address to X-Forwarded-For, so a client that sends
-# its own header ends up left of the trustworthy entry. Reading RIGHT-most
-# therefore takes Caddy's value and ignores anything the client seeded.
-AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
+# Cloudflare states the visitor's address in its own header and does not let a
+# caller override it, so that is read first. It has to be: with Cloudflare in
+# front, X-Forwarded-For arrives holding the edge that served the request —
+# measured, not assumed — and every failed admin login was being recorded and
+# counted against a Cloudflare address instead of the person trying. Lockout is
+# keyed on (username, ip_address), so with the address effectively constant and
+# rotating between edges, six wrong passwords from one attacker no longer added
+# up to six anywhere.
+#
+# X-Forwarded-For stays as the fallback for a request that did not come through
+# Cloudflare, read RIGHT-most so a client that seeds its own header cannot
+# choose which address it is judged by.
+AXES_IPWARE_META_PRECEDENCE_ORDER = [
+    "HTTP_CF_CONNECTING_IP",
+    "HTTP_X_FORWARDED_FOR",
+    "REMOTE_ADDR",
+]
 AXES_IPWARE_PROXY_ORDER = "right-most"
 
 AUTH_PASSWORD_VALIDATORS = [
