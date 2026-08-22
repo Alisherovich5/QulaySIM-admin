@@ -66,6 +66,14 @@ class LadderFromTheTableTests(TestCase):
         # The signal drops the cache, so the next import sees the change.
         self.assertFalse(on_ladder(5120, 30))
 
+    def test_deactivating_one_rung_leaves_the_others_alone(self):
+        SellableShape.objects.create(data_mb=5120, days=30, network="5G", sort_order=0)
+        keep = SellableShape.objects.create(data_mb=1024, days=7, network="4G", sort_order=1)
+        SellableShape.objects.filter(data_mb=5120).update(is_active=False)
+        reset_rungs_cache()
+        self.assertFalse(on_ladder(5120, 30))
+        self.assertTrue(on_ladder(keep.data_mb, keep.days))
+
     def test_the_order_the_owner_sets_is_the_order_the_page_reads(self):
         SellableShape.objects.create(data_mb=20480, days=30, network="5G", sort_order=0)
         SellableShape.objects.create(data_mb=1024, days=7, network="4G", sort_order=1)

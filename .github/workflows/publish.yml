@@ -59,6 +59,12 @@ jobs:
         # A model changed without `makemigrations` is invisible until the
         # container fails to boot after a deploy.
         run: python manage.py makemigrations --check --dry-run
+      - name: Collect static
+        # Unfold reads theme images through `static()` at request time, and with
+        # a manifest storage that raises without a manifest. Every admin page in
+        # the test suite 500s otherwise — 165 errors, invisible until this job
+        # existed at all.
+        run: python manage.py collectstatic --noinput
       - name: Schema doc is current
         # Generated from the live tables, so it cannot go stale silently — the
         # reason it exists is that three production queries were written against
@@ -74,7 +80,7 @@ jobs:
         # config and catalog for now, not the whole suite: widening it in the
         # same change that introduced the step would mean a pre-existing broken
         # test blocks every deploy, which is a separate decision.
-        run: python manage.py test config catalog -v 2
+        run: python manage.py test config catalog -v 1
 
   build:
     needs: checks

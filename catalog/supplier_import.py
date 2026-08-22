@@ -91,8 +91,16 @@ def rungs(iso2: str | None = None) -> list[tuple[int, int, str]]:
         (shape.data_mb, shape.days, shape.network)
         for shape in query.order_by("sort_order", "data_mb", "days")
     ]
-    _RUNGS_CACHE[key] = found or list(DEFAULT_LADDER)
-    return _RUNGS_CACHE[key]
+    if not found:
+        # "Not configured yet" and "configured to sell less" are different
+        # answers, and the fallback must only cover the first. Deactivating a
+        # rung used to silently restore the whole shipped ladder — caught by
+        # test_an_inactive_rung_stops_being_sold_without_being_deleted, which is
+        # the operator's expectation: what they switch off stays off.
+        found = [] if SellableShape.objects.exists() else list(DEFAULT_LADDER)
+
+    _RUNGS_CACHE[key] = found
+    return found
 
 
 def on_ladder(megabytes: int, days: int, iso2: str | None = None) -> bool:
