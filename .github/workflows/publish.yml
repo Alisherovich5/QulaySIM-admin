@@ -59,6 +59,17 @@ jobs:
         # A model changed without `makemigrations` is invisible until the
         # container fails to boot after a deploy.
         run: python manage.py makemigrations --check --dry-run
+      - name: Schema doc is current
+        # Generated from the live tables, so it cannot go stale silently — the
+        # reason it exists is that three production queries were written against
+        # guessed column names on the day it was added.
+        run: |
+          python manage.py migrate --noinput
+          python manage.py dump_schema
+          git diff --exit-code docs/schema.md || {
+            echo "docs/schema.md is out of date — run: python manage.py dump_schema"
+            exit 1
+          }
       - name: Tests
         # config and catalog for now, not the whole suite: widening it in the
         # same change that introduced the step would mean a pre-existing broken
