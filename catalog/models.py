@@ -740,3 +740,76 @@ class PricingRule(models.Model):
         if self.scope == self.Scope.TIER:
             self.provider = ""
             self.country = None
+
+class SellableShape(models.Model):
+    """A rung on the ladder: one traffic size and one duration we are willing to sell.
+
+    The wholesalers list far more shapes than a destination page can usefully
+    show — 63 for Uzbekistan alone, including daily allowances and a 0.49 GB
+    oddity — so the importer only creates plans for shapes named here. What made
+    this a table rather than a list in the code: deciding to sell the daily
+    packages is a commercial decision, and it used to require an engineer, a
+    commit and a deploy. Now it requires a row.
+
+    Nothing is lost silently. Shapes with no rung are counted in the import
+    report (`off_ladder`), so widening the ladder stays a decision made from
+    evidence rather than a guess.
+
+    `country` is the exception hatch: a rung with no country applies everywhere,
+    a rung naming one applies only there. That is how "daily packages, but only
+    for Uzbekistan" is expressed without touching the rest of the catalogue.
+    """
+
+    class Network(models.TextChoices):
+        LTE = "4G", "4G"
+        FIVE_G = "5G", "5G"
+
+    data_mb = models.PositiveIntegerField(
+        verbose_name=_("traffic (MB)"),
+        help_text=_("1024 = 1 GB. Must match the wholesaler's shape exactly."),
+    )
+    days = models.PositiveIntegerField(verbose_name=_("days"))
+    network = models.CharField(
+        max_length=2,
+        choices=Network.choices,
+        default=Network.FIVE_G,
+        verbose_name=_("network shown"),
+    )
+    country = models.ForeignKey(
+        "catalog.Country",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="sellable_shapes",
+        verbose_name=_("only this destination"),
+        help_text=_("Leave empty to offer this shape everywhere it exists."),
+    )
+    sort_order = models.PositiveIntegerField(
+        default=0,
+        verbose_name=_("order on the page"),
+        help_text=_("Lowest first. This is the order the customer reads."),
+    )
+    is_active = models.BooleanField(default=True, verbose_name=_("active"))
+    note = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name=_("note"),
+        help_text=_("Why this rung exists. Read by whoever wonders later."),
+    )
+
+    class Meta:
+        verbose_name = _("sellable shape")
+        verbose_name_plural = _("sellable shapes")
+        ordering = ("sort_order", "data_mb", "days")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["data_mb", "days", "country"],
+                name="one_rung_per_shape_and_country",
+            )
+        ]
+
+    def __str__(self) -> str:
+        gb = self.data_mb / 1024
+        size = f"{gb:g} GB" if self.data_mb >= 1024 else f"{self.data_mb} MB"
+        where = f" · {self.country.name}" if self.country_id else ""
+        return f"{size} / {self.days} d{where}"

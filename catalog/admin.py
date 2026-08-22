@@ -11,7 +11,7 @@ from unfold.decorators import display
 
 from django.utils.translation import gettext_lazy as _
 
-from .models import CatalogSyncRun, Country, Plan, PricingRule, Region, SupplierOffer
+from .models import CatalogSyncRun, Country, Plan, PricingRule, Region, SellableShape, SupplierOffer
 
 
 def _site_name_expression():
@@ -1950,3 +1950,35 @@ class CatalogSyncRunAdmin(ModelAdmin):
         if seconds is None:
             return "—"
         return f"{seconds // 60}m {seconds % 60}s" if seconds >= 60 else f"{seconds}s"
+
+
+@admin.register(SellableShape)
+class SellableShapeAdmin(ModelAdmin):
+    """The ladder, as a page the owner can edit.
+
+    This decides what the catalogue offers. The wholesalers list far more shapes
+    than a destination page can usefully show — 63 for Uzbekistan alone — so a
+    shape without a row here is imported, counted, and not sold. Adding a row is
+    how the assortment grows; it used to be a commit and a deploy.
+
+    Two things worth knowing while editing:
+      · the shape must match the wholesaler's exactly (3072 MB / 30 days, not
+        3000 / 30), because that is the key the import matches on;
+      · leaving "only this destination" empty offers the shape everywhere it
+        exists, which is what the seven original rungs do.
+    """
+
+    list_display = ("__str__", "size", "days", "network", "where", "sort_order", "is_active")
+    list_editable = ("sort_order", "is_active")
+    list_filter = ("is_active", "network", "days")
+    search_fields = ("note", "country__name")
+    ordering = ("sort_order", "data_mb", "days")
+    autocomplete_fields = ("country",)
+
+    @display(description=_("Traffic"), ordering="data_mb")
+    def size(self, obj):
+        return f"{obj.data_mb / 1024:g} GB" if obj.data_mb >= 1024 else f"{obj.data_mb} MB"
+
+    @display(description=_("Where"), ordering="country__name")
+    def where(self, obj):
+        return obj.country.name if obj.country_id else _("everywhere")

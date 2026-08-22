@@ -55,8 +55,15 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Django checks
         run: python manage.py check
+      - name: Migrations are complete
+        # A model changed without `makemigrations` is invisible until the
+        # container fails to boot after a deploy.
+        run: python manage.py makemigrations --check --dry-run
       - name: Tests
-        run: python manage.py test config -v 2
+        # config and catalog for now, not the whole suite: widening it in the
+        # same change that introduced the step would mean a pre-existing broken
+        # test blocks every deploy, which is a separate decision.
+        run: python manage.py test config catalog -v 2
 
   build:
     needs: checks

@@ -16,7 +16,7 @@ from decimal import Decimal, InvalidOperation
 from io import StringIO
 from typing import Iterable
 
-from django.db import transaction
+from django.db import models, transaction
 
 from catalog.models import Country, Plan, SupplierOffer
 
@@ -34,7 +34,12 @@ from catalog.models import Country, Plan, SupplierOffer
 # What it must never do is drop a shape silently, which is what it used to do —
 # `ParsedPrices.off_ladder` now records every package the ladder had no rung for,
 # so widening it is a decision someone makes from evidence.
-LADDER = [
+#: The ladder as it shipped, and now only the seed for the table that replaced it.
+#:
+#: Kept in code for one reason: an empty table must not silently stop the
+#: catalogue from importing. `rungs()` falls back to this, so a fresh database
+#: behaves exactly as this file used to before the data migration runs.
+DEFAULT_LADDER = [
     (1024, 7, "4G"),     # 1 GB / 7 days   — 204 countries
     (3072, 15, "5G"),    # 3 GB / 15 days  — 204
     (3072, 30, "5G"),    # 3 GB / 30 days  — 194
@@ -44,22 +49,60 @@ LADDER = [
     (51200, 30, "5G"),   # 50 GB / 30 days — 40, the heavy-user rung
 ]
 
-
-LADDER_SHAPES = {(mb, days) for mb, days, _ in LADDER}
-
 #: The one region whose page carries every shape the wholesalers sell rather
-#: than the seven-rung ladder a destination page gets.
+#: than the ladder a destination page gets.
 GLOBAL_SLUG = "global"
 
 
-def on_ladder(megabytes: int, days: int) -> bool:
+#: One read of a tiny table per country per import, instead of one per package.
+#: A supplier file carries thousands of rows; the table has a handful. Cleared
+#: whenever a rung is edited (see catalog/signals.py) so the admin's change
+#: takes effect on the next import rather than the next restart.
+_RUNGS_CACHE: dict[str | None, list[tuple[int, int, str]]] = {}
+
+
+def reset_rungs_cache() -> None:
+    _RUNGS_CACHE.clear()
+
+
+def rungs(iso2: str | None = None) -> list[tuple[int, int, str]]:
+    """The shapes we are willing to sell, in the order the customer reads them.
+
+    Read from `SellableShape` so widening the ladder is a row in the admin rather
+    than a commit and a deploy — see that model for why. A rung naming a country
+    applies only there; a rung naming none applies everywhere.
+
+    Cached per import run by the caller, not here: this is called once per
+    package and the table is tiny, but a supplier file has thousands of rows.
+    """
+    from catalog.models import SellableShape
+
+    key = iso2.upper() if iso2 else None
+    if key in _RUNGS_CACHE:
+        return _RUNGS_CACHE[key]
+
+    query = SellableShape.objects.filter(is_active=True)
+    if iso2:
+        query = query.filter(models.Q(country__isnull=True) | models.Q(country__iso2=iso2.upper()))
+    else:
+        query = query.filter(country__isnull=True)
+
+    found = [
+        (shape.data_mb, shape.days, shape.network)
+        for shape in query.order_by("sort_order", "data_mb", "days")
+    ]
+    _RUNGS_CACHE[key] = found or list(DEFAULT_LADDER)
+    return _RUNGS_CACHE[key]
+
+
+def on_ladder(megabytes: int, days: int, iso2: str | None = None) -> bool:
     """Whether a package shape has a rung, and so becomes a sellable plan."""
-    return (megabytes, days) in LADDER_SHAPES
+    return any((mb, d) == (megabytes, days) for mb, d, _ in rungs(iso2))
 
 
-def ladder_rung(megabytes: int, days: int) -> tuple[int, str] | None:
+def ladder_rung(megabytes: int, days: int, iso2: str | None = None) -> tuple[int, str] | None:
     """(sort order, network) for a shape, or None when it has no rung."""
-    for order, (mb, plan_days, network) in enumerate(LADDER):
+    for order, (mb, plan_days, network) in enumerate(rungs(iso2)):
         if (mb, plan_days) == (megabytes, days):
             return order, network
     return None
@@ -141,7 +184,7 @@ def plan_changes(prices: ParsedPrices, provider: str, *, iso2: Iterable[str] | N
         if country is None:
             continue
         mb = int(round(gb * 1024))
-        if not on_ladder(mb, days):
+        if not on_ladder(mb, days, loc):
             # Only the rungs the catalogue actually sells; a wholesaler lists
             # two dozen shapes, most of them near-duplicates. What was dropped is
             # recorded in prices.off_ladder rather than lost.
@@ -194,7 +237,7 @@ def apply_regional(
     from catalog.models import Region
 
     regions = {r.slug: r for r in Region.objects.all()}
-    ladder_index = {(mb, days): (order, network) for order, (mb, days, network) in enumerate(LADDER)}
+    ladder_index = {(mb, days): (order, network) for order, (mb, days, network) in enumerate(rungs())}
     made_plans = made_offers = 0
 
     for (region_slug, gb, days), offer in sorted(regional.items()):
@@ -354,7 +397,7 @@ def apply(prices: ParsedPrices, provider: str, *, iso2: Iterable[str] | None = N
     """Write the plans and offers this file describes."""
     wanted = {code.upper() for code in iso2} if iso2 else None
     countries = {c.iso2.upper(): c for c in Country.objects.all() if c.iso2}
-    ladder_index = {(mb, days): (order, network) for order, (mb, days, network) in enumerate(LADDER)}
+    ladder_index = {(mb, days): (order, network) for order, (mb, days, network) in enumerate(rungs())}
     # Same rule as the preview, via the same helper — see on_ladder().
     made_plans = made_offers = 0
 

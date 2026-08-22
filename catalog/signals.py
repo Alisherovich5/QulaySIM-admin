@@ -6,7 +6,7 @@ from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from catalog.models import Country, Plan, PricingRule, Region, SupplierOffer
+from catalog.models import Country, Plan, PricingRule, Region, SellableShape, SupplierOffer
 from config.cache import invalidate_catalogue
 
 
@@ -32,3 +32,14 @@ def _clear_catalogue_cache(sender, **kwargs):
     # Outside a transaction the callback runs immediately, so nothing changes
     # for plain saves.
     transaction.on_commit(invalidate_catalogue)
+
+
+@receiver(post_save, sender=SellableShape)
+@receiver(post_delete, sender=SellableShape)
+def _forget_the_ladder(sender, **kwargs):
+    """A rung edited in the admin has to reach the next import, not the next
+    restart. The importer caches the table once per country per run — see
+    supplier_import.rungs — so the cache is dropped here."""
+    from catalog.supplier_import import reset_rungs_cache
+
+    reset_rungs_cache()
