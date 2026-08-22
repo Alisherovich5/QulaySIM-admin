@@ -49,6 +49,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # First, because everything after it may read the client address: it removes
+    # CF-Connecting-IP unless Cloudflare actually delivered the request. See
+    # config/client_address.py and docs/adr/0001-client-address-behind-cloudflare.md.
+    "config.client_address.TrustedClientIpMiddleware",
     "django.middleware.security.SecurityMiddleware",
     # Serves the collected static files. Django itself refuses to with
     # DEBUG=False and gunicorn has no opinion about them, so without this the
@@ -290,11 +294,15 @@ AXES_VERBOSE = True
 # X-Forwarded-For stays as the fallback for a request that did not come through
 # Cloudflare, read RIGHT-most so a client that seeds its own header cannot
 # choose which address it is judged by.
-AXES_IPWARE_META_PRECEDENCE_ORDER = [
-    "HTTP_CF_CONNECTING_IP",
-    "HTTP_X_FORWARDED_FOR",
-    "REMOTE_ADDR",
-]
+#: The same switch the API reads, from the same .env. Two services, one value:
+#: before this, the API's was configuration and this was hard-coded, so turning
+#: Cloudflare off would have left the admin still believing a header anyone can
+#: send. The middleware above is what makes believing it safe.
+TRUST_CLOUDFLARE_CLIENT_IP = config("TRUST_CLOUDFLARE_CLIENT_IP", default=False, cast=bool)
+
+AXES_IPWARE_META_PRECEDENCE_ORDER = (
+    ["HTTP_CF_CONNECTING_IP"] if TRUST_CLOUDFLARE_CLIENT_IP else []
+) + ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
 AXES_IPWARE_PROXY_ORDER = "right-most"
 
 AUTH_PASSWORD_VALIDATORS = [
