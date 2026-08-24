@@ -127,17 +127,48 @@ class CatalogueCompletenessTests(TestCase):
 
     def test_compiled_catalogue_is_current(self):
         """Only the .mo is read at runtime, so a .po edited without a recompile
-        ships the previous wording with nothing to show for it."""
+        ships the previous wording with nothing to show for it.
+
+        Compared by CONTENT, not by modification time. Timestamps looked like
+        the obvious check and were wrong: git sets every file's mtime at
+        checkout, so on CI the .mo and the .po are written in the same
+        instant and which one lands first is arbitrary. It failed by 0.4
+        milliseconds. What the test actually wants to know is whether every
+        translation in the source is present in the compiled file, and that
+        question has an answer that does not depend on the clock.
+        """
+        import gettext
+
         for language in LOCALES:
             with self.subTest(language=language):
                 po = _catalogue(language)
                 mo = po.with_suffix(".mo")
                 self.assertTrue(mo.exists(), f"{mo} missing — run compilemessages")
                 self.assertGreater(mo.stat().st_size, 10_000)
-                self.assertGreaterEqual(
-                    mo.stat().st_mtime,
-                    po.stat().st_mtime,
-                    f"{mo.name} is older than {po.name} — run compilemessages",
+
+                with mo.open("rb") as handle:
+                    compiled = gettext.GNUTranslations(handle)
+                # Presence, not equality. `_entries` yields the msgstr as a
+                # LIST of continuation parts, and for a plural entry those parts
+                # are different forms -- joining them would compare against a
+                # string that never existed. Asking "did this entry make it into
+                # the .mo at all" is the question anyway: the failure being
+                # guarded is a new .po entry with no recompile, and gettext
+                # returns the msgid unchanged for exactly that.
+                uncompiled = sorted(
+                    msgid
+                    for _block, msgid, strs in _entries(language)
+                    if any(strs)
+                    and compiled.gettext(msgid) == msgid
+                    # A translation identical to the source is indistinguishable
+                    # from an uncompiled one, and is not a bug.
+                    and "".join(strs) != msgid
+                )
+                self.assertEqual(
+                    uncompiled,
+                    [],
+                    f"{mo.name} does not carry these translations from "
+                    f"{po.name} — run compilemessages: {uncompiled[:10]}",
                 )
 
 
