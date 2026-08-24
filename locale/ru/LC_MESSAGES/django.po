@@ -4376,3 +4376,59 @@ msgid ""
 msgstr ""
 "Сумма в сумах — это то, что фактически списано с карты, зафиксировано по "
 "курсу на момент оформления заказа."
+
+#: orders/admin.py
+msgid "Almost gone (90%+ used)"
+msgstr "Почти закончился (использовано 90%+)"
+
+#: orders/admin.py
+msgid "Data left"
+msgstr "Остаток трафика"
+
+#: orders/admin.py
+msgid "Days left"
+msgstr "Осталось дней"
+
+#: orders/admin.py
+msgid "Expired"
+msgstr "Срок истёк"
+
+#: orders/admin.py
+msgid "Expires within 3 days"
+msgstr "Истекает в течение 3 дней"
+
+#: orders/admin.py
+msgid "Expires within 7 days"
+msgstr "Истекает в течение 7 дней"
+
+#: orders/admin.py
+msgid "Expiry"
+msgstr "Срок действия"
+
+#: orders/admin.py
+msgid "Finished (0 left)"
+msgstr "Закончился (0 осталось)"
+
+#: orders/admin.py
+msgid "Left"
+msgstr "Остаток"
+
+#: orders/admin.py
+msgid "Never used"
+msgstr "Не использовался"
+
+#: orders/admin.py
+msgid "Past half (50%+ used)"
+msgstr "Больше половины (использовано 50%+)"
+
+#: orders/admin.py
+msgid "Still valid"
+msgstr "Ещё действует"
+
+#: orders/admin.py
+msgid "eSIMs — sold %(sold)s, used %(used)s, left %(left)s"
+msgstr "eSIM — продано %(sold)s, использовано %(used)s, осталось %(left)s"
+
+#: orders/admin.py
+msgid "expired"
+msgstr "срок истёк"

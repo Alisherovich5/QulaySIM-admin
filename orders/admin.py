@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 from django import forms
 from django.contrib import admin
-from django.db.models import Count
+from django.db.models import Case, Count, F, FloatField, IntegerField, Value, When
+from django.db.models.functions import Cast
 from django.utils import timezone
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
@@ -260,6 +263,97 @@ class OrderAdmin(ModelAdmin):
         )
 
 
+def _human_mb(mb: int) -> str:
+    """MB or GB, whichever a person would say out loud.
+
+    1948 MB is what the database holds; "1.9 GB" is what the answer sounds like.
+    Below a gigabyte MB stays, because "0.2 GB" reads as less precise than the
+    number it came from.
+    """
+    if mb >= 1024:
+        return f"{mb / 1024:.1f} GB"
+    return f"{mb} MB"
+
+
+def _human_gb(mb: int) -> str:
+    """Totals are always in GB: a page-wide sum is never a two-digit MB."""
+    return f"{mb / 1024:.1f} GB"
+
+
+class DataLeftFilter(admin.SimpleListFilter):
+    """How much of the allowance is gone.
+
+    The question this page exists to answer is not "which eSIMs are active" but
+    "which ones are about to stop working", and those are two different sets: a
+    profile at 98% is still `active` and still reads as fine everywhere else.
+    "Finished" is separated from "almost gone" because they need different
+    actions -- one is a sale you can still make, the other is a support call
+    that already happened.
+    """
+
+    title = _("Data left")
+    parameter_name = "data_left"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("finished", _("Finished (0 left)")),
+            ("low", _("Almost gone (90%+ used)")),
+            ("half", _("Past half (50%+ used)")),
+            ("unused", _("Never used")),
+            ("unlimited", _("Unlimited")),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        # data_total_mb == 0 means unlimited in this schema, so every threshold
+        # below has to exclude it: a percentage of zero is not a small number,
+        # it is not a number.
+        if value == "finished":
+            return queryset.filter(data_total_mb__gt=0, data_used_mb__gte=F("data_total_mb"))
+        if value == "low":
+            return queryset.filter(data_total_mb__gt=0, data_used_mb__gte=F("data_total_mb") * 0.9)
+        if value == "half":
+            return queryset.filter(data_total_mb__gt=0, data_used_mb__gte=F("data_total_mb") * 0.5)
+        if value == "unused":
+            return queryset.filter(data_used_mb=0)
+        if value == "unlimited":
+            return queryset.filter(data_total_mb=0)
+        return queryset
+
+
+class ExpiryFilter(admin.SimpleListFilter):
+    """When the profile stops working, whatever is left on it.
+
+    Validity runs from purchase, not from first use, so a customer who has not
+    installed the eSIM yet is still losing days. That makes "expires soon" a
+    thing worth seeing on its own, separately from how much data is left.
+    """
+
+    title = _("Expiry")
+    parameter_name = "expiry"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("expired", _("Expired")),
+            ("d3", _("Expires within 3 days")),
+            ("d7", _("Expires within 7 days")),
+            ("live", _("Still valid")),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        now = timezone.now()
+        if value == "expired":
+            return queryset.filter(expires_at__lt=now)
+        if value == "d3":
+            return queryset.filter(expires_at__gte=now, expires_at__lt=now + timedelta(days=3))
+        if value == "d7":
+            return queryset.filter(expires_at__gte=now, expires_at__lt=now + timedelta(days=7))
+        if value == "live":
+            return queryset.filter(expires_at__gte=now)
+        return queryset
+
+
 @admin.register(ESIM)
 class ESIMAdmin(ModelAdmin):
 
@@ -268,18 +362,96 @@ class ESIMAdmin(ModelAdmin):
     # tether where bytes are the slow part. Fifty still fills a screen several
     # times over.
     list_per_page = 50
-    list_display = ("iccid", "customer", "plan", "status_badge", "usage_bar", "expires_at")
-    list_filter = ("status", "plan__network_type")
+    # Ordered as the question is asked: which sale, how much is LEFT, how long
+    # has it got. Remaining comes before used because "1.9 GB left" is the
+    # answer; "36% used" is the same fact in the form that needs arithmetic.
+    list_display = (
+        "iccid",
+        "customer",
+        "plan",
+        "status_badge",
+        "data_left",
+        "usage_bar",
+        "days_left",
+        "expires_at",
+    )
+    list_filter = (DataLeftFilter, ExpiryFilter, "status", "plan__network_type")
     search_fields = ("iccid", "customer__email")
     autocomplete_fields = ("order", "plan", "customer")
     readonly_fields = ("qr_preview", "iccid", "qr_payload", "created_at")
     ordering = ("-created_at",)
 
+    def get_queryset(self, request):
+        """Annotate remaining and percentage so the columns can be SORTED.
+
+        A computed column that cannot be ordered is half a monitoring page: the
+        whole point is to put the nearly-empty profiles at the top. Unlimited
+        (total 0) annotates to NULL rather than to a number, so it sorts to one
+        end instead of pretending to be the emptiest profile on the page.
+        """
+        used = Cast(F("data_used_mb"), FloatField())
+        total = Cast(F("data_total_mb"), FloatField())
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(
+                left_mb=Case(
+                    When(data_total_mb=0, then=Value(None)),
+                    default=F("data_total_mb") - F("data_used_mb"),
+                    output_field=IntegerField(),
+                ),
+                used_pct=Case(
+                    When(data_total_mb=0, then=Value(None)),
+                    default=used * Value(100.0) / total,
+                    output_field=FloatField(),
+                ),
+            )
+        )
+
+    def changelist_view(self, request, extra_context=None):
+        """Put the totals in the page title, where they cannot be missed.
+
+        The totals are for the CURRENT filter, so "Finished" answers "how much
+        did we sell that is now spent" without a second query anywhere. Done in
+        the title rather than a template block because overriding an unfold
+        template to show three numbers is a maintenance cost with no upside.
+        """
+        from django.db.models import Sum
+
+        rows = self.get_changelist_instance(request).get_queryset(request)
+        totals = rows.filter(data_total_mb__gt=0).aggregate(
+            sold=Sum("data_total_mb"), used=Sum("data_used_mb")
+        )
+        sold_mb = totals["sold"] or 0
+        used_mb = min(totals["used"] or 0, sold_mb)
+        extra_context = {
+            **(extra_context or {}),
+            "title": _("eSIMs — sold %(sold)s, used %(used)s, left %(left)s")
+            % {
+                "sold": _human_gb(sold_mb),
+                "used": _human_gb(used_mb),
+                "left": _human_gb(sold_mb - used_mb),
+            },
+        }
+        return super().changelist_view(request, extra_context)
+
     @display(description=_("Status"))
     def status_badge(self, obj):
         return _status_badge(obj.status, obj.get_status_display())
 
-    @display(description=_("Data used"))
+    @display(description=_("Left"), ordering="left_mb")
+    def data_left(self, obj):
+        if obj.data_total_mb == 0:
+            return format_html('<span style="color:var(--qs-ink-soft);">{}</span>', _("Unlimited"))
+        # Clamped at zero: the wholesaler's figure can exceed the allowance, and
+        # "-40 MB left" is a number no one can act on.
+        left = max(0, obj.data_total_mb - obj.data_used_mb)
+        colour = "var(--qs-ink)" if left else "var(--qs-red, #b3261e)"
+        return format_html(
+            '<strong style="color:{};">{}</strong>', colour, _human_mb(left)
+        )
+
+    @display(description=_("Data used"), ordering="used_pct")
     def usage_bar(self, obj):
         if obj.data_total_mb == 0:
             return "Unlimited"
@@ -287,10 +459,27 @@ class ESIMAdmin(ModelAdmin):
         return format_html(
             '<div style="width:120px;background:var(--qs-line);border-radius:999px;height:8px;">'
             '<div style="width:{}%;background:var(--qs-blue);height:8px;border-radius:999px;"></div>'
-            '</div><span style="font-size:11px;color:var(--qs-ink-soft);">{}%</span>',
+            '</div><span style="font-size:11px;color:var(--qs-ink-soft);">{}% · {}</span>',
             pct,
             pct,
+            _human_mb(obj.data_used_mb),
         )
+
+    @display(description=_("Days left"), ordering="expires_at")
+    def days_left(self, obj):
+        if not obj.expires_at:
+            return "—"
+        # Rounded UP: a profile with 10 days and 23 hours on it has eleven
+        # calendar days of use left, and truncating told the customer ten. The
+        # support desk reads this number out loud, so it has to be the one the
+        # customer will experience.
+        from math import ceil
+
+        seconds = (obj.expires_at - timezone.now()).total_seconds()
+        remaining = ceil(seconds / 86400)
+        if remaining < 0:
+            return format_html('<span style="color:var(--qs-red, #b3261e);">{}</span>', _("expired"))
+        return format_html("{}", remaining)
 
     @display(description=_("QR code"))
     def qr_preview(self, obj):

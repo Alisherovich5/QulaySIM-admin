@@ -46,6 +46,10 @@ jobs:
       DB_PASSWORD: qulaysim
       DB_HOST: localhost
       DB_PORT: "5432"
+      # The eSIM activation code is encrypted at rest, so any test that SAVES a
+      # profile needs a key. A throwaway one: it encrypts nothing that outlives
+      # the job.
+      FIELD_ENCRYPTION_KEY: 8Xb0nGm2Qk7ZpR4tYv9WcJdLxAeSfHu1NqTgVzKoMbI=
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -77,10 +81,12 @@ jobs:
             exit 1
           }
       - name: Tests
-        # config and catalog for now, not the whole suite: widening it in the
-        # same change that introduced the step would mean a pre-existing broken
-        # test blocks every deploy, which is a separate decision.
-        run: python manage.py test config catalog -v 1
+        # orders is included now. It was left out when this step was added, on
+        # the grounds that widening the net in the same change could surface a
+        # pre-existing failure and block every deploy. Checked before adding it:
+        # all 34 already passed, so they had simply never been run here -- which
+        # is how a test suite rots without anyone noticing.
+        run: python manage.py test config catalog orders -v 1
 
   build:
     needs: checks

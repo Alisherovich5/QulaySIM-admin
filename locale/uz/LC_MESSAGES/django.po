@@ -4357,3 +4357,59 @@ msgid ""
 msgstr ""
 "So‘mdagi summa — kartadan haqiqatan yechilgan miqdor, buyurtma berilgan "
 "paytdagi kurs bo‘yicha qotirilgan."
+
+#: orders/admin.py
+msgid "Almost gone (90%+ used)"
+msgstr "Tugayapti (90%+ ishlatilgan)"
+
+#: orders/admin.py
+msgid "Data left"
+msgstr "Qolgan trafik"
+
+#: orders/admin.py
+msgid "Days left"
+msgstr "Qolgan kun"
+
+#: orders/admin.py
+msgid "Expired"
+msgstr "Muddati tugagan"
+
+#: orders/admin.py
+msgid "Expires within 3 days"
+msgstr "3 kun ichida tugaydi"
+
+#: orders/admin.py
+msgid "Expires within 7 days"
+msgstr "7 kun ichida tugaydi"
+
+#: orders/admin.py
+msgid "Expiry"
+msgstr "Muddat"
+
+#: orders/admin.py
+msgid "Finished (0 left)"
+msgstr "Tugagan (0 qoldi)"
+
+#: orders/admin.py
+msgid "Left"
+msgstr "Qolgan"
+
+#: orders/admin.py
+msgid "Never used"
+msgstr "Ishlatilmagan"
+
+#: orders/admin.py
+msgid "Past half (50%+ used)"
+msgstr "Yarmidan oshgan (50%+ ishlatilgan)"
+
+#: orders/admin.py
+msgid "Still valid"
+msgstr "Amal qilmoqda"
+
+#: orders/admin.py
+msgid "eSIMs — sold %(sold)s, used %(used)s, left %(left)s"
+msgstr "eSIM'lar — sotilgan %(sold)s, ishlatilgan %(used)s, qolgan %(left)s"
+
+#: orders/admin.py
+msgid "expired"
+msgstr "muddati tugagan"
