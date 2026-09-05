@@ -1,5 +1,7 @@
 from django.contrib import admin
-from django.db.models import Count
+from django.conf import settings
+from django.db.models import Count, Q
+from django.utils.html import format_html
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group, User
@@ -7,7 +9,7 @@ from unfold.admin import ModelAdmin
 from unfold.decorators import display
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
-from .models import Customer, Referral, SocialAccount
+from .models import Customer, Referral, ReferralAgent, SocialAccount
 from django.utils.translation import gettext_lazy as _
 
 # Re-register Django's built-in auth models with Unfold styling.
@@ -88,3 +90,65 @@ class SocialAccountAdmin(ModelAdmin):
         # The full id is not secret, but it is long and identifies a person at
         # the provider; the tail is enough to match up a support request.
         return f"…{obj.provider_uid[-8:]}" if len(obj.provider_uid) > 8 else obj.provider_uid
+
+
+@admin.register(ReferralAgent)
+class ReferralAgentAdmin(ModelAdmin):
+    """Kim qancha odam olib keldi va qancha pul tegishli.
+
+    Ikkita son ataylab alohida: ro'yxatdan o'tganlar va SOTIB OLGANLAR. Pul
+    faqat ikkinchisiga to'lanadi, va bitta ustunda ko'rsatilsa, agent birinchi
+    songa qarab hisob-kitob qilib, keyin nizo chiqadi.
+    """
+
+    list_display = (
+        "agent",
+        "referral_code",
+        "invited_count",
+        "purchased_count",
+        "earned_display",
+    )
+    search_fields = ("email", "full_name", "referral_code")
+    ordering = ("-id",)
+
+    def get_queryset(self, request):
+        # Faqat kimdir taklif qilganlar. Hech kimni taklif qilmagan mijozlar bu
+        # sahifada shovqin bo'ladi -- ular uchun "Mijozlar" sahifasi bor.
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(
+                invited=Count("referrals", distinct=True),
+                purchased=Count(
+                    "referrals",
+                    filter=Q(referrals__status=Referral.Status.COMPLETED),
+                    distinct=True,
+                ),
+            )
+            .filter(invited__gt=0)
+            .order_by("-purchased", "-invited")
+        )
+
+    @admin.display(description="Agent", ordering="full_name")
+    def agent(self, obj):
+        return obj.full_name or obj.email
+
+    @admin.display(description="Ro'yxatdan o'tgan", ordering="invited")
+    def invited_count(self, obj):
+        return obj.invited
+
+    @admin.display(description="Sotib olgan", ordering="purchased")
+    def purchased_count(self, obj):
+        return obj.purchased
+
+    @admin.display(description="Tegishli pul", ordering="purchased")
+    def earned_display(self, obj):
+        total = obj.purchased * settings.REFERRAL_COMMISSION_UZS
+        return format_html(
+            '<b>{}</b> so\'m', f"{total:,}".replace(",", " ")
+        )
+
+    def has_add_permission(self, request):
+        # Agent bu yerda yaratilmaydi: odam taklif havolasini ishlatganda o'zi
+        # paydo bo'ladi. Qo'lda qo'shish yolg'on hisobot yasashning yo'li.
+        return False

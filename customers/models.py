@@ -128,3 +128,17 @@ class SocialAccount(models.Model):
 
     def __str__(self):
         return f"{self.get_provider_display()} — {self.customer_id}"
+
+
+class ReferralAgent(Customer):
+    """Taklif havolasi orqali odam olib kelganlar -- alohida sahifa sifatida.
+
+    Proksi, chunki bu boshqa jadval emas, o'sha mijozlarning bir qismi. Alohida
+    sahifa kerak, chunki mijozlarning aksariyati hech kimni taklif qilmagan va
+    ularni umumiy ro'yxatda qidirish agentni topishni qiyinlashtiradi.
+    """
+
+    class Meta:
+        proxy = True
+        verbose_name = "Agent (referal)"
+        verbose_name_plural = "Agentlar va referallar"

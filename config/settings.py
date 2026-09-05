@@ -20,6 +20,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # No fall-back for the secret: a missing value must crash the process rather
 # than quietly boot with a key an attacker can look up in the repository.
 SECRET_KEY = config("SECRET_KEY")
+
+# Referal komissiyasi -- taklif qilingan odam birinchi marta to'lov qilganda
+# taklif qilganga tegadigan naqd summa. FastAPI ham AYNAN shu env
+# o'zgaruvchisini o'qiydi (referral_commission_uzs), ya'ni raqam bitta joyda
+# turadi: ikki nusxa bo'lsa, biri o'zgarib ikkinchisi qolib ketadi va agentga
+# panelda bir raqam, hisobotda boshqasi ko'rinadi.
+REFERRAL_COMMISSION_UZS = config("REFERRAL_COMMISSION_UZS", default=6000, cast=int)
 # Defaults to OFF. A missing DEBUG variable used to mean "debug on", which
 # turns every 500 into a full stack trace plus every setting, database
 # password included.
