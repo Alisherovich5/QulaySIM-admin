@@ -30,12 +30,14 @@ SECRET_KEY = config("SECRET_KEY")
 # (referral_commission_tiers), ya'ni raqam bitta joyda turadi: ikki nusxa
 # bo'lsa, biri o'zgarib ikkinchisi qolib ketadi va agentga panelda bir raqam,
 # hisobotda boshqasi ko'rinadi.
-REFERRAL_COMMISSION_TIERS = config(
-    "REFERRAL_COMMISSION_TIERS", default="0:5%,100:6%,300:6.5%"
-)
-# Eski, bir pog'onali sozlama. Faqat yuqoridagisi bo'sh qoldirilganda
-# ishlatiladi -- .env hali eskicha bo'lsa hisobot nolga tushib qolmasin.
-REFERRAL_COMMISSION_UZS = config("REFERRAL_COMMISSION_UZS", default=0, cast=int)
+# ATAYLAB BO'SH: bo'sh bo'lsa pastdagi eski, bir pog'onali sozlama ishlatiladi,
+# ya'ni bu kod hisobotdagi summani o'z-o'zidan o'zgartirmaydi. Kelishuv
+# qat'iylashganda .env ga bitta satr yoziladi, masalan:
+#
+#     REFERRAL_COMMISSION_TIERS=0:5%,100:6%,300:6.5%
+REFERRAL_COMMISSION_TIERS = config("REFERRAL_COMMISSION_TIERS", default="")
+# Eski, bir pog'onali sozlama: har bir sotib olgan mijoz uchun qat'iy summa.
+REFERRAL_COMMISSION_UZS = config("REFERRAL_COMMISSION_UZS", default=6000, cast=int)
 # Defaults to OFF. A missing DEBUG variable used to mean "debug on", which
 # turns every 500 into a full stack trace plus every setting, database
 # password included.
