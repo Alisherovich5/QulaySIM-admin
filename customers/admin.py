@@ -1,6 +1,5 @@
 from django.contrib import admin
-from django.conf import settings
-from django.db.models import Count, Q
+from django.db.models import Count, OuterRef, Prefetch, Q, Subquery
 from django.utils.html import format_html
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
@@ -9,7 +8,9 @@ from unfold.admin import ModelAdmin
 from unfold.decorators import display
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
+from .commission import current_tiers, tier_for
 from .models import Customer, Referral, ReferralAgent, SocialAccount
+from orders.models import Order
 from django.utils.translation import gettext_lazy as _
 
 # Re-register Django's built-in auth models with Unfold styling.
@@ -106,6 +107,7 @@ class ReferralAgentAdmin(ModelAdmin):
         "referral_code",
         "invited_count",
         "purchased_count",
+        "rate_display",
         "earned_display",
     )
     search_fields = ("email", "full_name", "referral_code")
@@ -114,6 +116,21 @@ class ReferralAgentAdmin(ModelAdmin):
     def get_queryset(self, request):
         # Faqat kimdir taklif qilganlar. Hech kimni taklif qilmagan mijozlar bu
         # sahifada shovqin bo'ladi -- ular uchun "Mijozlar" sahifasi bor.
+        #
+        # Sotib olgan referallar oldindan yuklab olinadi: stavka pog'onali va
+        # har birining haqi o'zi kelgan navbatga bog'liq, ya'ni summani SQL
+        # bitta ustunda hisoblab bera olmaydi. Prefetch bo'lmasa har bir qator
+        # o'ziga alohida so'rov yuborardi.
+        first_paid_uzs = (
+            Order.objects.filter(customer=OuterRef("referred"), status="paid")
+            .order_by("id")
+            .values("amount_uzs")[:1]
+        )
+        completed = (
+            Referral.objects.filter(status=Referral.Status.COMPLETED)
+            .annotate(first_paid_uzs=Subquery(first_paid_uzs))
+            .order_by("completed_at", "id")
+        )
         return (
             super()
             .get_queryset(request)
@@ -126,6 +143,9 @@ class ReferralAgentAdmin(ModelAdmin):
                 ),
             )
             .filter(invited__gt=0)
+            .prefetch_related(
+                Prefetch("referrals", queryset=completed, to_attr="paid_referrals")
+            )
             .order_by("-purchased", "-invited")
         )
 
@@ -143,10 +163,18 @@ class ReferralAgentAdmin(ModelAdmin):
 
     @admin.display(description="Tegishli pul", ordering="purchased")
     def earned_display(self, obj):
-        total = obj.purchased * settings.REFERRAL_COMMISSION_UZS
-        return format_html(
-            '<b>{}</b> so\'m', f"{total:,}".replace(",", " ")
+        # Har bir mijoz o'zi kelgan paytdagi stavkada qoladi: 101-mijoz
+        # kelganda oldingi 100 tasi qayta hisoblanmaydi.
+        tiers = current_tiers()
+        total = sum(
+            tier_for(tiers, index).amount_for(referral.first_paid_uzs or 0)
+            for index, referral in enumerate(obj.paid_referrals)
         )
+        return format_html("<b>{}</b> so'm", f"{total:,}".replace(",", " "))
+
+    @admin.display(description="Hozirgi stavka")
+    def rate_display(self, obj):
+        return tier_for(current_tiers(), obj.purchased).label
 
     def has_add_permission(self, request):
         # Agent bu yerda yaratilmaydi: odam taklif havolasini ishlatganda o'zi
