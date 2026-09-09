@@ -403,6 +403,14 @@ class ESIM(models.Model):
     validity_days = models.PositiveIntegerField(default=7, verbose_name=_("validity days"))
     activated_at = models.DateTimeField(null=True, blank=True, verbose_name=_("activated at"))
     expires_at = models.DateTimeField(null=True, blank=True, verbose_name=_("expires at"))
+    # Ta'minotchidan traffik oxirgi marta qachon so'ralgani.
+    #
+    # Sarf o'zgarmasa ham yoziladi -- gap "raqam o'zgardi" da emas, "biz shu
+    # payt tekshirdik" da. Mijoz "0 GB sarflangan" ni ko'rib "sayt buzuq" deb
+    # o'ylaydi; yonida "15:20 da yangilandi" turgani shu savolni yopadi.
+    last_synced_at = models.DateTimeField(
+        null=True, blank=True, verbose_name=_("last synced at")
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"))
 
     class Meta:

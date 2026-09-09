@@ -373,13 +373,38 @@ class ESIMAdmin(ModelAdmin):
         "data_left",
         "usage_bar",
         "days_left",
+        "synced_ago",
         "expires_at",
     )
     list_filter = (DataLeftFilter, ExpiryFilter, "status", "plan__network_type")
     search_fields = ("iccid", "customer__email")
     autocomplete_fields = ("order", "plan", "customer")
-    readonly_fields = ("qr_preview", "iccid", "qr_payload", "created_at")
+    readonly_fields = ("qr_preview", "iccid", "qr_payload", "created_at", "last_synced_at")
     ordering = ("-created_at",)
+
+    @admin.display(description="Tekshirildi", ordering="last_synced_at")
+    def synced_ago(self, obj):
+        """Traffik oxirgi marta qachon so'ralgani.
+
+        "0 GB sarflangan" degan shikoyat kelganda birinchi savol -- raqam
+        eskirganmi yoki rostdan nol. Bu ustun shu savolga javob beradi, ya'ni
+        yordam xizmati bazaga qaramasdan aytadi.
+        """
+
+        if obj.last_synced_at is None:
+            return format_html('<span style="color:#9E6D14">hech qachon</span>')
+
+        minutes = int((timezone.now() - obj.last_synced_at).total_seconds() // 60)
+        if minutes < 1:
+            return "hozir"
+        if minutes < 60:
+            return f"{minutes} daq oldin"
+        hours = minutes // 60
+        if hours < 24:
+            # Bir soatdan oshgani -- sinxron har 20 daqiqada ishlaydi, ya'ni
+            # bu holda nimadir to'xtagan.
+            return format_html('<span style="color:#9E6D14">{} soat oldin</span>', hours)
+        return format_html('<span style="color:#D73D3D">{} kun oldin</span>', hours // 24)
 
     def get_queryset(self, request):
         """Annotate remaining and percentage so the columns can be SORTED.
