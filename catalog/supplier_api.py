@@ -168,13 +168,34 @@ def _add_regional(
         catalogue.regional[key] = RegionalOffer(code, cost, tuple(codes))
 
 
-def _add(catalogue: FetchedCatalogue, iso2: str, gb: float, days: int, code: str, cost: Decimal):
+def _add(
+    catalogue: FetchedCatalogue,
+    iso2: str,
+    gb: float,
+    days: int,
+    code: str,
+    cost: Decimal,
+    *,
+    unlimited: bool = False,
+):
     """Record one package, keeping the cheapest per (country, GB, days).
 
     Same rule the CSV parser uses: a supplier often lists several packages for
     the same shape and we want the one that costs least.
+
+    `unlimited` is how a package with no gigabyte figure gets through. Zero GB
+    is otherwise the signature of a package we could not read — a missing
+    `data_quantity`, a name the regex did not match — and those must keep being
+    discarded. So the caller has to say which it is; the two cases are
+    indistinguishable from the number alone, and that is exactly why every
+    unlimited package was being counted as unusable and dropped.
     """
-    if not iso2 or gb <= 0 or days <= 0 or cost <= 0 or not code:
+    if not iso2 or days <= 0 or cost <= 0 or not code:
+        catalogue.unusable += 1
+        return
+    if unlimited:
+        gb = 0.0
+    elif gb <= 0:
         catalogue.unusable += 1
         return
     key = (iso2.upper(), gb, days)
@@ -351,23 +372,37 @@ def fetch_esimcard(*, max_pages: int = 120) -> FetchedCatalogue:
                 if len(code) == 2:
                     catalogue.countries.setdefault(code, entry.get("country_name") or code)
             gb = _quantity_in_gb(package)
+            unlimited = bool(package.get("unlimited"))
             days = _validity_in_days(package)
             cost = Decimal(str(package.get("price") or 0)).quantize(Decimal("0.01"))
             code = str(package.get("id") or "")
 
-            if len(coverage) != 1:
+            # Distinct countries, not coverage entries. eSIMCard lists one entry
+            # per network, so "Unlimited eSIM Data for 1 Day in South Korea"
+            # arrives with two coverage rows — both Korea, KT and one other —
+            # and counting rows called it a multi-country package and sent it
+            # down the regional path. 639 of the unlimited packages have exactly
+            # that shape.
+            iso_codes = {
+                (entry.get("code") or "").upper()
+                for entry in coverage
+                if len(entry.get("code") or "") == 2
+            }
+
+            if len(iso_codes) != 1:
                 catalogue.multi_country += 1
-                _add_regional(
-                    catalogue,
-                    [(entry.get("code") or "").upper() for entry in coverage],
-                    gb,
-                    days,
-                    code,
-                    cost,
-                )
+                _add_regional(catalogue, sorted(iso_codes), gb, days, code, cost)
                 continue
 
-            _add(catalogue, (coverage[0].get("code") or "").upper(), gb, days, code, cost)
+            _add(
+                catalogue,
+                next(iter(iso_codes)),
+                gb,
+                days,
+                code,
+                cost,
+                unlimited=unlimited,
+            )
         page += 1
 
     catalogue.prices.rows_read = catalogue.packages_read

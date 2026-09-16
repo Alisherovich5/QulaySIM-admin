@@ -175,6 +175,19 @@ class Change:
     price_after: Decimal | None = None
 
 
+def plan_label(country_name: str, gb: float, days: int) -> str:
+    """What a plan of this shape is called, in one place.
+
+    Zero gigabytes is unlimited by the time it reaches here — the fetchers
+    discard a package whose size they could not read, so the only way a zero
+    arrives is a package that genuinely has no allowance. Writing it as "0 GB"
+    is what the old comment in supplier_api warned about, and this is where it
+    would have happened.
+    """
+    size = "Unlimited" if gb <= 0 else f"{gb:g} GB"
+    return f"{country_name} {size} · {days} days"
+
+
 def plan_changes(prices: ParsedPrices, provider: str, *, iso2: Iterable[str] | None = None) -> list[Change]:
     """What applying this file would do. Touches nothing.
 
@@ -201,7 +214,7 @@ def plan_changes(prices: ParsedPrices, provider: str, *, iso2: Iterable[str] | N
             continue
 
         existing_plan = country.plans.filter(data_amount_mb=mb, validity_days=days).first()
-        label = f"{country.name} {gb:g} GB · {days} days"
+        label = plan_label(country.name, gb, days)
         if existing_plan is None:
             changes.append(Change(country.name, label, "new-plan", code, cost))
             continue
@@ -428,7 +441,13 @@ def apply(prices: ParsedPrices, provider: str, *, iso2: Iterable[str] | None = N
             data_amount_mb=mb,
             validity_days=days,
             defaults={
-                "title": f"{country.name} {gb:g} GB · {days} days",
+                "title": plan_label(country.name, gb, days),
+                # Zero megabytes is the unlimited rung. The flag is what the
+                # storefront reads — `data_label` shows "Unlimited" instead of a
+                # size, and the destination page raises the "cheksiz internet
+                # mavjud" badge off it — so it has to be set here and not left
+                # to whoever edits the plan next.
+                "is_unlimited": mb == 0,
                 "network_type": network,
                 "price_usd": Decimal("0"),  # recalculated from cost on save
                 "cost_usd": cost,
