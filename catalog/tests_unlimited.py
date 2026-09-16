@@ -232,3 +232,86 @@ class TheLabelTests(TestCase):
 
     def test_a_size_still_reads_as_a_size(self):
         self.assertEqual(plan_label("South Korea", 3.0, 15), "South Korea 3 GB · 15 days")
+
+
+class ATopUpMirrorDoesNotStopTheSyncTests(TestCase):
+    """The sync died the first time it ran after a top-up had ever been sold.
+
+    A top-up needs a Plan row of its own so the order line has something to
+    point at, and that row carries the same country, size and duration as the
+    plan it tops up. China 5 GB / 30 days therefore exists twice, and the
+    importer's get_or_create on exactly those three fields raised
+    MultipleObjectsReturned and took the whole catalogue sync down with it —
+    every destination, both suppliers, nothing written.
+    """
+
+    def setUp(self):
+        reset_rungs_cache()
+        SellableShape.objects.all().delete()
+        SellableShape.objects.create(data_mb=5120, days=30, network="5G", sort_order=3)
+        region = Region.objects.create(name="Asia", slug="asia")
+        self.cn = Country.objects.create(
+            name="China", slug="china", iso2="CN", region=region
+        )
+        self.real = Plan.objects.create(
+            country=self.cn,
+            scope=Plan.Scope.LOCAL,
+            title="China 5 GB · 30 days",
+            data_amount_mb=5120,
+            validity_days=30,
+            price_usd=Decimal("7.99"),
+            cost_usd=Decimal("2.96"),
+            sort_order=5,
+        )
+        # Sorted ahead of the destination plan on purpose. Plan.Meta orders by
+        # (sort_order, price_usd), so this is the row a bare .first() returns —
+        # which is what makes the two tests below fail if the exclude is
+        # dropped. In production both rows carried 7.99 and the tie made the
+        # winner undefined, so "it happened to pick the right one" was never a
+        # property anything guaranteed.
+        self.mirror = Plan.objects.create(
+            country=self.cn,
+            scope=Plan.Scope.TOPUP,
+            title="China 5GB 30Days (qo'shimcha)",
+            data_amount_mb=5120,
+            validity_days=30,
+            price_usd=Decimal("7.99"),
+            # A different cost, so the two rows end up at different prices once
+            # save() recomputes them. That is what lets the preview test below
+            # tell which row it read.
+            cost_usd=Decimal("9.00"),
+            sort_order=0,
+            is_active=False,
+        )
+
+    def tearDown(self):
+        reset_rungs_cache()
+
+    def _prices(self):
+        prices = supplier_api.ParsedPrices()
+        prices.best[("CN", 5.0, 30)] = ("pkg-cn", Decimal("2.50"))
+        return prices
+
+    def test_the_sync_completes(self):
+        result = apply(self._prices(), "esimcard")
+
+        self.assertEqual(result["plans_created"], 0)
+
+    def test_the_offer_lands_on_the_destination_plan_not_the_mirror(self):
+        apply(self._prices(), "esimcard")
+
+        self.assertTrue(self.real.offers.filter(provider="esimcard").exists())
+        self.assertFalse(self.mirror.offers.filter(provider="esimcard").exists())
+
+    def test_the_preview_reads_the_destination_plan_too(self):
+        from catalog.supplier_import import plan_changes
+
+        changes = plan_changes(self._prices(), "esimcard")
+
+        self.assertEqual([c.kind for c in changes], ["new-offer"])
+        # Which row it read, not just that it read one. The mirror costs more,
+        # so it is priced higher — reading it would report the wrong "before".
+        self.real.refresh_from_db()
+        self.mirror.refresh_from_db()
+        self.assertNotEqual(self.real.price_usd, self.mirror.price_usd)
+        self.assertEqual(changes[0].price_before, self.real.price_usd)

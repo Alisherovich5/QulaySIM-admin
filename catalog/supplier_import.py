@@ -213,7 +213,11 @@ def plan_changes(prices: ParsedPrices, provider: str, *, iso2: Iterable[str] | N
             prices.off_ladder[key] = prices.off_ladder.get(key, 0) + 1
             continue
 
-        existing_plan = country.plans.filter(data_amount_mb=mb, validity_days=days).first()
+        existing_plan = (
+            country.plans.filter(data_amount_mb=mb, validity_days=days)
+            .exclude(scope=Plan.Scope.TOPUP)
+            .first()
+        )
         label = plan_label(country.name, gb, days)
         if existing_plan is None:
             changes.append(Change(country.name, label, "new-plan", code, cost))
@@ -436,11 +440,27 @@ def apply(prices: ParsedPrices, provider: str, *, iso2: Iterable[str] | None = N
             continue
         order, network = rung
 
-        plan, created = Plan.objects.get_or_create(
+        # Top-ups are excluded, and the sync stops dead without it.
+        #
+        # A top-up is sold through a Plan row of its own so the order line has
+        # something to point at, and that row carries the same country, size and
+        # duration as the plan it tops up — China 5 GB / 30 days exists twice,
+        # once as the destination plan and once as its top-up mirror. A
+        # get_or_create on those three fields therefore raises
+        # MultipleObjectsReturned and takes the whole catalogue sync down with
+        # it, which is what it did the first time this ran after a top-up had
+        # ever been sold.
+        existing = (
+            Plan.objects.filter(country=country, data_amount_mb=mb, validity_days=days)
+            .exclude(scope=Plan.Scope.TOPUP)
+            .first()
+        )
+        created = existing is None
+        plan = existing or Plan.objects.create(
             country=country,
             data_amount_mb=mb,
             validity_days=days,
-            defaults={
+            **{
                 "title": plan_label(country.name, gb, days),
                 # Zero megabytes is the unlimited rung. The flag is what the
                 # storefront reads — `data_label` shows "Unlimited" instead of a
