@@ -185,7 +185,11 @@ def plan_label(country_name: str, gb: float, days: int) -> str:
     would have happened.
     """
     size = "Unlimited" if gb <= 0 else f"{gb:g} GB"
-    return f"{country_name} {size} · {days} days"
+    # "1 days" only became visible with the unlimited rungs — the gigabyte
+    # ladder starts at 7 — and it is on 198 destination pages and in 198 page
+    # titles, so it is worth the branch.
+    unit = "day" if days == 1 else "days"
+    return f"{country_name} {size} · {days} {unit}"
 
 
 def plan_changes(prices: ParsedPrices, provider: str, *, iso2: Iterable[str] | None = None) -> list[Change]:

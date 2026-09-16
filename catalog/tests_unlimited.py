@@ -233,6 +233,14 @@ class TheLabelTests(TestCase):
     def test_a_size_still_reads_as_a_size(self):
         self.assertEqual(plan_label("South Korea", 3.0, 15), "South Korea 3 GB · 15 days")
 
+    def test_one_day_is_a_day(self):
+        """198 unlimited plans are one-day plans, and every one of them said
+        "1 days" — on the page and in its title tag."""
+        self.assertEqual(plan_label("South Korea", 0.0, 1), "South Korea Unlimited · 1 day")
+
+    def test_two_days_are_days(self):
+        self.assertEqual(plan_label("South Korea", 0.0, 2), "South Korea Unlimited · 2 days")
+
 
 class ATopUpMirrorDoesNotStopTheSyncTests(TestCase):
     """The sync died the first time it ran after a top-up had ever been sold.
