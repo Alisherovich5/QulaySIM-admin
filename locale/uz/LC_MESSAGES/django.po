@@ -4413,3 +4413,19 @@ msgstr "eSIM'lar — sotilgan %(sold)s, ishlatilgan %(used)s, qolgan %(left)s"
 #: orders/admin.py
 msgid "expired"
 msgstr "muddati tugagan"
+
+#: config/otp.py
+msgid "Authenticator code"
+msgstr "Autentifikator kodi"
+
+#: config/otp.py
+msgid "The six digits from your authenticator app."
+msgstr "Autentifikator ilovangizdagi olti xonali kod."
+
+#: config/otp.py
+msgid "Please enter the correct username, password and authenticator code."
+msgstr "Iltimos, to'g'ri foydalanuvchi nomi, parol va autentifikator kodini kiriting."
+
+#: config/otp.py
+msgid "Two-factor authentication is required and this account has no authenticator enrolled. Ask an administrator to run `manage.py setup_totp <username>`."
+msgstr "Ikki bosqichli tasdiqlash majburiy, bu hisobda esa autentifikator ro'yxatdan o'tkazilmagan. Administratordan `manage.py setup_totp <username>` buyrug'ini ishga tushirishni so'rang."
