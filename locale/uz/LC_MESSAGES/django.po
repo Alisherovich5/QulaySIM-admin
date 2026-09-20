@@ -4413,3 +4413,15 @@ msgstr "eSIM'lar — sotilgan %(sold)s, ishlatilgan %(used)s, qolgan %(left)s"
 #: orders/admin.py
 msgid "expired"
 msgstr "muddati tugagan"
+
+#: orders/admin.py
+msgid "Customer email"
+msgstr "Mijoz emaili"
+
+#: orders/admin.py
+msgid "The eSIM goes to this address. If nobody with it exists yet, a customer is created — they reach it by signing in with this email."
+msgstr "eSIM shu manzilga beriladi. Agar bunday mijoz hali bo‘lmasa, yangisi ochiladi — u shu email bilan kirib oladi."
+
+#: orders/admin.py
+msgid "A new customer was created for %(email)s. They sign in with this address."
+msgstr "%(email)s uchun yangi mijoz ochildi. U shu manzil bilan kiradi."

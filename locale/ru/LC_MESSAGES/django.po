@@ -4432,3 +4432,15 @@ msgstr "eSIM — продано %(sold)s, использовано %(used)s, о�
 #: orders/admin.py
 msgid "expired"
 msgstr "срок истёк"
+
+#: orders/admin.py
+msgid "Customer email"
+msgstr "Email клиента"
+
+#: orders/admin.py
+msgid "The eSIM goes to this address. If nobody with it exists yet, a customer is created — they reach it by signing in with this email."
+msgstr "eSIM уходит на этот адрес. Если такого клиента ещё нет, он будет создан — войти сможет по этому же email."
+
+#: orders/admin.py
+msgid "A new customer was created for %(email)s. They sign in with this address."
+msgstr "Для %(email)s создан новый клиент. Он входит по этому адресу."

@@ -756,6 +756,57 @@ class SupplierPurchaseAdmin(ModelAdmin):
             obj.get_state_display(),
         )
 
+class ComplimentaryGrantForm(forms.ModelForm):
+    """One field where a customer used to be: an email address.
+
+    The autocomplete that stood here could only find somebody the shop already
+    had, which is the wrong half of the problem. The person asking for an eSIM
+    is usually a new name — a friend, a colleague, somebody who wrote in — and
+    picking from a list of existing customers cannot express that. "Shu mijoz
+    deb qo'ygan joyiga man gmailni kiritsak, bo'ldi" — 2026-09-19. The cost of
+    it not working was not a slow form; it was that the person who wanted to
+    hand out an eSIM had to ask somebody else to do it every single time.
+
+    An address nobody has used yet becomes a customer here. That is not a
+    shortcut: an account with no password is exactly what the storefront
+    already creates for anybody who signs in with Google, and the eSIM has to
+    belong to somebody before it can be bought.
+    """
+
+    email = forms.EmailField(
+        label=_("Customer email"),
+        help_text=_(
+            "The eSIM goes to this address. If nobody with it exists yet, "
+            "a customer is created — they reach it by signing in with this email."
+        ),
+    )
+
+    class Meta:
+        model = ComplimentaryGrant
+        fields = ("plan", "reason")
+
+    def clean_email(self) -> str:
+        # Addresses are typed by hand here, from a phone, by somebody reading
+        # them off another screen. Case and stray spaces are not a new customer.
+        return self.cleaned_data["email"].strip().lower()
+
+    def save(self, commit: bool = True):
+        from customers.models import Customer
+
+        grant = super().save(commit=False)
+        email = self.cleaned_data["email"]
+        customer = Customer.objects.filter(email__iexact=email).first()
+        # Recorded for the admin's message, which is the only place anyone
+        # finds out that a new account was opened in their name.
+        self.customer_created = customer is None
+        if customer is None:
+            customer = Customer.objects.create(email=email)
+        grant.customer = customer
+        if commit:
+            grant.save()
+        return grant
+
+
 @admin.register(ComplimentaryGrant)
 class ComplimentaryGrantAdmin(ModelAdmin):
     """The page for handing someone an eSIM at our cost.
@@ -767,12 +818,13 @@ class ComplimentaryGrantAdmin(ModelAdmin):
     reports read.
     """
 
+    form = ComplimentaryGrantForm
     list_display = ("created_at", "customer", "plan", "cost_usd", "reason", "order", "granted_by")
     list_filter = ("created_at",)
     search_fields = ("customer__email", "plan__title", "reason")
-    autocomplete_fields = ("customer", "plan")
+    autocomplete_fields = ("plan",)
     readonly_fields = ("cost_usd", "order", "granted_by", "created_at")
-    fields = ("customer", "plan", "reason", "cost_usd", "order", "granted_by", "created_at")
+    fields = ("email", "plan", "reason", "cost_usd", "order", "granted_by", "created_at")
 
     def has_change_permission(self, request, obj=None):
         return False
@@ -802,6 +854,12 @@ class ComplimentaryGrantAdmin(ModelAdmin):
                 % {"reason": exc},
             )
             return
+        if getattr(form, "customer_created", False):
+            messages.info(
+                request,
+                _("A new customer was created for %(email)s. They sign in with this address.")
+                % {"email": obj.customer.email},
+            )
         messages.success(
             request,
             _("eSIM ordered at cost ($%(cost)s). It appears under the customer's profile once the wholesaler answers.")
