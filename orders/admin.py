@@ -4,6 +4,7 @@ from django import forms
 from django.contrib import admin
 from django.db.models import Case, Count, F, FloatField, IntegerField, Value, When
 from django.db.models.functions import Cast
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
@@ -508,9 +509,32 @@ class ESIMAdmin(ModelAdmin):
 
     @display(description=_("QR code"))
     def qr_preview(self, obj):
-        if obj.qr_image:
-            return format_html('<img src="{}" style="width:160px;height:160px;" />', obj.qr_image)
-        return "—"
+        """The picture, a file to send, and the line to paste.
+
+        A 160px image in a page is something to photograph, not something to
+        forward, and whoever is handing an eSIM over is doing it in Telegram on
+        a phone. So: the code itself, a download that saves a real PNG named
+        after the ICCID, and the LPA string underneath for the phone whose
+        camera will not read a QR off another screen — which is most of them,
+        held at arm's length in a taxi.
+        """
+        if not obj.qr_image:
+            return format_html("<span>{}</span>", _("Not issued yet"))
+        name = f"qulaysim-{obj.iccid or 'esim'}.png"
+        return format_html(
+            '<div style="display:flex;flex-direction:column;gap:10px;max-width:420px">'
+            '<img src="{}" alt="QR" style="width:180px;height:180px;border-radius:8px" />'
+            '<a href="{}" download="{}" class="text-primary-600" '
+            'style="font-weight:600">{}</a>'
+            '<code style="user-select:all;word-break:break-all;font-size:12px;'
+            'padding:8px;border-radius:6px;background:rgba(127,127,127,.12)">{}</code>'
+            "</div>",
+            obj.qr_image,
+            obj.qr_image,
+            name,
+            _("Download the QR"),
+            obj.qr_payload or "—",
+        )
 
 
 @admin.register(Payment)
@@ -819,12 +843,28 @@ class ComplimentaryGrantAdmin(ModelAdmin):
     """
 
     form = ComplimentaryGrantForm
-    list_display = ("created_at", "customer", "plan", "cost_usd", "reason", "order", "granted_by")
+    list_display = ("created_at", "customer", "plan", "cost_usd", "qr_link", "reason", "order", "granted_by")
     list_filter = ("created_at",)
     search_fields = ("customer__email", "plan__title", "reason")
     autocomplete_fields = ("plan",)
     readonly_fields = ("cost_usd", "order", "granted_by", "created_at")
     fields = ("email", "plan", "reason", "cost_usd", "order", "granted_by", "created_at")
+
+    @display(description=_("QR code"))
+    def qr_link(self, obj):
+        """Where the QR is, from the row that caused it to exist.
+
+        Without this the person who just gave an eSIM away has an order number
+        and nothing else: the profile arrives seconds later, on a different
+        page, found by searching a list of every eSIM ever sold. "Kutilmoqda"
+        is the honest answer for the seconds in between — the wholesaler has
+        been asked and has not answered yet.
+        """
+        esim = obj.order.esims.first() if obj.order_id else None
+        if esim is None:
+            return format_html("<span>{}</span>", _("waiting"))
+        url = reverse("admin:orders_esim_change", args=[esim.pk])
+        return format_html('<a href="{}" class="text-primary-600">{}</a>', url, _("open the QR"))
 
     def has_change_permission(self, request, obj=None):
         return False

@@ -4425,3 +4425,19 @@ msgstr "eSIM shu manzilga beriladi. Agar bunday mijoz hali bo‘lmasa, yangisi o
 #: orders/admin.py
 msgid "A new customer was created for %(email)s. They sign in with this address."
 msgstr "%(email)s uchun yangi mijoz ochildi. U shu manzil bilan kiradi."
+
+#: orders/admin.py
+msgid "Not issued yet"
+msgstr "Hali berilmagan"
+
+#: orders/admin.py
+msgid "Download the QR"
+msgstr "QR ni yuklab olish"
+
+#: orders/admin.py
+msgid "waiting"
+msgstr "kutilmoqda"
+
+#: orders/admin.py
+msgid "open the QR"
+msgstr "QR ni ochish"

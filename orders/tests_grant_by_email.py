@@ -14,7 +14,14 @@ from django.test import TestCase
 
 from catalog.models import Country, Plan
 from customers.models import Customer
-from orders.admin import ComplimentaryGrantAdmin, ComplimentaryGrantForm
+from django.contrib.admin.sites import site
+
+from orders.admin import (
+    ComplimentaryGrantAdmin,
+    ComplimentaryGrantForm,
+    ESIMAdmin,
+)
+from orders.models import ESIM, ComplimentaryGrant, Order
 
 
 class GrantByEmailTests(TestCase):
@@ -81,3 +88,82 @@ class GrantByEmailTests(TestCase):
         self.assertIn("email", ComplimentaryGrantAdmin.fields)
         self.assertNotIn("customer", ComplimentaryGrantAdmin.fields)
         self.assertNotIn("customer", ComplimentaryGrantAdmin.autocomplete_fields)
+
+
+class GrantShowsTheQrTests(TestCase):
+    """Handing the eSIM over is the rest of the job.
+
+    The grant page produced an order number and nothing else. The profile
+    arrives from the wholesaler seconds later, on a different page, findable
+    only by searching a list of every eSIM ever sold — so the person who had
+    just given one away still could not send it to anybody.
+    """
+
+    def setUp(self) -> None:
+        country = Country.objects.create(name="Vietnam", slug="vietnam", iso2="VN")
+        self.plan = Plan.objects.create(
+            country=country,
+            title="Vietnam 3 GB · 15 days",
+            data_amount_mb=3072,
+            validity_days=15,
+            price_usd=Decimal("6.00"),
+            cost_usd=Decimal("4.00"),
+        )
+        self.customer = Customer.objects.create(email="qr@gmail.com")
+        self.order = Order.objects.create(customer=self.customer, status=Order.Status.PAID)
+        self.grant = ComplimentaryGrant.objects.create(
+            customer=self.customer, plan=self.plan, cost_usd=Decimal("4.00"), order=self.order
+        )
+        self.admin = ComplimentaryGrantAdmin(ComplimentaryGrant, site)
+
+    def test_it_says_waiting_while_the_wholesaler_has_not_answered(self) -> None:
+        """Asserted as "no link", not as a word: the column is translated, and
+        a test that pins the English text fails the moment somebody reads the
+        page in Uzbek — which is everybody who uses it."""
+        html = self.admin.qr_link(self.grant)
+        self.assertNotIn("<a ", html)
+        self.assertIn("<span>", html)
+
+    def test_it_links_to_the_profile_once_there_is_one(self) -> None:
+        esim = ESIM.objects.create(
+            order=self.order,
+            customer=self.customer,
+            plan=self.plan,
+            iccid="8900000000000000001",
+            qr_payload="LPA:1$example.com$ABC",
+        )
+        html = self.admin.qr_link(self.grant)
+        self.assertIn(f"/orders/esim/{esim.pk}/change/", html)
+
+
+class QrIsSendableTests(TestCase):
+    """A 160px image in a page is something to photograph, not to forward."""
+
+    def setUp(self) -> None:
+        country = Country.objects.create(name="Vietnam", slug="vietnam", iso2="VN")
+        plan = Plan.objects.create(
+            country=country, title="Vietnam 3 GB", data_amount_mb=3072,
+            validity_days=15, price_usd=Decimal("6.00"), cost_usd=Decimal("4.00"),
+        )
+        customer = Customer.objects.create(email="qr2@gmail.com")
+        order = Order.objects.create(customer=customer, status=Order.Status.PAID)
+        self.esim = ESIM.objects.create(
+            order=order, customer=customer, plan=plan,
+            iccid="8900000000000000002",
+            qr_payload="LPA:1$rsp.example.com$ABCDEF",
+            qr_image="data:image/png;base64,iVBORw0KGgo=",
+        )
+        self.admin = ESIMAdmin(ESIM, site)
+
+    def test_the_picture_can_be_saved_as_a_file(self) -> None:
+        html = self.admin.qr_preview(self.esim)
+        self.assertIn("download=", html)
+        self.assertIn("8900000000000000002", html)
+
+    def test_the_line_to_paste_is_there_too(self) -> None:
+        """Most phone cameras will not read a QR off another screen."""
+        self.assertIn("LPA:1$rsp.example.com$ABCDEF", self.admin.qr_preview(self.esim))
+
+    def test_an_unissued_profile_says_so_instead_of_a_broken_image(self) -> None:
+        self.esim.qr_image = ""
+        self.assertNotIn("<img", self.admin.qr_preview(self.esim))

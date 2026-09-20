@@ -4444,3 +4444,19 @@ msgstr "eSIM уходит на этот адрес. Если такого кли
 #: orders/admin.py
 msgid "A new customer was created for %(email)s. They sign in with this address."
 msgstr "Для %(email)s создан новый клиент. Он входит по этому адресу."
+
+#: orders/admin.py
+msgid "Not issued yet"
+msgstr "Ещё не выдан"
+
+#: orders/admin.py
+msgid "Download the QR"
+msgstr "Скачать QR"
+
+#: orders/admin.py
+msgid "waiting"
+msgstr "ожидается"
+
+#: orders/admin.py
+msgid "open the QR"
+msgstr "открыть QR"
