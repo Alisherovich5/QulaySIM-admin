@@ -5,8 +5,13 @@ terminal. It must not travel any other way: a QR code pasted into a chat, a
 ticket or an e-mail is a second factor that a second party now holds, which is
 the one property it exists to deny.
 
-    ssh -t <host> 'cd ~/qulaysim && docker compose exec admin \
+    ssh -t <host> 'cd ~/qulaysim && sudo docker compose exec catalog-sync \
         python manage.py setup_totp <username>'
+
+`catalog-sync` rather than `admin`: the Django site itself is no longer served
+— the backoffice replaced it — but the image still runs, because it owns the
+schema and imports the wholesalers' catalogues. It is the Django the server
+has.
 
 The TTY is not only about privacy: the command finishes by asking for a code
 from the app and enrols nothing until it gets one. Run without a terminal it
