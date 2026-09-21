@@ -47,12 +47,22 @@ class QuietAdminLoginForm(AuthenticationForm):
 
 
 def install() -> None:
-    """Point the admin login at the quiet form.
+    """Point the admin login at the quiet form — the two-factor one.
 
     Called from config/urls.py, which Django imports once while resolving
     ROOT_URLCONF — late enough that `admin.site` exists, early enough that no
-    request has been served.
+    request has been served. That is also later than `AppConfig.ready`, where
+    config/otp.py installs the same attribute, and the two used to disagree: this
+    function ran second and quietly replaced the two-factor form with one that
+    never asks for a code. Nothing failed, no test covered it, and the second
+    factor was simply off.
+
+    So both installers now name the same class, and it is the subclass that has
+    both behaviours. Imported inside the function because otp.py imports the
+    quiet form from this module at import time.
     """
     from django.contrib import admin
 
-    admin.site.login_form = QuietAdminLoginForm
+    from config.otp import OtpAdminAuthenticationForm
+
+    admin.site.login_form = OtpAdminAuthenticationForm

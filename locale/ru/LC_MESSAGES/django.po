@@ -4460,3 +4460,19 @@ msgstr "ожидается"
 #: orders/admin.py
 msgid "open the QR"
 msgstr "открыть QR"
+
+#: config/otp.py
+msgid "Authenticator code"
+msgstr "Код аутентификатора"
+
+#: config/otp.py
+msgid "The six digits from your authenticator app."
+msgstr "Шесть цифр из приложения-аутентификатора."
+
+#: config/otp.py
+msgid "Please enter the correct username, password and authenticator code."
+msgstr "Пожалуйста, введите правильные имя пользователя, пароль и код аутентификатора."
+
+#: config/otp.py
+msgid "Two-factor authentication is required and this account has no authenticator enrolled. Ask an administrator to run `manage.py setup_totp <username>`."
+msgstr "Двухфакторная аутентификация обязательна, но для этой учётной записи аутентификатор не настроен. Попросите администратора выполнить `manage.py setup_totp <username>`."

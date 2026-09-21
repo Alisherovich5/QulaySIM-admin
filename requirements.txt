@@ -24,3 +24,9 @@ Babel>=2.14
 # never writes one — see catalog/ai_pricing.py.
 anthropic>=0.60
 celery>=5.4
+
+# Second factor for the admin: a stolen password alone gets no session.
+# qrcode renders the enrolment QR into the operator's terminal, so the secret
+# never travels through a chat, a ticket or an e-mail.
+django-otp>=1.5
+qrcode>=7.4
