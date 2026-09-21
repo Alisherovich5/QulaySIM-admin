@@ -7,7 +7,11 @@ name: Publish image
 
 on:
   push:
-    branches: [main, production-cleanup, payme-integration]
+    # One branch, the one the shop is built from.
+    branches: [main]
+  # Checks run on a proposal too, and only the build is skipped there. A gate
+  # that fires after the merge is a gate that reports rather than prevents.
+  pull_request:
     tags: ["v*"]
   workflow_dispatch:
 
@@ -81,15 +85,22 @@ jobs:
             exit 1
           }
       - name: Tests
-        # orders is included now. It was left out when this step was added, on
-        # the grounds that widening the net in the same change could surface a
-        # pre-existing failure and block every deploy. Checked before adding it:
-        # all 34 already passed, so they had simply never been run here -- which
-        # is how a test suite rots without anyone noticing.
-        run: python manage.py test config catalog orders -v 1
+        # Every app, named by nobody. The list used to be `config catalog
+        # orders`, which quietly left out customers and content -- 37 tests
+        # including the referral tiers and the commission rules, none of which
+        # had ever run here. A list of apps is a list somebody has to remember
+        # to extend, and this is what forgetting looks like.
+        #
+        # Checked before widening it, the same way `orders` was: all 466 pass
+        # locally against the same Postgres this job uses, so nothing here is
+        # being switched on in the hope that it works.
+        run: python manage.py test -v 1
 
   build:
     needs: checks
+    # Nothing is published from a proposal — the checks above are the whole
+    # point of running it there.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
